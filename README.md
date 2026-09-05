@@ -25,6 +25,7 @@ Pink Edge AI runs 100% offline on cheap edge hardware.
 * Maternal Health (Ultrasound Engine): Analyzes off-grid ultrasound video streams natively to identify standard anatomical planes and fetal growth parameters with zero cloud reliance.
 
 ## Architecture
+```text
 Rural BHU (Edge Node)
 ├── RK3588 NPU (AI Inference)
 ├── SQLite3 (Local Cache)
@@ -36,6 +37,7 @@ Rural BHU (Edge Node)
 ▼
 Allied Hospital (Urban Hub)
 └── 2G GSM Alert Receiver
+```
 
 
 ---
