@@ -1,15 +1,15 @@
-**Pink Edge AI**
+## Pink Edge AI
 Offline Edge AI Mammography Triage on Rockchip RK3588 NPU.
 
 Alibaba Cloud AI Hackathon 2026 Submission.
 
-**Problem**
+## Problem
 Rural Punjab lacks breast cancer screening. No radiologists at village clinics. No internet for cloud AI. Late detection costs lives.
 
-**Solution**
+## Solution 
 Pink Edge AI runs 100% offline on cheap edge hardware. It performs real-time mammography triage using YOLOv8-OBB. When internet becomes available, it syncs critical data to Alibaba Cloud as a backup layer.
 
-**Architecture**
+## Architecture
 Rural BHU (Edge Node)
 ├── RK3588 NPU (AI Inference)
 ├── SQLite3 (Local Cache)
