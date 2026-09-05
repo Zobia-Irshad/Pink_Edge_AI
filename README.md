@@ -1,7 +1,19 @@
 ## Pink Edge AI
 Offline Edge AI Mammography Triage on Rockchip RK3588 NPU.
-
 Alibaba Cloud AI Hackathon 2026 Submission.
+
+## Overview
+Pink Edge AI is a hybrid-edge clinical intelligence platform designed for rural healthcare centers in Punjab, Pakistan. It runs AI-powered medical imaging triage 100% offline on low-cost edge hardware (Rockchip RK3588 NPU) and uses Alibaba Cloud as an optional background sync layer when internet connectivity becomes available.
+
+**The platform currently supports three diagnostic models:**
+
+1. Mammography (Breast Cancer Screening)
+2. Tuberculosis (Chest X-Ray Analysis)
+3. Maternal Health (Ultrasound Triage)
+
+The system is specifically built for Lady Health Visitors (LHVs) working at Basic Health Units (BHUs) in rural areas where no radiologist is available and internet connectivity is unreliable.
+
+
 
 ## Problem
 Rural Punjab lacks breast cancer screening. No radiologists at village clinics. No internet for cloud AI. Late detection costs lives.
