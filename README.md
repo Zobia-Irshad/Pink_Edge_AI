@@ -67,7 +67,7 @@ Allied Hospital (Urban Hub)
 Step 1: Clone the repository.
 
 ```bash
-git clone https://github.com/yourusername/pink-edge-ai.git
+git clone https://github.com/Zobia-Irshad/Pink_Edge_AI.git
 cd pink-edge-ai
 ```
 
