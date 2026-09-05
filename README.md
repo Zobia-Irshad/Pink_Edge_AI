@@ -69,3 +69,24 @@ Step 1: Clone the repository.
 ```bash
 git clone https://github.com/yourusername/pink-edge-ai.git
 cd pink-edge-ai
+```
+
+Step 2: Install dependencies.
+```bash
+pip install streamlit numpy opencv-python Pillow fpdf2
+```
+
+Step 3: Run the application.
+```bash
+streamlit run pink_edge.py
+```
+
+## Usage
+Step 1: Select AI Model in sidebar.
+Step 2: Upload patient scan or use placeholder.
+Step 3: Click Run Triage.
+Step 4: Review BI-RADS and ACR assessment.
+Step 5: Click Save to Cache for offline storage.
+Step 6: Download Text or PDF report.
+Step 7: Switch to GSM Failover mode for cloud sync.
+
