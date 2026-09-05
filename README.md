@@ -19,7 +19,10 @@ The system is specifically built for Lady Health Visitors (LHVs) working at Basi
 Rural Punjab lacks breast cancer screening. No radiologists at village clinics. No internet for cloud AI. Late detection costs lives.
 
 ## Solution 
-Pink Edge AI runs 100% offline on cheap edge hardware. It performs real-time mammography triage using YOLOv8-OBB. When internet becomes available, it syncs critical data to Alibaba Cloud as a backup layer.
+Pink Edge AI runs 100% offline on cheap edge hardware.
+* Mammography (Breast Cancer Screening): It performs real-time mammography triage using YOLOv8-OBB. When internet becomes available, it syncs critical data to Alibaba Cloud as a backup layer.
+* Tuberculosis (Chest X-Ray Engine): Processes local digital X-ray scans offline to detect pulmonary opacities and cavitary lesions, routing critical findings to the Allied Hospital hub via 2G GSM.
+* Maternal Health (Ultrasound Engine): Analyzes off-grid ultrasound video streams natively to identify standard anatomical planes and fetal growth parameters with zero cloud reliance.
 
 ## Architecture
 Rural BHU (Edge Node)
