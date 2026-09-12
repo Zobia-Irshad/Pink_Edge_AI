@@ -16,7 +16,10 @@ import random
 import numpy as np
 from PIL import Image
 
-MODELS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Models")
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+MODELS_DIR = os.path.join(PROJECT_DIR, "models")
+LEGACY_MODELS_DIR = os.path.join(PROJECT_DIR, "Models")
+NESTED_MODELS_DIR = os.path.join(PROJECT_DIR, "Misc", "Pink_Edge_AI-main", "models")
 
 BI_RADS_OPTIONS = [
     "BI-RADS 0 - Incomplete (Additional imaging needed)",
@@ -62,12 +65,26 @@ def load_tb_model():
         import torch
         from huggingface_hub import hf_hub_download
 
-        weights_path = hf_hub_download(
-            repo_id="sukhmani1303/tuberculosis-vit-model", filename="model.pt",
-            local_dir=os.path.join(MODELS_DIR, "TB"),
+        local_weights = next(
+            (
+                os.path.join(directory, "tb_classifier.pt")
+                for directory in (MODELS_DIR, LEGACY_MODELS_DIR, NESTED_MODELS_DIR)
+                if os.path.isfile(os.path.join(directory, "tb_classifier.pt"))
+            ),
+            None,
         )
-        _tb_model = torch.jit.load(weights_path, map_location="cpu")
-        _tb_model.eval()
+        if local_weights:
+            from ultralytics import YOLO
+
+            _tb_model = YOLO(local_weights)
+        else:
+            weights_path = hf_hub_download(
+                repo_id="sukhmani1303/tuberculosis-vit-model", filename="model.pt",
+                local_dir=os.path.join(MODELS_DIR, "TB"),
+            )
+            _tb_model = torch.jit.load(weights_path, map_location="cpu")
+        if hasattr(_tb_model, "eval"):
+            _tb_model.eval()
     except Exception as e:  # missing dep, no internet, corrupted file, etc.
         _tb_load_error = str(e)
         _tb_model = None
@@ -101,16 +118,23 @@ def predict_tb(pil_image: Image.Image) -> dict:
     try:
         import torch
 
-        chw = _tb_preprocess(pil_image)
-        tensor = torch.from_numpy(chw).unsqueeze(0)
-        with torch.no_grad():
-            out = model(tensor)
-            if out.dim() > 1:
-                out = out.squeeze(-1)
-            prob = torch.sigmoid(out).item()
-
-        is_positive = prob > 0.5
-        confidence = (prob if is_positive else (1 - prob)) * 100.0
+        if hasattr(model, "predict"):
+            result = model.predict(np.asarray(pil_image.convert("RGB")), imgsz=160, device="cpu", verbose=False)[0]
+            probabilities = result.probs.data.cpu().numpy()
+            class_index = int(np.argmax(probabilities))
+            prob = float(probabilities[1])
+            confidence = float(probabilities[class_index]) * 100.0
+            is_positive = class_index == 1
+        else:
+            chw = _tb_preprocess(pil_image)
+            tensor = torch.from_numpy(chw).unsqueeze(0)
+            with torch.no_grad():
+                out = model(tensor)
+                if out.dim() > 1:
+                    out = out.squeeze(-1)
+                prob = torch.sigmoid(out).item()
+            is_positive = prob > 0.5
+            confidence = (prob if is_positive else (1 - prob)) * 100.0
 
         if is_positive:
             severity = "S3 - Advanced (large cavity / miliary pattern)" if confidence >= 90 else (
@@ -119,17 +143,17 @@ def predict_tb(pil_image: Image.Image) -> dict:
             zone = random.choice(TB_LUNG_ZONES)
             return {
                 "bi_rads": severity, "acr": zone, "verdict": "TB Positive",
-                "sub": "Real-model detection (Vision Transformer)", "css": "danger",
+                "sub": "Real-model detection (YOLOv8 classifier)", "css": "danger",
                 "loc": zone, "extra": severity, "vicon": "⚠️",
                 "confidence": confidence, "sms": "TB:POS", "is_critical": True,
-                "source": "sukhmani1303/tuberculosis-vit-model (Hugging Face, real inference)",
+                "source": "Pink Edge AI TBX11K YOLOv8 classifier (local trained model, real inference)",
             }
         return {
             "bi_rads": "S0 - No active disease", "acr": "Bilateral", "verdict": "TB Negative",
-            "sub": "Real-model clear (Vision Transformer)", "css": "success",
+            "sub": "Real-model clear (YOLOv8 classifier)", "css": "success",
             "loc": "Lungs clear", "extra": "No active disease", "vicon": "✅",
             "confidence": confidence, "sms": "TB:NEG", "is_critical": False,
-            "source": "sukhmani1303/tuberculosis-vit-model (Hugging Face, real inference)",
+            "source": "Pink Edge AI TBX11K YOLOv8 classifier (local trained model, real inference)",
         }
     except Exception:
         return None
@@ -236,12 +260,13 @@ _mammo_load_error = None
 
 
 def _find_local_mammo_weights():
-    d = os.path.join(MODELS_DIR, "Mammography")
-    if not os.path.isdir(d):
-        return None
-    for f in os.listdir(d):
-        if f.lower().endswith((".pt", ".onnx")):
-            return os.path.join(d, f)
+    for base_dir in (MODELS_DIR, LEGACY_MODELS_DIR):
+        d = os.path.join(base_dir, "Mammography")
+        if not os.path.isdir(d):
+            continue
+        for f in os.listdir(d):
+            if f.lower().endswith((".pt", ".onnx")):
+                return os.path.join(d, f)
     return None
 
 
@@ -367,7 +392,7 @@ def model_status() -> dict:
         "Tuberculosis (Chest X-Ray)": {
             "real": tb_available(),
             "reason": _tb_load_error or "OK",
-            "source": "Owos/tb-classifier (Hugging Face)",
+            "source": "Pink Edge AI TBX11K YOLOv8 classifier",
         },
         "Maternal Health (Ultrasound)": {
             "real": maternal_available(),
