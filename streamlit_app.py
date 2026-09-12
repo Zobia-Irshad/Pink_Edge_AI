@@ -29,8 +29,8 @@ CSS = f"""
 .block-container {{ padding-top: 2rem !important; padding-bottom: 2rem !important; max-width: 1300px !important; }}
 section[data-testid="stSidebar"] {{ background: {C['surface']} !important; }}
 h1, h2, h3, h4 {{ color: {C['text']} !important; }}
-.page-header {{ background: linear-gradient(135deg, {C['primary']} 0%, {C['accent']} 100%);
-  border-radius: 14px; padding: 22px 28px; margin-bottom: 16px; }}
+.page-header {{ background: {C['primary']};
+    border-radius: 10px; padding: 22px 28px; margin-bottom: 16px; }}
 .page-header h1 {{ color: #fff !important; margin: 0 !important; font-size: 1.4rem !important; }}
 .page-header p {{ color: rgba(255,255,255,0.85); font-size: 0.85rem; margin: 6px 0 0 0; }}
 .badge {{ display: inline-flex; padding: 5px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }}
@@ -99,8 +99,8 @@ t = core.t
 def render_sidebar():
     with st.sidebar:
         st.markdown(
-            '<div style="background:linear-gradient(135deg,{p} 0%,{a} 100%);border-radius:10px;'
-            'padding:14px;margin-bottom:14px;color:#fff;"><b>🩸 Pink Edge AI</b>'
+            '<div style="background:{p};border:1px solid {a};border-radius:10px;'
+            'padding:14px;margin-bottom:14px;color:#fff;"><b><span style="color:{a};">🩸</span> Pink Edge AI</b>'
             '<div style="font-size:0.72rem;opacity:0.85;">Clinical Intelligence Platform</div></div>'
             .format(p=C["primary"], a=C["accent"]), unsafe_allow_html=True)
 
@@ -345,7 +345,7 @@ def render_dashboard(selected_model):
 # HOSPITAL HUB TAB
 # ============================================================
 def render_hospital_hub():
-    st.markdown(f"""<div class="page-header" style="background:linear-gradient(135deg,{C['primary']} 0%,{C['success']} 100%);">
+    st.markdown(f"""<div class="page-header" style="background:{C['primary']};">
     <h1>🏥 Allied Hospital Faisalabad</h1><p>Urban Receiving Terminal • 2G GSM Critical Alert Monitor</p></div>""",
                 unsafe_allow_html=True)
 
@@ -375,7 +375,7 @@ def render_hospital_hub():
 # CLOUD SYNC TAB
 # ============================================================
 def render_cloud_sync():
-    st.markdown(f"""<div class="page-header" style="background:linear-gradient(135deg,{C['primary']} 0%,{C['warning']} 100%);">
+    st.markdown(f"""<div class="page-header" style="background:{C['primary']};">
     <h1>☁️ Cloud Sync & Cache</h1><p>Alibaba Cloud Integration (simulated) • Hybrid-Edge Architecture</p></div>""",
                 unsafe_allow_html=True)
 

@@ -570,7 +570,7 @@ class PinkEdgeApp:
         self.log_text = tk.Text(left, height=8, bg="#060a13", fg="#94a3b8", bd=0, font=("Consolas", 9), highlightthickness=0)
         self.log_text.pack(fill="both", expand=False)
         for tag, color in [("dicom", "#60a5fa"), ("npu", "#34d399"), ("gsm", "#22d3ee"),
-                            ("cache", "#f472b6"), ("muted", "#475569")]:
+                            ("cache", C["accent_light"]), ("muted", "#8fa9bf")]:
             self.log_text.tag_configure(tag, foreground=color)
 
         right = ttk.Frame(body, width=380, style="Card.TFrame")
