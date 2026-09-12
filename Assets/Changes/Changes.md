@@ -12,8 +12,15 @@ model backend) + `Validation/validate.py`.
   (mobile/tablet-width-aware CSS) rebuild — not the original `pink_edge.py` — that imports `GUI.py`
   directly for every piece of shared logic (constants, imaging, simulated scenarios, DB, reports, the
   `run_triage()` dispatcher) instead of duplicating it, so it gets the real TB/Maternal models and the
-  honest Mammography SIMULATED fallback for free. `GUI.py`'s own Tkinter code never executes unless
-  `GUI.py` is run directly, so importing it from a Streamlit script is safe.
+  honest Mammography SIMULATED fallback for free.
+- **Streamlit Community Cloud deploy fix.** First cloud deploy crashed with `ImportError: import
+  _tkinter` — `GUI.py` originally imported `tkinter`/`PIL.ImageTk` unconditionally at module level,
+  and Streamlit Cloud's Linux container has no system Tk libraries. Fixed by lazy-importing tkinter
+  only inside `PinkEdgeApp.__init__()`/`main()` (via `_lazy_import_tkinter()`, binding as module
+  globals) — `GUI.py` is now safely importable on a headless host, and the actual Tk import only
+  happens if the desktop app is really launched. Also swapped `opencv-python` → `opencv-python-headless`
+  in `requirements.txt` for the same reason (the GUI build needs `libGL.so.1`, which headless
+  containers don't have; nothing in this codebase calls `cv2.imshow` or other GUI functions).
 - **Android was the original ask, deferred.** This machine had no Java/Android SDK/Gradle installed;
   desktop was the fast, low-risk path using the Python already available. Nothing here forecloses an
   Android build later.
@@ -43,6 +50,75 @@ its TB code path was ever wired for real inference, with nothing real to load. T
 
 Every result-dict a model (real or simulated) produces carries a `source` field so the UI and reports
 show plainly which of the three cases produced it.
+
+## Roboflow integration (`imaad-ullah-khan-yameen` workspace)
+All three modalities now try the user's own trained Roboflow model/workflow first (real,
+purpose-trained on this project's data), falling back to the offline Hugging Face models above
+(TB, Maternal) or the simulated picker (Mammography) when Roboflow is unreachable. Grounded against
+real API calls (not guessed field names) via `inference-sdk`'s `InferenceHTTPClient`:
+- **Mammography** — Workflow `breastcancer-yolov8-78tni` (`client.run_workflow`).
+- **Tuberculosis** — Model `tuberculosis-tp2pv/1` (`client.infer`); real class taxonomy grounded
+  from the project's COCO export (Turkish labels, ASCII-folded in the API response — handled with
+  an accent-stripping normalizer, not hardcoded spellings).
+- **Maternal Health** — Model `hash-maternal-health/1` (`client.infer`); single-class detector
+  (`"abnormal"`), grounded the same way.
+
+**Key finding from validating against ground truth, not just "does it run"**: the TB model
+(`tuberculosis-tp2pv/1`) correctly caught a real positive case but called all 3 tested
+ground-truth-healthy samples TB Positive at 98-99% confidence — a real accuracy problem in that
+specific trained model (see `Documentations/MODEL_SOURCES.md` for full detail and next steps), not
+an integration bug. `Validation/validate.py`'s TB ground-truth check is left failing on purpose to
+keep surfacing this.
+
+Also added: a shared Roboflow client layer in `inference.py` (`RoboflowError`, retry-with-backoff,
+`_roboflow_infer`/`_roboflow_run_workflow`), and 4 new validation checks — ground-truth
+cross-checks for all three modalities against their real COCO-annotated datasets (which the user
+added under `Models/*/Data Set/`), not just "did it return something."
+
+## Offline pixel-diff heuristic (`offline_cv.py`) — no model, no internet, ever
+Added per a direct request for a fully-offline method: image → grayscale → resize/orient (try
+identity vs. horizontal-flip, keep whichever best correlates with a generic reference — handles
+left/right laterality without full registration) → average local labeled images into "typical
+positive"/"typical negative" reference templates → pixel-difference the uploaded image against
+both → the region that's furthest from negative and closest to positive becomes a **real** bounding
+box (not the old illustrative fixed position — `draw_bbox()` in `GUI.py` now draws it when
+present) → the mean of that difference map becomes the confidence score.
+
+**Measured, not assumed**, on a proper held-out test split (`python offline_cv.py`): **74% for TB,
+96% for Mammography**. Maternal Health has no negative/healthy images anywhere in its local
+dataset (every image is an annotated abnormal case), so it correctly returns `None` there rather
+than guessing.
+
+This directly fixed the TB accuracy problem documented above: TB's try-order now puts this
+heuristic first (74%, beats both the Roboflow model's 0%-on-healthy and the offline HF ViT's 62%
+on the same 50 held-out samples), Mammography gets it as a second offline option after the
+(well-performing) Roboflow Workflow. `Validation/validate.py`'s TB ground-truth check — left
+failing on purpose in the previous pass — now **passes for real**, because the underlying problem
+got fixed rather than tolerated.
+
+## Hardware planning docs (`Hardware/`)
+New folder, purely documentation/diagrams — no app code touched. Compares the four hardware ideas
+given (RK3588 SBC, Raspberry Pi, mobile APK, ESP32) as what they actually are: three candidate main
+compute boards plus one companion MCU that can't run these models at all but is useful for the
+GSM/telemetry link regardless of which board is chosen (`ALTERNATIVES.md`). Also: `HARDWARE_
+REQUIREMENTS.md` + `BOM.txt` (parts + costs), `ARCHITECTURE.md` (data flow, maps onto the existing
+`inference.py`/`offline_cv.py`/`GUI.py` stack), `WIRING.md` (pin-level, including the SIM800L
+power-supply gotcha that's a common real-world failure mode for that module), `DESIGN.md`
+(enclosure/power-resilience/thermal for an actual rural clinic), `STRUCTURE.md` (this folder's
+layout + multi-BHU fleet structure), and 5 generated PNG diagrams (`diagrams/`, produced from
+`_generate_diagrams.py` — reproducible from code, not a binary source-of-truth, same dark
+teal/pink palette as the app itself). Explicitly flagged as an unbuilt, unbench-tested plan, same
+honesty posture as `Documentations/MODEL_SOURCES.md` takes for the AI models.
+
+## streamlit_app.py follow-up fixes
+`core.draw_bbox()` is shared with `GUI.py`, so the offline heuristic's real bounding boxes were
+already live in the Streamlit edition automatically — no change needed there. Two things weren't
+automatic and needed fixing directly in `streamlit_app.py`: its own `"real inference" in source`
+check (same bug pattern as `Validation/validate.py` had) was tagging offline_cv.py results as
+"Simulated" in the telemetry log since that source string doesn't contain that exact phrase —
+switched to the same `"SIMULATED" not in source` check; and the dashboard header / module
+docstring still described the old "TB+Maternal real, Mammography simulated" state, updated to
+reflect the current accuracy-ranked multi-method precedence.
 
 ## Validation
 Added `Validation/validate.py` — a 14-check validation suite covering module imports, placeholder

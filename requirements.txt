@@ -4,7 +4,10 @@
 
 numpy>=1.24.0
 Pillow>=10.0.0
-opencv-python>=4.8.0
+# headless build: the GUI-enabled `opencv-python` needs system graphics libs (libGL.so.1) that
+# headless containers like Streamlit Community Cloud don't have. TB inference (CLAHE/blur/resize)
+# and ultralytics both work fine against the headless build; nothing here opens an OpenCV window.
+opencv-python-headless>=4.8.0
 fpdf2>=2.7.0
 requests>=2.31.0
 streamlit>=1.30.0

@@ -2,11 +2,14 @@
 """
 Pink Edge AI — Streamlit (responsive web) edition
 ====================================================
-A responsive web UI, sibling to the Tkinter desktop app (GUI.py) — same shared logic, same real
-on-device models (TB, Maternal Health) with the same SIMULATED fallback (Mammography), same SQLite
-cache. All shared logic (constants, imaging, simulated scenarios, DB, reports, the run_triage()
-dispatcher) is imported straight from GUI.py rather than duplicated — GUI.py's Tkinter code never
-runs unless GUI.py itself is executed directly, so importing it here is safe.
+A responsive web UI, sibling to the Tkinter desktop app (GUI.py) — same shared logic, same model
+backend (inference.py: Roboflow-hosted models, the offline_cv.py pixel-diff heuristic, offline HF
+models, and the SIMULATED scenario picker, tried in whichever order is measurably best per
+modality — see Documentations/MODEL_SOURCES.md), same SQLite cache. All shared logic (constants,
+imaging, simulated scenarios, DB, reports, the run_triage() dispatcher, draw_bbox() — which now
+draws a real detected bounding box when a result carries one, e.g. from offline_cv.py) is imported
+straight from GUI.py rather than duplicated — GUI.py's Tkinter code never runs unless GUI.py itself
+is executed directly, so importing it here is safe.
 
 Run with:  streamlit run streamlit_app.py
 """
@@ -27,32 +30,32 @@ CSS = f"""
 <style>
 .stApp {{ background: {C['bg']}; color: {C['text']}; }}
 .block-container {{ padding-top: 2rem !important; padding-bottom: 2rem !important; max-width: 1300px !important; }}
-section[data-testid="stSidebar"] {{ background: {C['surface_alt']} !important; }}
+section[data-testid="stSidebar"] {{ background: {C['surface']} !important; }}
 h1, h2, h3, h4 {{ color: {C['text']} !important; }}
-.page-header {{ background: {C['primary']};
-    border-radius: 10px; padding: 22px 28px; margin-bottom: 16px; }}
+.page-header {{ background: linear-gradient(135deg, {C['primary']} 0%, {C['accent']} 100%);
+  border-radius: 14px; padding: 22px 28px; margin-bottom: 16px; }}
 .page-header h1 {{ color: #fff !important; margin: 0 !important; font-size: 1.4rem !important; }}
 .page-header p {{ color: rgba(255,255,255,0.85); font-size: 0.85rem; margin: 6px 0 0 0; }}
 .badge {{ display: inline-flex; padding: 5px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }}
-.badge-offline {{ background: rgba(46,125,50,0.16); color: {C['success']}; border: 1px solid rgba(46,125,50,0.4); }}
-.badge-cloud {{ background: rgba(249,168,37,0.16); color: {C['warning']}; border: 1px solid rgba(249,168,37,0.4); }}
+.badge-offline {{ background: rgba(16,185,129,0.12); color: {C['success']}; border: 1px solid rgba(16,185,129,0.3); }}
+.badge-cloud {{ background: rgba(245,158,11,0.12); color: {C['warning']}; border: 1px solid rgba(245,158,11,0.3); }}
 .card {{ background: {C['surface']}; border: 1px solid {C['border']}; border-radius: 14px; padding: 16px; margin: 6px 0; }}
 .metric-tile {{ background: {C['surface']}; border: 1px solid {C['border']}; border-radius: 10px; padding: 12px; text-align: center; }}
 .metric-tile .label {{ color: {C['text_muted']}; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.6px; }}
 .metric-tile .value {{ font-size: 1.4rem; font-weight: 800; margin-top: 4px; }}
 .verdict-box {{ border-radius: 12px; padding: 20px; text-align: center; margin: 8px 0; }}
-.verdict-box.success {{ background: rgba(46,125,50,0.12); border: 2px solid rgba(46,125,50,0.4); }}
-.verdict-box.danger {{ background: rgba(198,40,40,0.12); border: 2px solid rgba(198,40,40,0.4); }}
+.verdict-box.success {{ background: rgba(16,185,129,0.08); border: 2px solid rgba(16,185,129,0.3); }}
+.verdict-box.danger {{ background: rgba(239,68,68,0.08); border: 2px solid rgba(239,68,68,0.3); }}
 .verdict-box .v-icon {{ font-size: 1.6rem; }}
 .verdict-box .v-title {{ font-size: 1.3rem; font-weight: 800; }}
 .verdict-box.success .v-title {{ color: {C['success']}; }}
 .verdict-box.danger .v-title {{ color: {C['danger']}; }}
 .verdict-box .v-sub {{ font-size: 0.85rem; margin-top: 4px; color: {C['text_muted']}; }}
-.console-log {{ background: {C['surface_alt']}; color: {C['text']}; border: 1px solid {C['border_light']}; border-radius: 10px; padding: 14px;
+.console-log {{ background: #060a13; border: 1px solid {C['border_light']}; border-radius: 10px; padding: 14px;
   font-family: 'Consolas', monospace; font-size: 0.76rem; line-height: 1.7; max-height: 260px; overflow-y: auto; }}
 .alert-card {{ border-radius: 10px; padding: 14px; margin: 6px 0; border-left: 4px solid; }}
-.alert-card.critical {{ background: rgba(198,40,40,0.12); border-color: {C['danger']}; }}
-.alert-card.ok {{ background: rgba(46,125,50,0.12); border-color: {C['success']}; }}
+.alert-card.critical {{ background: rgba(239,68,68,0.08); border-color: {C['danger']}; }}
+.alert-card.ok {{ background: rgba(16,185,129,0.08); border-color: {C['success']}; }}
 .source-tag {{ font-size: 0.72rem; color: {C['text_muted']}; font-family: Consolas, monospace; }}
 /* --- responsive: narrow viewports (phones/small tablets) --- */
 @media (max-width: 768px) {{
@@ -99,8 +102,8 @@ t = core.t
 def render_sidebar():
     with st.sidebar:
         st.markdown(
-            '<div style="background:{p};border:1px solid {a};border-radius:10px;'
-            'padding:14px;margin-bottom:14px;color:#fff;"><b><span style="color:{a};">🩸</span> Pink Edge AI</b>'
+            '<div style="background:linear-gradient(135deg,{p} 0%,{a} 100%);border-radius:10px;'
+            'padding:14px;margin-bottom:14px;color:#fff;"><b>🩸 Pink Edge AI</b>'
             '<div style="font-size:0.72rem;opacity:0.85;">Clinical Intelligence Platform</div></div>'
             .format(p=C["primary"], a=C["accent"]), unsafe_allow_html=True)
 
@@ -210,7 +213,7 @@ def run_triage_action(selected_model, uploaded):
     st.session_state.pat_id = random.randint(10000000, 99999999)
     st.session_state.pat_age = random.randint(28, 75)
 
-    real = "real inference" in result.get("source", "")
+    real = "SIMULATED" not in result.get("source", "")  # covers Roboflow, offline HF models, AND the offline_cv.py heuristic
     st.session_state.log_entries.append(
         f"[{time.strftime('%H:%M:%S')}] [NPU] {'Real on-device' if real else 'Simulated'} inference "
         f"for {selected_model.split('(')[0].strip()}... Complete ({st.session_state.inference_latency}s).")
@@ -260,7 +263,7 @@ def sync_cloud_action():
 # ============================================================
 def render_dashboard(selected_model):
     st.markdown(f"""<div class="page-header"><h1>🩸 Pink Edge AI</h1>
-    <p>Clinical Intelligence Platform • Real on-device models (TB, Maternal Health) + simulated fallback</p></div>""",
+    <p>Clinical Intelligence Platform • Roboflow-hosted + offline pixel-diff models, per-modality accuracy-ranked</p></div>""",
                 unsafe_allow_html=True)
 
     col_img, col_meta = st.columns([3, 2])
@@ -345,7 +348,7 @@ def render_dashboard(selected_model):
 # HOSPITAL HUB TAB
 # ============================================================
 def render_hospital_hub():
-    st.markdown(f"""<div class="page-header" style="background:{C['primary']};">
+    st.markdown(f"""<div class="page-header" style="background:linear-gradient(135deg,{C['primary']} 0%,{C['success']} 100%);">
     <h1>🏥 Allied Hospital Faisalabad</h1><p>Urban Receiving Terminal • 2G GSM Critical Alert Monitor</p></div>""",
                 unsafe_allow_html=True)
 
@@ -375,7 +378,7 @@ def render_hospital_hub():
 # CLOUD SYNC TAB
 # ============================================================
 def render_cloud_sync():
-    st.markdown(f"""<div class="page-header" style="background:{C['primary']};">
+    st.markdown(f"""<div class="page-header" style="background:linear-gradient(135deg,{C['primary']} 0%,{C['warning']} 100%);">
     <h1>☁️ Cloud Sync & Cache</h1><p>Alibaba Cloud Integration (simulated) • Hybrid-Edge Architecture</p></div>""",
                 unsafe_allow_html=True)
 

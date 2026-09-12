@@ -9,20 +9,37 @@ offline at run time: model weights are downloaded once and cached under models/,
 locally on every subsequent run.
 
 Run with:  python GUI.py
+
+Note: tkinter (and PIL's ImageTk, which wraps it) is intentionally NOT imported at module level.
+streamlit_app.py imports this module for its shared logic (constants, imaging, simulated
+scenarios, DB, reports, the run_triage() dispatcher) without ever touching the Tkinter UI, and
+some deployment environments (e.g. Streamlit Community Cloud's Linux containers) don't have the
+system Tk libraries tkinter needs, which would crash that import at module load time. See
+_lazy_import_tkinter() below — it's called only when the desktop UI actually runs.
 """
 import json
 import os
 import random
 import sqlite3
 import time
-import tkinter as tk
 from datetime import datetime
-from tkinter import ttk, filedialog, messagebox
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont, ImageTk
+from PIL import Image, ImageDraw, ImageFont
 
 import inference as inf
+
+
+def _lazy_import_tkinter():
+    """Import tkinter/ttk/filedialog/messagebox/ImageTk and bind them as module globals, but
+    only the first time the desktop UI is actually constructed — keeps GUI.py importable on
+    headless hosts that lack tkinter (see module docstring)."""
+    global tk, ttk, filedialog, messagebox, ImageTk
+    if "tk" in globals():
+        return
+    import tkinter as tk
+    from tkinter import ttk, filedialog, messagebox
+    from PIL import ImageTk
 
 # ============================================================
 # CONFIG / CONSTANTS
@@ -39,10 +56,10 @@ TB_SEVERITY_LEVELS = inf.TB_SEVERITY_LEVELS
 TB_LUNG_ZONES = inf.TB_LUNG_ZONES
 
 C = {  # color tokens — same palette as the Streamlit app's injected CSS
-    "bg": "#ffffff", "surface": "#f8fbff", "surface_alt": "#e8f0fe", "surface_hover": "#d7e7f7",
-    "border": "#d2e0ee", "border_light": "#b5cce1", "text": "#17324d", "text_muted": "#587087",
-    "text_light": "#e8f0fe", "primary": "#0b5394", "primary_light": "#2f75ad", "accent": "#e91e63",
-    "accent_light": "#f06292", "success": "#2e7d32", "warning": "#f9a825", "danger": "#c62828",
+    "bg": "#0a0e1a", "surface": "#111827", "surface_alt": "#1e293b", "surface_hover": "#334155",
+    "border": "#1e293b", "border_light": "#334155", "text": "#f1f5f9", "text_muted": "#94a3b8",
+    "text_light": "#64748b", "primary": "#14b8a6", "primary_light": "#2dd4bf", "accent": "#ec4899",
+    "accent_light": "#f472b6", "success": "#10b981", "warning": "#f59e0b", "danger": "#ef4444",
 }
 
 TR = {
@@ -276,22 +293,33 @@ def draw_bbox(image, model_name, result):
     conf_str = f"{result['confidence']:.1f}%" if result else "94.2%"
     color = (236, 72, 153) if is_critical else (16, 185, 129)
 
+    # offline_cv.py's pixel-comparison heuristic returns a REAL detected region (normalized
+    # (x, y, w, h) fractions) rather than an illustrative fixed position — use it when present.
+    real_bbox = result.get("bbox") if result else None
+    if real_bbox:
+        rx, ry, rw, rh = real_bbox
+        default_center = (int((rx + rw / 2) * w), int((ry + rh / 2) * h))
+        default_size = (max(int(rw * w), 20), max(int(rh * h), 20))
+    else:
+        default_center = default_size = None
+
     if "Mammography" in model_name:
-        center = (int(w * 0.68), int(h * 0.35))
-        box = _rotated_box(center, (int(w * 0.15), int(h * 0.12)), 35)
+        center = default_center or (int(w * 0.68), int(h * 0.35))
+        size = default_size or (int(w * 0.15), int(h * 0.12))
+        box = _rotated_box(center, size, 0 if real_bbox else 35)
         draw.polygon(box, outline=color, width=2)
         for pt in box:
             draw.ellipse([pt[0] - 5, pt[1] - 5, pt[0] + 5, pt[1] + 5], fill=color)
         label = f"YOLOv8-OBB: {'Malignant' if is_critical else 'Benign'} ({conf_str})"
     elif "Tuberculosis" in model_name:
-        center = (int(w * 0.35), int(h * 0.30))
-        bw, bh = int(w * 0.12), int(h * 0.10)
+        center = default_center or (int(w * 0.35), int(h * 0.30))
+        bw, bh = default_size or (int(w * 0.12), int(h * 0.10))
         draw.rectangle([center[0] - bw // 2, center[1] - bh // 2, center[0] + bw // 2, center[1] + bh // 2],
                         outline=color, width=2)
         label = f"TB Classifier: {'Active Lesion' if is_critical else 'Clear'} ({conf_str})"
     else:
-        center = (int(w * 0.50), int(h * 0.50))
-        r = int(w * 0.15)
+        center = default_center or (int(w * 0.50), int(h * 0.50))
+        r = max(default_size) // 2 if default_size else int(w * 0.15)
         draw.ellipse([center[0] - r, center[1] - r, center[0] + r, center[1] + r], outline=color, width=2)
         label = f"Fetal Health: {'Review Needed' if is_critical else 'Normal'} ({conf_str})"
 
@@ -395,6 +423,7 @@ def generate_pdf_bytes(d):
 # ============================================================
 class PinkEdgeApp:
     def __init__(self, root):
+        _lazy_import_tkinter()
         self.root = root
         root.title("Pink Edge AI — Clinical Intelligence Platform (Desktop)")
         root.geometry("1280x820")
@@ -523,7 +552,7 @@ class PinkEdgeApp:
 
         ttk.Separator(parent).pack(fill="x", padx=14, pady=10)
         ttk.Label(parent, text="Hardware Diagnostics", style="Card.TLabel", font=("Segoe UI", 8, "bold")).pack(anchor="w", **pad)
-        self.hw_panel = tk.Text(parent, height=6, width=28, bg=C["surface_alt"], fg=C["text_muted"], bd=0,
+        self.hw_panel = tk.Text(parent, height=6, width=28, bg="#060a13", fg="#94a3b8", bd=0,
                                  font=("Consolas", 8), highlightthickness=0)
         self.hw_panel.pack(padx=14, fill="x")
         self._update_hw_panel()
@@ -567,10 +596,10 @@ class PinkEdgeApp:
         self.metric_lat = self._metric_tile(metrics, "Latency", "—")
 
         ttk.Label(left, text="Telemetry Log", style="H2.TLabel").pack(anchor="w", pady=(8, 2))
-        self.log_text = tk.Text(left, height=8, bg=C["surface_alt"], fg=C["text_muted"], bd=0, font=("Consolas", 9), highlightthickness=0)
+        self.log_text = tk.Text(left, height=8, bg="#060a13", fg="#94a3b8", bd=0, font=("Consolas", 9), highlightthickness=0)
         self.log_text.pack(fill="both", expand=False)
         for tag, color in [("dicom", "#60a5fa"), ("npu", "#34d399"), ("gsm", "#22d3ee"),
-                            ("cache", C["accent_light"]), ("muted", "#8fa9bf")]:
+                            ("cache", "#f472b6"), ("muted", "#475569")]:
             self.log_text.tag_configure(tag, foreground=color)
 
         right = ttk.Frame(body, width=380, style="Card.TFrame")
@@ -648,7 +677,7 @@ class PinkEdgeApp:
         right.pack(side="left", fill="y", padx=(8, 0))
         right.pack_propagate(False)
         ttk.Label(right, text="Network Status", style="Card.TLabel", font=("Segoe UI", 10, "bold")).pack(anchor="w", padx=12, pady=6)
-        self.net_panel = tk.Text(right, height=6, bg=C["surface_alt"], fg=C["text_muted"], bd=0, font=("Consolas", 8), highlightthickness=0)
+        self.net_panel = tk.Text(right, height=6, bg="#060a13", fg="#94a3b8", bd=0, font=("Consolas", 8), highlightthickness=0)
         self.net_panel.pack(fill="x", padx=12)
         stats = ttk.Frame(right, style="Card.TFrame")
         stats.pack(fill="x", padx=12, pady=10)
@@ -964,6 +993,7 @@ class PinkEdgeApp:
 
 
 def main():
+    _lazy_import_tkinter()
     root = tk.Tk()
     app = PinkEdgeApp(root)
     root.mainloop()
