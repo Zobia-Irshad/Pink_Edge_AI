@@ -104,6 +104,43 @@ Tkinter UI builds and can run one triage cycle end-to-end with no visible window
 browser needed). Exits non-zero (and prints `inference.py`'s per-modality model status) if anything
 fails. Works from any working directory — paths are anchored to the repo root, not the caller's CWD.
 
+## Deploy the web edition to Streamlit Community Cloud
+
+The repo is already laid out the way [share.streamlit.io](https://share.streamlit.io) expects:
+`streamlit_app.py` at the root, a top-level `requirements.txt`, a `.streamlit/config.toml` theme, and
+a `.gitignore` that keeps downloaded model weights out of git (they're re-fetched from Hugging Face
+automatically on first run instead — see `inference.py`).
+
+1. **Push to GitHub** (once git is installed — see below):
+   ```
+   git init
+   git add .
+   git commit -m "Pink Edge AI desktop + Streamlit editions"
+   ```
+   Create an empty repo at github.com/new (no README/.gitignore/license — this repo already has
+   them), then:
+   ```
+   git remote add origin https://github.com/<your-username>/<repo-name>.git
+   git branch -M main
+   git push -u origin main
+   ```
+2. **Deploy**: go to [share.streamlit.io](https://share.streamlit.io) → sign in with GitHub →
+   *New app* → pick your repo/branch, set **Main file path** to `streamlit_app.py` → *Deploy*.
+3. **Optional — real mammography model**: in the deploy dialog's *Advanced settings* (or later via
+   *App settings → Secrets*), add:
+   ```toml
+   ROBOFLOW_API_KEY = "your-key-here"
+   ```
+   `inference.py` checks `st.secrets` for this automatically — no code changes needed.
+
+**Resource caveat, honestly stated:** Streamlit Community Cloud's free tier gives each app ~1 CPU
+core and ~1 GB RAM. This app's dependency stack (PyTorch, Ultralytics/OpenCV, two real model
+checkpoints downloaded at first run) is heavier than a typical Streamlit demo — expect a slow first
+boot (installing torch + downloading ~80 MB of weights) and keep an eye out for memory-related
+crashes on that tier. If it struggles, the fixes in order of effort are: pin lighter dependency
+versions, or deploy on a paid tier / your own server (`streamlit run streamlit_app.py --server.port
+80 --server.address 0.0.0.0`) instead.
+
 ## Relationship to the original project
 
 `Misc/Pink_Edge_AI-main` is the original Streamlit/Alibaba-Cloud-Hackathon submission both editions

@@ -2,10 +2,11 @@
 """
 Pink Edge AI (Desktop) — validation suite.
 ============================================
-Self-contained smoke/validation test for GUI.py + inference.py: imports, imaging, simulated
-scenario generators, SQLite cache round-trip, text/PDF report generation, real model inference
-(TB + Maternal), the SIMULATED fallback path (Mammography), the run_triage() dispatcher, and
-finally that the Tkinter UI actually builds without error (hidden window, no mainloop).
+Self-contained smoke/validation test for GUI.py + inference.py + streamlit_app.py: imports,
+imaging, simulated scenario generators, SQLite cache round-trip, text/PDF report generation, real
+model inference (TB + Maternal, on synthetic and real Test Data/ images), the SIMULATED fallback
+path (Mammography), the run_triage() dispatcher, and that both the Tkinter UI (hidden window, no
+mainloop) and the Streamlit UI (AppTest, no browser) actually build and can run one triage cycle.
 
 Run with:  python Validation/validate.py   (from anywhere — paths below are anchored to the
 repo root, not the current working directory)
@@ -258,6 +259,23 @@ def _():
         require(app.current_result is not None, "UI-driven _run_triage() produced no result")
     finally:
         root.destroy()
+
+
+# ---- 9. Streamlit UI builds and runs one triage cycle (AppTest, no browser) ----
+@check("Streamlit UI construction + one triage cycle (AppTest, headless)")
+def _():
+    from streamlit.testing.v1 import AppTest
+
+    at = AppTest.from_file(os.path.join(ROOT_DIR, "streamlit_app.py"))
+    at.run(timeout=60)
+    require(not at.exception, f"initial script run raised: {at.exception}")
+
+    # sidebar buttons in creation order: EN, Urdu, Run Triage, ...
+    at.sidebar.button[2].click().run(timeout=90)
+    require(not at.exception, f"Run Triage click raised: {at.exception}")
+    require(at.session_state["inference_done"], "Run Triage did not complete in the Streamlit app")
+    r = at.session_state["current_result"]
+    validate_result_shape(r, "streamlit run_triage")
 
 
 # ============================================================

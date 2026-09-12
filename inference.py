@@ -249,6 +249,15 @@ def _roboflow_api_key():
     key = os.environ.get("ROBOFLOW_API_KEY")
     if key:
         return key.strip()
+    # Streamlit Community Cloud's Secrets manager (Settings -> Secrets) surfaces values via
+    # st.secrets rather than env vars or files; check it if Streamlit is running/available.
+    try:
+        import streamlit as st
+
+        if "ROBOFLOW_API_KEY" in st.secrets:
+            return str(st.secrets["ROBOFLOW_API_KEY"]).strip()
+    except Exception:
+        pass
     key_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "roboflow_key.txt")
     if os.path.isfile(key_file):
         with open(key_file, "r", encoding="utf-8") as fh:
