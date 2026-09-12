@@ -1,8 +1,19 @@
-streamlit>=1.30.0
+# Pink Edge AI (Desktop) — Python dependencies.
+# Tkinter is stdlib and not listed here. Install with: pip install -r requirements.txt
+# (Start.bat does this automatically on first run.)
+
 numpy>=1.24.0
-opencv-python-headless
 Pillow>=10.0.0
+opencv-python>=4.8.0
 fpdf2>=2.7.0
-ultralytics>=8.0.0
+requests>=2.31.0
+
+# ML runtime — CPU is enough for all 3 models at demo scale.
 torch>=2.0.0
 torchvision>=0.15.0
+ultralytics>=8.0.0
+huggingface_hub>=0.20.0
+
+# Optional: only needed if you provide a Roboflow API key for the real mammography model
+# (see MODEL_SOURCES.md). Safe to leave installed even if unused.
+roboflow>=1.1.0
