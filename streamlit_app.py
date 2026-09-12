@@ -34,15 +34,15 @@ h1, h2, h3, h4 {{ color: {C['text']} !important; }}
 .page-header h1 {{ color: #fff !important; margin: 0 !important; font-size: 1.4rem !important; }}
 .page-header p {{ color: rgba(255,255,255,0.85); font-size: 0.85rem; margin: 6px 0 0 0; }}
 .badge {{ display: inline-flex; padding: 5px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }}
-.badge-offline {{ background: rgba(16,185,129,0.12); color: {C['success']}; border: 1px solid rgba(16,185,129,0.3); }}
-.badge-cloud {{ background: rgba(245,158,11,0.12); color: {C['warning']}; border: 1px solid rgba(245,158,11,0.3); }}
+.badge-offline {{ background: rgba(46,125,50,0.16); color: {C['success']}; border: 1px solid rgba(46,125,50,0.4); }}
+.badge-cloud {{ background: rgba(249,168,37,0.16); color: {C['warning']}; border: 1px solid rgba(249,168,37,0.4); }}
 .card {{ background: {C['surface']}; border: 1px solid {C['border']}; border-radius: 14px; padding: 16px; margin: 6px 0; }}
 .metric-tile {{ background: {C['surface']}; border: 1px solid {C['border']}; border-radius: 10px; padding: 12px; text-align: center; }}
 .metric-tile .label {{ color: {C['text_muted']}; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.6px; }}
 .metric-tile .value {{ font-size: 1.4rem; font-weight: 800; margin-top: 4px; }}
 .verdict-box {{ border-radius: 12px; padding: 20px; text-align: center; margin: 8px 0; }}
-.verdict-box.success {{ background: rgba(16,185,129,0.08); border: 2px solid rgba(16,185,129,0.3); }}
-.verdict-box.danger {{ background: rgba(239,68,68,0.08); border: 2px solid rgba(239,68,68,0.3); }}
+.verdict-box.success {{ background: rgba(46,125,50,0.12); border: 2px solid rgba(46,125,50,0.4); }}
+.verdict-box.danger {{ background: rgba(198,40,40,0.12); border: 2px solid rgba(198,40,40,0.4); }}
 .verdict-box .v-icon {{ font-size: 1.6rem; }}
 .verdict-box .v-title {{ font-size: 1.3rem; font-weight: 800; }}
 .verdict-box.success .v-title {{ color: {C['success']}; }}
@@ -51,8 +51,8 @@ h1, h2, h3, h4 {{ color: {C['text']} !important; }}
 .console-log {{ background: #060a13; border: 1px solid {C['border_light']}; border-radius: 10px; padding: 14px;
   font-family: 'Consolas', monospace; font-size: 0.76rem; line-height: 1.7; max-height: 260px; overflow-y: auto; }}
 .alert-card {{ border-radius: 10px; padding: 14px; margin: 6px 0; border-left: 4px solid; }}
-.alert-card.critical {{ background: rgba(239,68,68,0.08); border-color: {C['danger']}; }}
-.alert-card.ok {{ background: rgba(16,185,129,0.08); border-color: {C['success']}; }}
+.alert-card.critical {{ background: rgba(198,40,40,0.12); border-color: {C['danger']}; }}
+.alert-card.ok {{ background: rgba(46,125,50,0.12); border-color: {C['success']}; }}
 .source-tag {{ font-size: 0.72rem; color: {C['text_muted']}; font-family: Consolas, monospace; }}
 /* --- responsive: narrow viewports (phones/small tablets) --- */
 @media (max-width: 768px) {{

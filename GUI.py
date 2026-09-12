@@ -39,10 +39,10 @@ TB_SEVERITY_LEVELS = inf.TB_SEVERITY_LEVELS
 TB_LUNG_ZONES = inf.TB_LUNG_ZONES
 
 C = {  # color tokens — same palette as the Streamlit app's injected CSS
-    "bg": "#0a0e1a", "surface": "#111827", "surface_alt": "#1e293b", "surface_hover": "#334155",
-    "border": "#1e293b", "border_light": "#334155", "text": "#f1f5f9", "text_muted": "#94a3b8",
-    "text_light": "#64748b", "primary": "#14b8a6", "primary_light": "#2dd4bf", "accent": "#ec4899",
-    "accent_light": "#f472b6", "success": "#10b981", "warning": "#f59e0b", "danger": "#ef4444",
+    "bg": "#071a2b", "surface": "#0b2d4a", "surface_alt": "#123b5d", "surface_hover": "#1a4c72",
+    "border": "#1b5075", "border_light": "#2d6b95", "text": "#f7fbff", "text_muted": "#c7d8e8",
+    "text_light": "#e8f0fe", "primary": "#0b5394", "primary_light": "#3f86c5", "accent": "#e91e63",
+    "accent_light": "#f06292", "success": "#2e7d32", "warning": "#f9a825", "danger": "#c62828",
 }
 
 TR = {
