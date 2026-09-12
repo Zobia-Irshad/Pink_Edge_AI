@@ -1,98 +1,114 @@
-## Pink Edge AI
-Offline Edge AI Mammography Triage on Rockchip RK3588 NPU.
-Alibaba Cloud AI Hackathon 2026 Submission.
+# Pink Edge AI — Offline Desktop + Responsive Web Editions
 
-## Overview
-Pink Edge AI is a hybrid-edge clinical intelligence platform designed for rural healthcare centers in Punjab, Pakistan. It runs AI-powered medical imaging triage 100% offline on low-cost edge hardware (Rockchip RK3588 NPU) and uses Alibaba Cloud as an optional background sync layer when internet connectivity becomes available.
+Two sibling UIs over the same shared logic, ported from the `Pink_Edge_AI-main` Streamlit hackathon
+demo (see `Misc/`): a Tkinter **desktop** app (`GUI.py`) and a responsive **Streamlit web** app
+(`streamlit_app.py`). Both are wired to real, publicly-sourced on-device models wherever one was
+available, share the same SQLite report cache, and both run fully offline at inference time once
+their model weights are downloaded (first run only) — the web edition is a local browser UI, not a
+hosted/cloud service.
 
-**The platform currently supports three diagnostic models:**
+## What this is
 
-1. Mammography (Breast Cancer Screening)
-2. Tuberculosis (Chest X-Ray Analysis)
-3. Maternal Health (Ultrasound Triage)
+Clinical-triage UI for three modalities — Mammography, Tuberculosis (chest X-ray), Maternal Health
+(ultrasound) — matching the original app's dashboard, hospital-hub alert feed, and simulated
+Alibaba-Cloud-sync panel, backed by:
 
-The system is specifically built for Lady Health Visitors (LHVs) working at Basic Health Units (BHUs) in rural areas where no radiologist is available and internet connectivity is unreliable.
+| Modality | Backing |
+|---|---|
+| Tuberculosis | **Real model** — [sukhmani1303/tuberculosis-vit-model](https://huggingface.co/sukhmani1303/tuberculosis-vit-model) |
+| Maternal Health | **Real model** — [shr3m/fetal-brain-plane-cnn](https://huggingface.co/shr3m/fetal-brain-plane-cnn) |
+| Mammography | Simulated by default — real Roboflow model needs your API key, see below |
 
+Full detail on every model (why it was picked, exact preprocessing, license) is in
+[Documentations/MODEL_SOURCES.md](Documentations/MODEL_SOURCES.md). This is a hackathon-grade demo,
+not a validated medical device — confidence numbers and severity mappings are illustrative, same
+caveat the original project stated for itself.
 
+## Run it
 
-## Problem
-Rural Punjab lacks breast cancer screening. No radiologists at village clinics. No internet for cloud AI. Late detection costs lives.
+**Desktop (Tkinter):**
+```
+Start.bat
+```
+or manually: `pip install -r requirements.txt` then `python GUI.py`
 
-## Solution 
-Pink Edge AI runs 100% offline on cheap edge hardware.
-* Mammography (Breast Cancer Screening): It performs real-time mammography triage using YOLOv8-OBB. When internet becomes available, it syncs critical data to Alibaba Cloud as a backup layer.
-* Tuberculosis (Chest X-Ray Engine): Processes local digital X-ray scans offline to detect pulmonary opacities and cavitary lesions, routing critical findings to the Allied Hospital hub via 2G GSM.
-* Maternal Health (Ultrasound Engine): Analyzes off-grid ultrasound video streams natively to identify standard anatomical planes and fetal growth parameters with zero cloud reliance.
+**Web (Streamlit, responsive — resizes down to phone/tablet widths):**
+```
+Start_Web.bat
+```
+or manually: `pip install -r requirements.txt` then `streamlit run streamlit_app.py`
+(opens `http://localhost:8501` in your browser; `--server.address 0.0.0.0` if you want it reachable
+from another device on your LAN)
 
-## Architecture
-```text
-Rural BHU (Edge Node)
-├── RK3588 NPU (AI Inference)
-├── SQLite3 (Local Cache)
-├── YOLOv8-OBB (INT8)
-├── 2G GSM → Alibaba Cloud IoT
-├── OSS (High-Risk Image Backup)
-└── ACR (OTA Model Updates)
-│
-▼
-Allied Hospital (Urban Hub)
-└── 2G GSM Alert Receiver
+Both share `requirements.txt`. First run downloads ~1-2 GB of model weights + PyTorch/Ultralytics
+(needs internet once). Every run after that is 100% offline for inference — weights are cached under
+`Models/`, and the report cache (`pink_edge_cache.db`, SQLite) is local and shared by both editions.
+
+## Enabling the real mammography model (optional)
+
+The Mammography pathway falls back to the original app's own simulated BI-RADS scenario picker
+unless you supply a Roboflow API key for the `b-davmu/breastcancer-yolov8` project:
+
+1. Get a key from [roboflow.com](https://roboflow.com) → your workspace → Settings → API.
+2. Save it to a file named `roboflow_key.txt` next to `GUI.py` (just the key, nothing else), or set
+   the `ROBOFLOW_API_KEY` environment variable.
+3. Restart the app (either edition). `inference.py` will try to pull a trained weight export for that
+   project into `Models/Mammography/` automatically; if the project only has an annotated dataset
+   with no trained export, it stays on the simulated fallback rather than guessing.
+
+## Project layout
+
+```
+GUI.py                    — Tkinter desktop app: UI + local SQLite cache + reports + fallbacks
+streamlit_app.py           — Streamlit web app (responsive) — same logic, imported from GUI.py
+inference.py                — real model loading + prediction for all three modalities
+requirements.txt            — Python dependencies (shared by both editions)
+Start.bat / Start_Web.bat    — one-click installer + launcher, desktop / web
+pink_edge_cache.db           — local report cache (SQLite; created on first "Save to Cache")
+
+Models/                  — downloaded weight cache, one folder per modality
+  TB/model.pt                          — sukhmani1303/tuberculosis-vit-model (TorchScript)
+  Maternal/FINAL-test-evaluation.pt    — shr3m/fetal-brain-plane-cnn
+  Mammography/                         — populated only if you add a Roboflow key (see above)
+
+Validation/
+  validate.py             — validation suite, run with `python Validation/validate.py`
+
+Test Data/                — real sample images validate.py runs through the real models
+  Tuberculosis/            — sample chest X-rays
+  Breast Cancer/           — sample mammogram
+
+Documentations/           — reference docs
+  MODEL_SOURCES.md         — exactly which model backs which modality, and why
+  (+ the original project's own docs: API/BACKEND/FRONTEND/MODEL/PROJECT_ARCHITECTURE, USER_GUIDE)
+
+Assets/
+  Changes/Changes.md       — what changed from the original Streamlit demo
+
+Misc/                     — the original hackathon submission this was built from
+  Pink_Edge_AI-main/       — original Streamlit app (pink_edge.py), notebook, requirements.txt
 ```
 
+## Validating a change
 
----
-
-## Features
-
-1. Offline AI Inference — YOLOv8-OBB on RK3588 NPU with INT8 quantization.
-2. Multi-Modal — Mammography, Tuberculosis, Maternal Health.
-3. Clinical Output — BI-RADS 0-6, ACR Density A-D, confidence scores.
-4. Local Cache — SQLite3 database for offline storage.
-5. PDF and Text Reports — Downloadable without internet.
-6. 2G GSM Alerts — 140-char telemetry to urban hospitals.
-7. Alibaba Cloud — IoT Platform, OSS, ACR (GSM Failover mode).
-8. Bilingual — English and Urdu support.
-9. Three Views — Edge Node, Hospital Hub, Cloud Sync.
-
----
-
-## Tech Stack
-
-- AI Model: YOLOv8-OBB (INT8)
-- Hardware: Rockchip RK3588 NPU
-- Backend: Python 3, Streamlit
-- Database: SQLite3
-- Cloud: Alibaba Cloud (IoT, OSS, ACR)
-- Comms: 2G GSM (SIM800L)
-
----
-
-## Installation
-
-Step 1: Clone the repository.
-
-```bash
-git clone https://github.com/Zobia-Irshad/Pink_Edge_AI.git
-cd pink-edge-ai
 ```
-
-Step 2: Install dependencies.
-```bash
-pip install streamlit numpy opencv-python Pillow fpdf2
+python Validation/validate.py
 ```
+14 checks covering: module imports, placeholder image synthesis, detection overlay drawing, the
+simulated scenario generators, a full SQLite cache round-trip (on a throwaway DB under `Validation/`
+— never touches the real `pink_edge_cache.db`), text/PDF report generation, real-model inference for
+TB and Maternal Health (both on synthetic images *and* the real samples in `Test Data/`), the
+mammography SIMULATED-fallback path, the `run_triage()` dispatcher for all 3 modalities, that the
+Tkinter UI builds and can run one triage cycle end-to-end with no visible window, and that the
+**Streamlit UI** builds and runs one triage cycle headlessly via `streamlit.testing.v1.AppTest` (no
+browser needed). Exits non-zero (and prints `inference.py`'s per-modality model status) if anything
+fails. Works from any working directory — paths are anchored to the repo root, not the caller's CWD.
 
-Step 3: Run the application.
-```bash
-streamlit run pink_edge.py
-```
+## Relationship to the original project
 
-## Usage
-
-1. Select AI Model in sidebar.
-2. Upload patient scan or use placeholder.
-3. Click Run Triage.
-4. Review BI-RADS and ACR assessment.
-5. Click Save to Cache for offline storage.
-6. Download Text or PDF report.
-7. Switch to GSM Failover mode for cloud sync.
-
+`Misc/Pink_Edge_AI-main` is the original Streamlit/Alibaba-Cloud-Hackathon submission both editions
+here are based on — same clinical vocabulary (BI-RADS, ACR density, TB severity/zone), same SQLite
+schema, same report layout, same simulated cloud-sync panel (no real Alibaba credentials are used
+here either). `streamlit_app.py` is a fresh, responsive rebuild (not the original `pink_edge.py`) that
+reuses `GUI.py`'s shared logic and the real model backends instead of the original's all-simulated
+scenario pickers. An Android build was discussed but deferred in favor of these desktop/web builds.

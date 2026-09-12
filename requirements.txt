@@ -1,4 +1,4 @@
-# Pink Edge AI (Desktop) — Python dependencies.
+# Pink Edge AI — Python dependencies (Desktop + Streamlit editions share this file).
 # Tkinter is stdlib and not listed here. Install with: pip install -r requirements.txt
 # (Start.bat does this automatically on first run.)
 
@@ -7,6 +7,7 @@ Pillow>=10.0.0
 opencv-python>=4.8.0
 fpdf2>=2.7.0
 requests>=2.31.0
+streamlit>=1.30.0
 
 # ML runtime — CPU is enough for all 3 models at demo scale.
 torch>=2.0.0
