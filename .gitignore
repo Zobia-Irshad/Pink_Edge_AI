@@ -1,0 +1,11 @@
+.venv/
+.venv-1/
+__pycache__/
+dataset/
+runs/
+*.db
+yolov8n-cls.pt
+
+# Keep the trained TB checkpoint; ignore placeholder model artifacts.
+models/fetal_health.pt
+models/yolov8_obb_int8.pt
