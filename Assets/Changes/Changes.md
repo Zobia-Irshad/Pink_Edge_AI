@@ -1,12 +1,19 @@
 # Changes from the original Streamlit demo
 
 Base: `Misc/Pink_Edge_AI-main/Pink_Edge_AI-main/pink_edge.py` (v5.3, Streamlit).
-This: `GUI.py` + `inference.py` (Tkinter, desktop, offline) + `Validation/validate.py`.
+This: `GUI.py` (Tkinter desktop) + `streamlit_app.py` (responsive web) + `inference.py` (shared real
+model backend) + `Validation/validate.py`.
 
 ## Platform
-- **Streamlit → Tkinter.** No browser, no local web server, no Gradio — a native desktop window.
-  Sidebar became a persistent left control panel; the 3 tabs (Dashboard / Hospital Hub / Cloud Sync)
-  became a `ttk.Notebook`.
+- **Streamlit → Tkinter, first.** No browser, no local web server, no Gradio — a native desktop
+  window. Sidebar became a persistent left control panel; the 3 tabs (Dashboard / Hospital Hub /
+  Cloud Sync) became a `ttk.Notebook`.
+- **Streamlit added back, as a second sibling UI.** `streamlit_app.py` is a fresh, responsive
+  (mobile/tablet-width-aware CSS) rebuild — not the original `pink_edge.py` — that imports `GUI.py`
+  directly for every piece of shared logic (constants, imaging, simulated scenarios, DB, reports, the
+  `run_triage()` dispatcher) instead of duplicating it, so it gets the real TB/Maternal models and the
+  honest Mammography SIMULATED fallback for free. `GUI.py`'s own Tkinter code never executes unless
+  `GUI.py` is run directly, so importing it from a Streamlit script is safe.
 - **Android was the original ask, deferred.** This machine had no Java/Android SDK/Gradle installed;
   desktop was the fast, low-risk path using the Python already available. Nothing here forecloses an
   Android build later.
@@ -38,15 +45,17 @@ Every result-dict a model (real or simulated) produces carries a `source` field 
 show plainly which of the three cases produced it.
 
 ## Validation
-Added `Validation/validate.py` — a 13-check validation suite covering module imports, placeholder
+Added `Validation/validate.py` — a 14-check validation suite covering module imports, placeholder
 image synthesis, the detection-overlay drawing, the simulated scenario generators, a full SQLite
 cache round-trip (throwaway DB, never the real `pink_edge_cache.db`), text/PDF report generation,
 real-model inference for TB and Maternal Health on both synthetic images and the real sample images
-in `Test Data/`, the mammography SIMULATED-fallback path, the `run_triage()` dispatcher, and that the
-Tkinter UI itself builds and can run one full triage cycle with no visible window. One real issue was
-found and fixed while writing it: the `patient_id` column (schema ported as-is from the original app)
-has SQLite TEXT affinity, so an inserted `int` silently comes back as a `str` on read — not a bug in
-the app's own behavior, just a trap for any test doing strict type equality on that column.
+in `Test Data/`, the mammography SIMULATED-fallback path, the `run_triage()` dispatcher, that the
+Tkinter UI itself builds and can run one full triage cycle with no visible window, and (added with
+the Streamlit edition) that the Streamlit UI builds and runs one triage cycle headlessly via
+`streamlit.testing.v1.AppTest`. One real issue was found and fixed while writing it: the `patient_id`
+column (schema ported as-is from the original app) has SQLite TEXT affinity, so an inserted `int`
+silently comes back as a `str` on read — not a bug in the app's own behavior, just a trap for any
+test doing strict type equality on that column.
 
 ## File organization
 Everything was reorganized out of a flat root into destined folders:
