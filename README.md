@@ -1,151 +1,283 @@
-# Pink Edge AI — Offline Desktop + Responsive Web Editions
+# Pink Edge AI
 
-Two sibling UIs over the same shared logic, ported from the `Pink_Edge_AI-main` Streamlit hackathon
-demo (see `Misc/`): a Tkinter **desktop** app (`GUI.py`) and a responsive **Streamlit web** app
-(`streamlit_app.py`). Both are wired to real, publicly-sourced on-device models wherever one was
-available, share the same SQLite report cache, and both run fully offline at inference time once
-their model weights are downloaded (first run only) — the web edition is a local browser UI, not a
-hosted/cloud service.
+> Offline-first medical-imaging triage for resource-constrained healthcare settings.
 
-## What this is
+[![Streamlit App](https://img.shields.io/badge/Live%20Demo-Streamlit-ff4b4b?logo=streamlit&logoColor=white)](https://pinkedgeai-zhuanifcsfpchwryujb28z.streamlit.app/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-Not%20specified-lightgrey)](#license)
 
-Clinical-triage UI for three modalities — Mammography, Tuberculosis (chest X-ray), Maternal Health
-(ultrasound) — matching the original app's dashboard, hospital-hub alert feed, and simulated
-Alibaba-Cloud-sync panel, backed by:
+Pink Edge AI is a research and hackathon prototype that brings medical-image triage workflows to a local edge computer. It provides a Tkinter desktop application and a responsive Streamlit web application over shared Python inference, reporting, and local-cache logic.
 
-| Modality | Backing |
-|---|---|
-| Tuberculosis | **Real model** — [sukhmani1303/tuberculosis-vit-model](https://huggingface.co/sukhmani1303/tuberculosis-vit-model) |
-| Maternal Health | **Real model** — [shr3m/fetal-brain-plane-cnn](https://huggingface.co/shr3m/fetal-brain-plane-cnn) |
-| Mammography | Simulated by default — real Roboflow model needs your API key, see below |
+The project is designed around a practical constraint: a Basic Health Unit may have limited connectivity, limited compute, and no radiologist on site. The application can process images locally, save reports to SQLite, and present a simulated escalation and synchronization workflow for review.
 
-Full detail on every model (why it was picked, exact preprocessing, license) is in
-[Documentations/MODEL_SOURCES.md](Documentations/MODEL_SOURCES.md). This is a hackathon-grade demo,
-not a validated medical device — confidence numbers and severity mappings are illustrative, same
-caveat the original project stated for itself.
+**This project is not a medical device and must not be used for diagnosis, treatment, or clinical decision-making.** All predictions require review by a qualified healthcare professional.
 
-## Run it
+## Live Demo
 
-**Desktop (Tkinter):**
-```
-Start.bat
-```
-or manually: `pip install -r requirements.txt` then `python GUI.py`
+Open the deployed Streamlit application:
 
-**Web (Streamlit, responsive — resizes down to phone/tablet widths):**
-```
-Start_Web.bat
-```
-or manually: `pip install -r requirements.txt` then `streamlit run streamlit_app.py`
-(opens `http://localhost:8501` in your browser; `--server.address 0.0.0.0` if you want it reachable
-from another device on your LAN)
+<https://pinkedgeai-zhuanifcsfpchwryujb28z.streamlit.app/>
 
-Both share `requirements.txt`. First run downloads ~1-2 GB of model weights + PyTorch/Ultralytics
-(needs internet once). Every run after that is 100% offline for inference — weights are cached under
-`Models/`, and the report cache (`pink_edge_cache.db`, SQLite) is local and shared by both editions.
+The public demo may take time to wake up or install its machine-learning dependencies. For reproducible development, run the application locally using the instructions below.
 
-## Enabling the real mammography model (optional)
+## Capabilities
 
-The Mammography pathway falls back to the original app's own simulated BI-RADS scenario picker
-unless you supply a Roboflow API key for the `b-davmu/breastcancer-yolov8` project:
+- Three modality workflows: mammography, tuberculosis chest X-ray, and maternal ultrasound.
+- Offline-first inference after model weights and Python dependencies are available locally.
+- English and Urdu interface options.
+- Upload JPEG and PNG scans or use generated placeholder images for UI testing.
+- Triage result cards with confidence, severity, localization, and escalation status.
+- Local SQLite report cache for offline operation.
+- Downloadable text and PDF reports.
+- Simulated GSM failover, hospital-hub alerts, cloud synchronization, OSS backup, and OTA status panels.
+- Desktop UI through Tkinter and browser UI through Streamlit.
 
-1. Get a key from [roboflow.com](https://roboflow.com) → your workspace → Settings → API.
-2. Save it to a file named `roboflow_key.txt` next to `GUI.py` (just the key, nothing else), or set
-   the `ROBOFLOW_API_KEY` environment variable.
-3. Restart the app (either edition). `inference.py` will try to pull a trained weight export for that
-   project into `Models/Mammography/` automatically; if the project only has an annotated dataset
-   with no trained export, it stays on the simulated fallback rather than guessing.
+## Model Status
 
-## Project layout
+The application reports whether a modality is backed by a real model or a clearly labeled simulation fallback.
 
-```
-GUI.py                    — Tkinter desktop app: UI + local SQLite cache + reports + fallbacks
-streamlit_app.py           — Streamlit web app (responsive) — same logic, imported from GUI.py
-inference.py                — real model loading + prediction for all three modalities
-requirements.txt            — Python dependencies (shared by both editions)
-Start.bat / Start_Web.bat    — one-click installer + launcher, desktop / web
-pink_edge_cache.db           — local report cache (SQLite; created on first "Save to Cache")
+| Modality | Current behavior | Model or source |
+| --- | --- | --- |
+| Tuberculosis | Real local inference | YOLOv8 classification checkpoint trained on the TBX11K simplified dataset; classes are `no_tb` and `tb` |
+| Maternal health | Real inference when the public checkpoint downloads successfully | `shr3m/fetal-brain-plane-cnn` from Hugging Face; fetal-brain ultrasound plane classification |
+| Mammography | Simulated by default | Optional Roboflow export when `ROBOFLOW_API_KEY` is configured; otherwise the UI labels the result as simulated |
 
-Models/                  — downloaded weight cache, one folder per modality
-  TB/model.pt                          — sukhmani1303/tuberculosis-vit-model (TorchScript)
-  Maternal/FINAL-test-evaluation.pt    — shr3m/fetal-brain-plane-cnn
-  Mammography/                         — populated only if you add a Roboflow key (see above)
+The committed TB checkpoint is located at `Misc/Pink_Edge_AI-main/models/tb_classifier.pt`. `inference.py` searches this location as well as the conventional `models/` and `Models/` directories so the application works on case-sensitive deployment systems such as Linux-based Streamlit Cloud.
 
-Validation/
-  validate.py             — validation suite, run with `python Validation/validate.py`
+Detailed model provenance, preprocessing, licenses, and limitations are documented in [Documentations/MODEL_SOURCES.md](Documentations/MODEL_SOURCES.md).
 
-Test Data/                — real sample images validate.py runs through the real models
-  Tuberculosis/            — sample chest X-rays
-  Breast Cancer/           — sample mammogram
+## Architecture
 
-Documentations/           — reference docs
-  MODEL_SOURCES.md         — exactly which model backs which modality, and why
-  (+ the original project's own docs: API/BACKEND/FRONTEND/MODEL/PROJECT_ARCHITECTURE, USER_GUIDE)
-
-Assets/
-  Changes/Changes.md       — what changed from the original Streamlit demo
-
-Misc/                     — the original hackathon submission this was built from
-  Pink_Edge_AI-main/       — original Streamlit app (pink_edge.py), notebook, requirements.txt
+```text
+                     +-----------------------------+
+                     |  Tkinter desktop UI (GUI.py)|
+                     +--------------+--------------+
+                                    |
+                     +--------------v--------------+
+                     | Shared triage and cache code |
+                     | GUI.py + inference.py       |
+                     +------+-----------------------+
+                            |
+              +-------------+-------------+
+              |                           |
+   +----------v----------+      +---------v----------+
+   | Streamlit web UI    |      | Local model files  |
+   | streamlit_app.py    |      | YOLO / PyTorch     |
+   +----------+----------+      +---------+----------+
+              |                           |
+              +-------------+-------------+
+                            |
+                   +--------v--------+
+                   | SQLite cache    |
+                   | Reports / sync  |
+                   +-----------------+
 ```
 
-## Validating a change
+The cloud-sync and GSM panels are workflow simulations for the prototype. They do not require Alibaba Cloud credentials and do not provide a production messaging or storage integration.
 
+## Technology Stack
+
+- Python 3.10 or newer
+- Streamlit for the responsive web application
+- Tkinter for the desktop application
+- PyTorch and Torchvision for neural-network inference
+- Ultralytics YOLO for the trained TB classifier and optional mammography model
+- OpenCV, NumPy, and Pillow for image processing
+- SQLite for local report storage
+- FPDF2 for PDF reports
+- Hugging Face Hub for optional public model downloads
+- Roboflow SDK for optional mammography weights
+
+## Installation
+
+### Windows PowerShell
+
+```powershell
+git clone https://github.com/Zobia-Irshad/Pink_Edge_AI.git
+cd Pink_Edge_AI
+
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
+
+If PowerShell blocks activation, run the project with the interpreter directly:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+### Linux or macOS
+
+```bash
+git clone https://github.com/Zobia-Irshad/Pink_Edge_AI.git
+cd Pink_Edge_AI
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+The PyTorch, Ultralytics, and OpenCV packages can make the first installation large. A network connection is required to install dependencies and download any public model that is not already present locally.
+
+## Run the Applications
+
+### Streamlit web application
+
+```bash
+streamlit run streamlit_app.py
+```
+
+Open <http://localhost:8501>. On Windows, `Start_Web.bat` installs missing dependencies and launches the same entry point.
+
+To make the local server reachable from another device on the same network:
+
+```bash
+streamlit run streamlit_app.py --server.address 0.0.0.0
+```
+
+### Tkinter desktop application
+
+```bash
+python GUI.py
+```
+
+On Windows, `Start.bat` installs missing dependencies and launches the desktop application.
+
+## Using the Application
+
+1. Choose a modality from the sidebar.
+2. Upload a JPEG or PNG scan, or run the workflow with a generated placeholder image.
+3. Select **Run Triage**.
+4. Review the verdict, confidence, model source, severity, and localization fields.
+5. Save the report to the local cache if required.
+6. Generate a text or PDF report from the dashboard.
+7. Use GSM Failover mode to inspect the prototype alert and synchronization workflow.
+
+Generated placeholders are for interface testing only. For model testing, use representative images from the appropriate modality and treat every result as research output.
+
+## Optional Mammography Configuration
+
+Mammography uses the explicit simulated fallback unless a trained Roboflow export is available. To enable the optional path:
+
+1. Create a Roboflow API key for the configured project.
+2. Set the key as an environment variable:
+
+   ```powershell
+   $env:ROBOFLOW_API_KEY = "your-key"
+   ```
+
+   Or save the key in `roboflow_key.txt` beside `GUI.py`. Do not commit this file.
+3. Restart the application.
+
+The loader keeps the simulated fallback if the project has no downloadable trained export or if the request fails. It never treats a missing model as a real clinical prediction.
+
+## Training the TB Classifier
+
+The training script uses the TBX11K simplified archive and creates a YOLO classification dataset with `no_tb` and `tb` folders. The dataset and generated runs are intentionally ignored by Git because they are large and contain source images.
+
+Expected archive location:
+
+```text
+dataset/tbx11k-simplified.zip
+```
+
+Run training with:
+
+```bash
+python train_tb_classifier.py
+```
+
+The script extracts the archive, verifies that image files are readable, creates a stratified train/validation split, trains a CPU-friendly YOLOv8 classifier, and copies the best checkpoint to the application model path. Training settings can be adjusted in `train_tb_classifier.py` for a larger dataset, more epochs, or GPU execution.
+
+The repository includes the trained TB checkpoint, but not the full TBX11K dataset. Confirm that your use of the dataset and resulting weights complies with the dataset's terms before redistribution or deployment.
+
+## Validation
+
+Run the repository validation suite from any working directory:
+
+```bash
 python Validation/validate.py
 ```
-14 checks covering: module imports, placeholder image synthesis, detection overlay drawing, the
-simulated scenario generators, a full SQLite cache round-trip (on a throwaway DB under `Validation/`
-— never touches the real `pink_edge_cache.db`), text/PDF report generation, real-model inference for
-TB and Maternal Health (both on synthetic images *and* the real samples in `Test Data/`), the
-mammography SIMULATED-fallback path, the `run_triage()` dispatcher for all 3 modalities, that the
-Tkinter UI builds and can run one triage cycle end-to-end with no visible window, and that the
-**Streamlit UI** builds and runs one triage cycle headlessly via `streamlit.testing.v1.AppTest` (no
-browser needed). Exits non-zero (and prints `inference.py`'s per-modality model status) if anything
-fails. Works from any working directory — paths are anchored to the repo root, not the caller's CWD.
 
-## Deploy the web edition to Streamlit Community Cloud
+The suite covers imports, image generation, overlay drawing, simulated fallbacks, SQLite cache round trips, report generation, real-model inference, triage dispatch, desktop UI construction, and a headless Streamlit smoke test. It exits with a non-zero status when a check fails.
 
-The repo is already laid out the way [share.streamlit.io](https://share.streamlit.io) expects:
-`streamlit_app.py` at the root, a top-level `requirements.txt`, a `.streamlit/config.toml` theme, and
-a `.gitignore` that keeps downloaded model weights out of git (they're re-fetched from Hugging Face
-automatically on first run instead — see `inference.py`).
+For a focused TB model smoke test:
 
-1. **Push to GitHub** (once git is installed — see below):
-   ```
-   git init
-   git add .
-   git commit -m "Pink Edge AI desktop + Streamlit editions"
-   ```
-   Create an empty repo at github.com/new (no README/.gitignore/license — this repo already has
-   them), then:
-   ```
-   git remote add origin https://github.com/<your-username>/<repo-name>.git
-   git branch -M main
-   git push -u origin main
-   ```
-2. **Deploy**: go to [share.streamlit.io](https://share.streamlit.io) → sign in with GitHub →
-   *New app* → pick your repo/branch, set **Main file path** to `streamlit_app.py` → *Deploy*.
-3. **Optional — real mammography model**: in the deploy dialog's *Advanced settings* (or later via
-   *App settings → Secrets*), add:
-   ```toml
-   ROBOFLOW_API_KEY = "your-key-here"
-   ```
-   `inference.py` checks `st.secrets` for this automatically — no code changes needed.
+```bash
+python -c "from pathlib import Path; from PIL import Image; import inference; print(inference.predict_tb(Image.open(next(Path('Test Data/Tuberculosis').glob('*')))))"
+```
 
-**Resource caveat, honestly stated:** Streamlit Community Cloud's free tier gives each app ~1 CPU
-core and ~1 GB RAM. This app's dependency stack (PyTorch, Ultralytics/OpenCV, two real model
-checkpoints downloaded at first run) is heavier than a typical Streamlit demo — expect a slow first
-boot (installing torch + downloading ~80 MB of weights) and keep an eye out for memory-related
-crashes on that tier. If it struggles, the fixes in order of effort are: pin lighter dependency
-versions, or deploy on a paid tier / your own server (`streamlit run streamlit_app.py --server.port
-80 --server.address 0.0.0.0`) instead.
+## Streamlit Community Cloud Deployment
 
-## Relationship to the original project
+1. Push the repository to GitHub.
+2. Open [Streamlit Community Cloud](https://share.streamlit.io/).
+3. Create a new app from the `main` branch.
+4. Set the main file to `streamlit_app.py`.
+5. Deploy.
 
-`Misc/Pink_Edge_AI-main` is the original Streamlit/Alibaba-Cloud-Hackathon submission both editions
-here are based on — same clinical vocabulary (BI-RADS, ACR density, TB severity/zone), same SQLite
-schema, same report layout, same simulated cloud-sync panel (no real Alibaba credentials are used
-here either). `streamlit_app.py` is a fresh, responsive rebuild (not the original `pink_edge.py`) that
-reuses `GUI.py`'s shared logic and the real model backends instead of the original's all-simulated
-scenario pickers. An Android build was discussed but deferred in favor of these desktop/web builds.
+The top-level `requirements.txt` is used by Streamlit Cloud. The first boot can be slow because PyTorch, Ultralytics, and model files are larger than typical Streamlit dependencies. The free tier may not have enough memory for every model to load simultaneously; use a larger deployment tier or disable optional model downloads if necessary.
+
+For the optional mammography model, configure the secret in the Streamlit app settings:
+
+```toml
+ROBOFLOW_API_KEY = "your-key"
+```
+
+Never commit API keys, patient images, generated databases, virtual environments, or downloaded datasets.
+
+## Repository Layout
+
+```text
+GUI.py                         Tkinter desktop application and shared triage logic
+streamlit_app.py               Streamlit web application
+inference.py                   Lazy model loaders and modality predictors
+train_tb_classifier.py         TBX11K preparation and YOLOv8 training script
+requirements.txt               Shared Python dependencies
+Start.bat                      Windows desktop launcher
+Start_Web.bat                  Windows Streamlit launcher
+Validation/validate.py         Automated validation suite
+Test Data/                     Small local sample images for validation
+Models/                        Downloaded model cache, including maternal weights
+Misc/Pink_Edge_AI-main/        Original project materials and trained TB checkpoint
+Documentations/                Architecture, model, backend, frontend, and user docs
+Assets/                        Change notes and supporting project assets
+```
+
+The original notebook and hackathon submission are retained under `Misc/` for reference. The maintained application entry points are `GUI.py` and `streamlit_app.py`.
+
+## Privacy and Safety
+
+- Images are processed locally by default.
+- The local SQLite database is not encrypted and should be treated as sensitive.
+- Do not use real patient data in development unless you have the required authorization and safeguards.
+- Do not upload patient images or reports to public issue trackers, demo sites, or untrusted storage.
+- Confidence values, severity labels, localization fields, and escalation messages are prototype outputs, not clinical measurements.
+- A qualified clinician must review all results before any healthcare action.
+
+## Documentation
+
+- [Model sources and licenses](Documentations/MODEL_SOURCES.md)
+- [Project architecture](Documentations/PROJECT_ARCHITECTURE.md)
+- [Backend documentation](Documentations/BACKEND_DOCUMENTATION%20(2).md)
+- [Frontend documentation](Documentations/FRONTEND_DOCUMENTATION%20(1).md)
+- [API documentation](Documentations/API_DOCUMENTATION.md)
+- [User guide](Documentations/USER_GUIDE.md)
+- [Change history](Assets/Changes/Changes.md)
+
+## Relationship to the Original Submission
+
+`Misc/Pink_Edge_AI-main` contains the original Alibaba Cloud hackathon submission. The maintained application in this repository preserves its clinical vocabulary, report concepts, and edge-first intent while providing a responsive Streamlit rebuild, shared model loaders, a real trained TB classifier, and explicit simulated fallbacks where a production-ready model is not available.
+
+## License
+
+This repository does not currently include a root `LICENSE` file. The project code and bundled assets should not be redistributed as an open-source package until a project license is added. Third-party model checkpoints, datasets, images, and documentation remain subject to their own licenses and terms; see [Documentations/MODEL_SOURCES.md](Documentations/MODEL_SOURCES.md) before reuse.
+
+## Acknowledgements
+
+- Streamlit and the open-source Python scientific-computing ecosystem.
+- Ultralytics YOLO and PyTorch.
+- The TBX11K dataset used for the trained TB classifier.
+- The public Hugging Face fetal-brain-plane checkpoint used for maternal ultrasound classification.
+- The original Pink Edge AI Alibaba Cloud hackathon team and submission preserved under `Misc/`.
