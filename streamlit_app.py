@@ -27,7 +27,7 @@ CSS = f"""
 <style>
 .stApp {{ background: {C['bg']}; color: {C['text']}; }}
 .block-container {{ padding-top: 2rem !important; padding-bottom: 2rem !important; max-width: 1300px !important; }}
-section[data-testid="stSidebar"] {{ background: {C['surface']} !important; }}
+section[data-testid="stSidebar"] {{ background: {C['surface_alt']} !important; }}
 h1, h2, h3, h4 {{ color: {C['text']} !important; }}
 .page-header {{ background: {C['primary']};
     border-radius: 10px; padding: 22px 28px; margin-bottom: 16px; }}
@@ -48,7 +48,7 @@ h1, h2, h3, h4 {{ color: {C['text']} !important; }}
 .verdict-box.success .v-title {{ color: {C['success']}; }}
 .verdict-box.danger .v-title {{ color: {C['danger']}; }}
 .verdict-box .v-sub {{ font-size: 0.85rem; margin-top: 4px; color: {C['text_muted']}; }}
-.console-log {{ background: #060a13; border: 1px solid {C['border_light']}; border-radius: 10px; padding: 14px;
+.console-log {{ background: {C['surface_alt']}; color: {C['text']}; border: 1px solid {C['border_light']}; border-radius: 10px; padding: 14px;
   font-family: 'Consolas', monospace; font-size: 0.76rem; line-height: 1.7; max-height: 260px; overflow-y: auto; }}
 .alert-card {{ border-radius: 10px; padding: 14px; margin: 6px 0; border-left: 4px solid; }}
 .alert-card.critical {{ background: rgba(198,40,40,0.12); border-color: {C['danger']}; }}

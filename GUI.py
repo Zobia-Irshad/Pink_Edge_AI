@@ -39,9 +39,9 @@ TB_SEVERITY_LEVELS = inf.TB_SEVERITY_LEVELS
 TB_LUNG_ZONES = inf.TB_LUNG_ZONES
 
 C = {  # color tokens — same palette as the Streamlit app's injected CSS
-    "bg": "#071a2b", "surface": "#0b2d4a", "surface_alt": "#123b5d", "surface_hover": "#1a4c72",
-    "border": "#1b5075", "border_light": "#2d6b95", "text": "#f7fbff", "text_muted": "#c7d8e8",
-    "text_light": "#e8f0fe", "primary": "#0b5394", "primary_light": "#3f86c5", "accent": "#e91e63",
+    "bg": "#ffffff", "surface": "#f8fbff", "surface_alt": "#e8f0fe", "surface_hover": "#d7e7f7",
+    "border": "#d2e0ee", "border_light": "#b5cce1", "text": "#17324d", "text_muted": "#587087",
+    "text_light": "#e8f0fe", "primary": "#0b5394", "primary_light": "#2f75ad", "accent": "#e91e63",
     "accent_light": "#f06292", "success": "#2e7d32", "warning": "#f9a825", "danger": "#c62828",
 }
 
@@ -523,7 +523,7 @@ class PinkEdgeApp:
 
         ttk.Separator(parent).pack(fill="x", padx=14, pady=10)
         ttk.Label(parent, text="Hardware Diagnostics", style="Card.TLabel", font=("Segoe UI", 8, "bold")).pack(anchor="w", **pad)
-        self.hw_panel = tk.Text(parent, height=6, width=28, bg="#060a13", fg="#94a3b8", bd=0,
+        self.hw_panel = tk.Text(parent, height=6, width=28, bg=C["surface_alt"], fg=C["text_muted"], bd=0,
                                  font=("Consolas", 8), highlightthickness=0)
         self.hw_panel.pack(padx=14, fill="x")
         self._update_hw_panel()
@@ -567,7 +567,7 @@ class PinkEdgeApp:
         self.metric_lat = self._metric_tile(metrics, "Latency", "—")
 
         ttk.Label(left, text="Telemetry Log", style="H2.TLabel").pack(anchor="w", pady=(8, 2))
-        self.log_text = tk.Text(left, height=8, bg="#060a13", fg="#94a3b8", bd=0, font=("Consolas", 9), highlightthickness=0)
+        self.log_text = tk.Text(left, height=8, bg=C["surface_alt"], fg=C["text_muted"], bd=0, font=("Consolas", 9), highlightthickness=0)
         self.log_text.pack(fill="both", expand=False)
         for tag, color in [("dicom", "#60a5fa"), ("npu", "#34d399"), ("gsm", "#22d3ee"),
                             ("cache", C["accent_light"]), ("muted", "#8fa9bf")]:
@@ -648,7 +648,7 @@ class PinkEdgeApp:
         right.pack(side="left", fill="y", padx=(8, 0))
         right.pack_propagate(False)
         ttk.Label(right, text="Network Status", style="Card.TLabel", font=("Segoe UI", 10, "bold")).pack(anchor="w", padx=12, pady=6)
-        self.net_panel = tk.Text(right, height=6, bg="#060a13", fg="#94a3b8", bd=0, font=("Consolas", 8), highlightthickness=0)
+        self.net_panel = tk.Text(right, height=6, bg=C["surface_alt"], fg=C["text_muted"], bd=0, font=("Consolas", 8), highlightthickness=0)
         self.net_panel.pack(fill="x", padx=12)
         stats = ttk.Frame(right, style="Card.TFrame")
         stats.pack(fill="x", padx=12, pady=10)
