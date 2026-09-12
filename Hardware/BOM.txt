@@ -1,0 +1,53 @@
+PINK EDGE AI — BILL OF MATERIALS (BOM)
+========================================
+Recommended pilot build: RK3588 SBC + ESP32 GSM companion (see ALTERNATIVES.md, Option A).
+Quantities below are per single edge node. Prices are rough 2026 USD street estimates for
+planning only — get real supplier quotes before ordering.
+
+MAIN COMPUTE
+------------
+1x  RK3588(S) SBC, 4-8GB RAM (Orange Pi 5 / Radxa Rock 5B or equivalent)     $60-120
+1x  microSD card, 64-128GB, A2/UHS-I rated                                   $10-20
+1x  Heatsink + 5V cooling fan (board-matched)                                $5-10
+1x  USB UVC camera OR CSI camera module (image capture)                      $10-40
+1x  5V/4A USB-C PD or barrel-jack power supply                               $8-15
+
+GSM / TELEMETRY
+---------------
+1x  ESP32 DevKitC (companion MCU for GSM handling)                           $4-8
+1x  SIM800L GSM module (with onboard regulator breakout preferred)           $5-10
+1x  2G GSM whip antenna, u.FL or SMA connector                               $2-5
+1x  Local carrier SIM card (2G-capable, data or SMS plan)                    ongoing cost
+2x  Status LED (5mm) + 220-ohm resistor                                      <$1
+1x  18650 Li-ion cell + TP4056 charge module (optional battery backup)       $5-10
+
+ENCLOSURE / POWER RESILIENCE
+-----------------------------
+1x  IP54+ ventilated enclosure (or custom/3D-printed case)                   $10-30
+1x  UPS HAT or 12V/7Ah SLA battery + charge controller (optional)            $15-40
+1x  7-10" HDMI/DSI touchscreen (optional, for local UI without a laptop)     $30-60
+
+CABLING / MISC
+--------------
+1x  Dupont jumper wire kit (M-M, M-F, F-F)                                   $3-5
+1x  Breadboard or perfboard (prototyping before a permanent enclosure)       $3-8
+1x  USB-A to Micro/Type-C cable (camera/accessory connections as needed)     $2-5
+
+ESTIMATED TOTAL PER NODE
+-------------------------
+Minimum (no display, no battery backup):    ~$110-190
+With display:                               ~$140-250
+With display + battery backup:              ~$170-300
+
+ALTERNATIVE: RASPBERRY PI BUILD
+---------------------------------
+Swap "MAIN COMPUTE" section for:
+1x  Raspberry Pi 4 (4/8GB) or Pi 5                                           $45-80
+1x  Google Coral USB Accelerator OR Hailo-8 HAT (strongly recommended        $60-130
+      -- CPU-only inference on Pi is impractically slow for this workload)
+(all other sections unchanged)
+
+ALTERNATIVE: MOBILE (ANDROID APK) BUILD
+------------------------------------------
+No new hardware needed -- uses LHV's existing Android phone (8.0+, 3GB+ RAM).
+See ALTERNATIVES.md, Option C.
