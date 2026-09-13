@@ -152,14 +152,20 @@ def html_block(s: str) -> str:
 # patch st.markdown once so ANY html string passed with
 # unsafe_allow_html=True gets dedented automatically, no matter how deeply
 # nested the call site is.
-_original_markdown = st.markdown
 
-
+# ------------------------------------------------------------
+# GLOBAL FIX: auto-dedent HTML passed to st.markdown
+# ------------------------------------------------------------
+# IMPORTANT: Streamlit reruns this script. Do not capture st.markdown here,
+# because on a later rerun it may already be our patched function, which
+# creates infinite recursion. Calling DeltaGenerator.markdown directly always
+# reaches Streamlit's real implementation.
+# Use Streamlit's internal main DeltaGenerator directly.
+# This avoids calling the patched st.markdown again on reruns.
 def _dedented_markdown(body, *args, **kwargs):
     if kwargs.get("unsafe_allow_html") and isinstance(body, str) and "\n" in body:
         body = html_block(body)
-    return _original_markdown(body, *args, **kwargs)
-
+    return st._main.markdown(body, *args, **kwargs)
 
 st.markdown = _dedented_markdown
 
@@ -184,9 +190,35 @@ section[data-testid="stSidebar"] * {
 
 /* Container Padding */
 .block-container {
-    padding-top: 1.8rem !important;
-    padding-bottom: 2rem !important;
+    /* Extra space below Streamlit's top toolbar so navigation and
+       page content never overlap or get clipped. */
+    padding-top: 4.5rem !important;
+    padding-bottom: 3rem !important;
     max-width: 1300px !important;
+}
+
+/* Top navigation tabs */
+.stTabs {
+    margin-top: 0.25rem !important;
+    margin-bottom: 1.25rem !important;
+}
+
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0.15rem !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    padding-bottom: 2px !important;
+}
+
+.stTabs [data-baseweb="tab"] {
+    min-height: 42px !important;
+    padding: 0.5rem 1rem !important;
+    white-space: nowrap !important;
+}
+
+/* Give every page header a clear separation from navigation. */
+.page-header {
+    margin-top: 0.75rem !important;
 }
 
 /* Headings & Text Overrides — Guaranteed Readability */
@@ -644,8 +676,13 @@ div[data-baseweb="input"] input {
 
 /* Responsive: narrow viewports */
 @media (max-width: 768px) {
-  .block-container { padding-left: 10px !important; padding-right: 10px !important; }
-  .page-header { padding: 16px 18px; }
+  .block-container {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    padding-top: 3.5rem !important;
+  }
+  .stTabs [data-baseweb="tab"] { padding-left: 0.7rem !important; padding-right: 0.7rem !important; }
+  .page-header { padding: 16px 18px; margin-top: 0.5rem !important; }
   .page-header h1 { font-size: 1.15rem !important; }
   .metric-tile .value { font-size: 1.1rem; }
   .ai-recommendation, .lhv-decision { padding: 16px; }
