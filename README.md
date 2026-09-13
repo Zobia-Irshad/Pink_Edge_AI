@@ -29,6 +29,70 @@ available). Full detail (grounding, exact preprocessing, license, the TB accurac
 [App/Documentations/MODEL_SOURCES.md](App/Documentations/MODEL_SOURCES.md). This is a hackathon-grade
 demo, not a validated medical device — confidence numbers and severity mappings are illustrative.
 
+## Feature overview
+
+Both editions (desktop + web) expose the same feature set, since both import their shared logic
+straight from `GUI.py`:
+
+- **Three-modality triage** — Mammography (YOLOv8-OBB), Tuberculosis (chest X-ray), Maternal Health
+  (ultrasound), each with a real bounding-box overlay drawn directly on the analyzed image when a
+  model returns one.
+- **Offline-first inference** — every modality tries the offline path (heuristic or local model
+  weights) as a genuine fallback, not just a placeholder, so triage keeps working with zero
+  internet; the Roboflow-hosted primaries are used opportunistically when a key + connection are
+  available.
+- **Role-based access control** (`auth_manager.py`) — Lady Health Worker (LHW) vs. Senior
+  Radiologist profiles, switchable in the sidebar or via PIN, gating who can override an AI
+  assessment (BI-RADS / ACR density / TB severity).
+- **DICOM anonymization & privacy hashing** (`dicom_anonymizer.py`) — every ingested scan is
+  stripped of PII and assigned a hex privacy hash before anything is displayed, cached, or
+  transmitted — aimed at HIPAA/GDPR-style compliance even on offline edge hardware.
+- **Bilingual UI** — full English/Urdu toggle across both editions, including a voice-message
+  library (English/Urdu/Punjabi text templates) with a pluggable offline-TTS hook
+  (`play_voice_message()` — currently a stub; wire in Piper or gTTS to enable real audio).
+- **SQLite report cache** — every "Save to Cache" writes to the shared local `pink_edge_cache.db`,
+  from either edition, with text and PDF report generation.
+- **Hospital Hub** — a live, color-coded (by real risk level) alert stream simulating GSM/SMS
+  broadcast to a receiving hospital, with LHV agree/override/approve actions and a documented
+  override-reason flow.
+- **Cloud Sync tab** — simulated Alibaba Cloud IoT sync of unsynced cached reports, plus session
+  feedback/analytics widgets (ratings, escalation counts, sync-rate metrics).
+- **Hardware diagnostics panel** — simulated RK3588 NPU load/power/temperature readout, standing in
+  for telemetry from a real edge-node deployment (see `App/Hardware/README.md`).
+
+## Recent fix — Streamlit HTML rendering (multi-line `st.markdown` cards)
+
+**Symptom:** cards like "Triage result", the AI Recommendation box, and the DICOM Metadata panel
+rendered as raw `<div style="...">` text (with Streamlit's code-block copy icon) instead of styled
+HTML, even though every call used `unsafe_allow_html=True`.
+
+**Root cause:** Streamlit's Markdown renderer follows CommonMark, where any line indented 4+ spaces
+is treated as a literal *indented code block* and shown as raw text — tags included — regardless of
+`unsafe_allow_html`. Because these HTML strings are built as f-strings inside nested functions and
+`if`/`with` blocks, every line naturally inherited 8+ spaces of Python indentation, silently
+triggering this on ~20 different cards across the Dashboard, Hospital Hub, and Cloud Sync tabs.
+
+**Fix (`streamlit_app.py`):** a helper, `html_block()`, strips per-line leading/trailing whitespace
+from a multi-line HTML string. Rather than requiring every individual `st.markdown(...,
+unsafe_allow_html=True)` call site to remember to wrap its string in `html_block()` — easy to miss,
+and exactly how this bug happened in the first place — `st.markdown` itself is patched once, right
+after `html_block()` is defined, so *any* HTML string passed with `unsafe_allow_html=True` is
+auto-dedented before Streamlit ever sees it:
+
+```python
+_original_markdown = st.markdown
+
+def _dedented_markdown(body, *args, **kwargs):
+    if kwargs.get("unsafe_allow_html") and isinstance(body, str) and "\n" in body:
+        body = html_block(body)
+    return _original_markdown(body, *args, **kwargs)
+
+st.markdown = _dedented_markdown
+```
+
+This covers every current card and any future one added the same way, with no per-call-site
+changes needed elsewhere in `streamlit_app.py`.
+
 ## Run it
 
 **Desktop (Tkinter):**
@@ -66,7 +130,8 @@ All three modalities check for a Roboflow API key and use it if present:
 ## Project layout
 
 GUI.py                    — Tkinter desktop app: UI + local SQLite cache + reports + fallbacks
-streamlit_app.py           — Streamlit web app (responsive) — same logic, imported from GUI.py
+streamlit_app.py           — Streamlit web app (responsive) — same logic, imported from GUI.py;
+                                  includes the global st.markdown auto-dedent patch (see fix above)
 auth_manager.py             — Multi-tenant biometric / PIN access control module (LHW vs. Senior Radiologist RBAC)
 test_auth.py                — Automated test suite for RBAC PIN authentication and permissions
 dicom_anonymizer.py         — Offline DICOM anonymization & Hexadecimal Privacy Hashing module (HIPAA/GDPR compliant)
