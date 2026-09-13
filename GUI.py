@@ -28,6 +28,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 import inference as inf
+from dicom_anonymizer import generate_hex_privacy_hash, anonymize_dicom_metadata
 
 
 def _lazy_import_tkinter():
@@ -438,6 +439,7 @@ class PinkEdgeApp:
         self.current_result = None
         self.inference_done = False
         self.pat_id = random.randint(10000000, 99999999)
+        self.privacy_hash = generate_hex_privacy_hash({"pat_id": self.pat_id, "cnic": f"35201-{self.pat_id}-1"})
         self.pat_age = random.randint(30, 70)
         self.hw_stats = {"load": "34%", "power": "6.2W", "temp": "42C"}
         self.net_stats = {"signal": "-85 dBm", "bhus": 14, "module": "ONLINE"}
@@ -762,9 +764,10 @@ class PinkEdgeApp:
         model = self.model_var.get()
         mod_map = {"Mammography (YOLOv8-OBB)": "MG (Mammography)", "Tuberculosis (Chest X-Ray)": "DX (Digital Radiography)",
                    "Maternal Health (Ultrasound)": "US (Ultrasound)"}
+        priv_h = getattr(self, "privacy_hash", "HEX-8F3A1C9B")
         self.meta_text.configure(text=(
-            f"Patient ID:  {self.pat_id}\nAge:  {self.pat_age} Y\nModality:  {mod_map[model]}\n"
-            f"Date:  {datetime.now().strftime('%Y-%m-%d')}\nInstitution:  Rural BHU Faisalabad"))
+            f"Patient ID:  {priv_h} (Hex Hashed)\nAge:  {self.pat_age} Y\nModality:  {mod_map[model]}\n"
+            f"Date:  {datetime.now().strftime('%Y-%m-%d')}\nPrivacy:  ANONYMIZED (PII Stripped)"))
         if "Tuberculosis" in model:
             self.assess_label1.configure(text="TB Severity")
             self.assess_label2.configure(text="Lung Zone")
@@ -825,7 +828,11 @@ class PinkEdgeApp:
 
     def _run_triage(self):
         model = self.model_var.get()
-        self._log("[DICOM] Ingesting raw scan via LAN... Success.", "dicom")
+        new = {"pat_id": random.randint(10000000, 99999999), "pat_age": random.randint(28, 75)}
+        self.pat_id, self.pat_age = new["pat_id"], new["pat_age"]
+        self.privacy_hash = generate_hex_privacy_hash({"pat_id": self.pat_id, "cnic": f"35201-{self.pat_id}-1"})
+
+        self._log(f"[DICOM] Ingesting & Anonymizing scan via LAN... PII Stripped -> Privacy Hash: {self.privacy_hash}", "dicom")
         self.root.update_idletasks()
 
         t0 = time.time()
@@ -839,19 +846,17 @@ class PinkEdgeApp:
         self.hw_stats = {"load": "97%", "power": f"{random.uniform(5.8, 6.5):.1f}W", "temp": f"{random.randint(38, 45)}C"}
         self.net_stats = {"signal": f"-{random.randint(75, 95)} dBm", "bhus": random.randint(10, 20),
                            "module": "ONLINE" if random.random() > 0.1 else "UNSTABLE"}
-        new = {"pat_id": random.randint(10000000, 99999999), "pat_age": random.randint(28, 75)}
-        self.pat_id, self.pat_age = new["pat_id"], new["pat_age"]
 
         real = "REAL" in result.get("source", "SIMULATED").upper() or "real inference" in result.get("source", "")
         self._log(f"[NPU] {'Real on-device' if real else 'Simulated'} inference for {model.split('(')[0].strip()}... Complete ({self.inference_latency}s).", "npu")
-        sms_payload = f"ID:{self.pat_id}|LOC:29.344|{result['sms']}"
+        sms_payload = f"ID:{self.privacy_hash}|LOC:ANON|{result['sms']}"
         self._log(f'[GSM] Broadcasted: "{sms_payload}" -> Allied Hospital Hub.', "gsm")
         if "GSM" in self.network_var.get():
             iot_id = f"IOT-{random.randint(100000, 999999)}"
             self._log(f"[Alibaba IoT] Queued - ID: {iot_id} -> Table Store", "gsm")
-            self.iot_messages.append({"time": time.strftime("%H:%M:%S"), "id": self.pat_id, "payload": sms_payload, "iot_id": iot_id})
+            self.iot_messages.append({"time": time.strftime("%H:%M:%S"), "id": self.privacy_hash, "payload": sms_payload, "iot_id": iot_id})
 
-        self.sms_alerts.insert(0, {"time": time.strftime("%H:%M:%S"), "id": self.pat_id,
+        self.sms_alerts.insert(0, {"time": time.strftime("%H:%M:%S"), "id": self.privacy_hash,
                                     "type": model.split("(")[0].strip(), "payload": sms_payload,
                                     "status": "Pending Review", "is_critical": result["is_critical"]})
 

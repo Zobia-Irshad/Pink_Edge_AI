@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 import shutil
 import zipfile
+from hashlib import sha256
 from pathlib import Path
 
 import cv2
@@ -13,6 +14,7 @@ ROOT = Path(__file__).resolve().parent
 DATASET_ZIP = ROOT / "dataset" / "tbx11k-simplified.zip"
 EXTRACT_DIR = ROOT / "dataset" / "tbx11k_raw"
 OUTPUT_DIR = ROOT / "dataset" / "tbx11k_cls"
+USER_TB_GLOB = "tb chest x ray data*.jpeg"
 TRAIN_SPLIT = 0.8
 MODEL_OUT = ROOT / "models" / "tb_classifier.pt"
 
@@ -78,6 +80,21 @@ def prepare_dataset() -> Path:
         for _, src, filename in val_rows:
             shutil.copy2(src, val_dir / cls / filename)
 
+    # User-supplied images are explicitly labeled TB and remain training-only.
+    raw_hashes = {sha256(path.read_bytes()).hexdigest() for path in image_index.values()}
+    added_user_images = 0
+    for src in sorted((ROOT / "dataset").glob(USER_TB_GLOB)):
+        image = cv2.imread(str(src), cv2.IMREAD_UNCHANGED)
+        if image is None or image.size == 0 or min(image.shape[:2]) < 128:
+            skipped += 1
+            continue
+        if sha256(src.read_bytes()).hexdigest() in raw_hashes:
+            skipped += 1
+            continue
+        destination = train_dir / "tb" / f"user_{src.name.replace(' ', '_')}"
+        shutil.copy2(src, destination)
+        added_user_images += 1
+
     data_yaml = OUTPUT_DIR / "data.yaml"
     data_yaml.write_text(
         "train: ./train\n"
@@ -91,6 +108,7 @@ def prepare_dataset() -> Path:
 
     print(f"Prepared dataset with classes: {class_names}")
     print(f"Skipped missing or unreadable images: {skipped}")
+    print(f"Added user-labeled TB images to training: {added_user_images}")
     print(f"Train samples: {sum(len(list((OUTPUT_DIR / 'train' / cls).glob('*'))) for cls in class_names)}")
     print(f"Val samples: {sum(len(list((OUTPUT_DIR / 'val' / cls).glob('*'))) for cls in class_names)}")
     print(f"Dataset path: {OUTPUT_DIR}")

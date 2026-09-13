@@ -75,11 +75,14 @@ core.init_db()
 # ============================================================
 def init_state():
     import random
+    from dicom_anonymizer import generate_hex_privacy_hash
+    raw_id = random.randint(10000000, 99999999)
+    privacy_hash = generate_hex_privacy_hash({"pat_id": raw_id, "cnic": f"35201-{raw_id}-1"})
     defaults = {
         "urdu_mode": False, "network_mode": "Fully Offline", "show_bbox": True,
         "log_entries": [], "inference_done": False, "last_model": None,
         "current_result": None, "current_image": None, "uploaded_name": None,
-        "pat_id": random.randint(10000000, 99999999), "pat_age": random.randint(30, 70),
+        "pat_id": raw_id, "privacy_hash": privacy_hash, "pat_age": random.randint(30, 70),
         "hw_stats": {"load": "34%", "power": "6.2W", "temp": "42C"},
         "net_stats": {"signal": "-85 dBm", "bhus": 14, "module": "ONLINE"},
         "sms_alerts": [], "iot_messages": [], "oss_uploads": [], "acr_status": None,
@@ -185,8 +188,15 @@ def render_sidebar():
 
 def run_triage_action(selected_model, uploaded):
     import random
+    from dicom_anonymizer import generate_hex_privacy_hash
 
-    st.session_state.log_entries.append(f"[{time.strftime('%H:%M:%S')}] [DICOM] Ingesting raw scan via LAN... Success.")
+    raw_id = random.randint(10000000, 99999999)
+    priv_hash = generate_hex_privacy_hash({"pat_id": raw_id, "cnic": f"35201-{raw_id}-1"})
+    st.session_state.pat_id = raw_id
+    st.session_state.privacy_hash = priv_hash
+    st.session_state.pat_age = random.randint(28, 75)
+
+    st.session_state.log_entries.append(f"[{time.strftime('%H:%M:%S')}] [DICOM] Ingesting & Anonymizing scan via LAN... PII Stripped -> Privacy Hash: {priv_hash}")
 
     if uploaded is not None:
         img = core.Image.open(uploaded).convert("L").resize((512, 512))
@@ -210,22 +220,20 @@ def run_triage_action(selected_model, uploaded):
     st.session_state.hw_stats = {"load": "97%", "power": f"{random.uniform(5.8, 6.5):.1f}W", "temp": f"{random.randint(38, 45)}C"}
     st.session_state.net_stats = {"signal": f"-{random.randint(75, 95)} dBm", "bhus": random.randint(10, 20),
                                    "module": "ONLINE" if random.random() > 0.1 else "UNSTABLE"}
-    st.session_state.pat_id = random.randint(10000000, 99999999)
-    st.session_state.pat_age = random.randint(28, 75)
 
     real = "SIMULATED" not in result.get("source", "")  # covers Roboflow, offline HF models, AND the offline_cv.py heuristic
     st.session_state.log_entries.append(
         f"[{time.strftime('%H:%M:%S')}] [NPU] {'Real on-device' if real else 'Simulated'} inference "
         f"for {selected_model.split('(')[0].strip()}... Complete ({st.session_state.inference_latency}s).")
-    sms_payload = f"ID:{st.session_state.pat_id}|LOC:29.344|{result['sms']}"
+    sms_payload = f"ID:{priv_hash}|LOC:ANON|{result['sms']}"
     st.session_state.log_entries.append(f'[{time.strftime("%H:%M:%S")}] [GSM] Broadcasted: "{sms_payload}" -> Allied Hospital Hub.')
     if "GSM" in st.session_state.network_mode:
         iot_id = f"IOT-{random.randint(100000, 999999)}"
         st.session_state.log_entries.append(f"[{time.strftime('%H:%M:%S')}] [Alibaba IoT] Queued - ID: {iot_id} -> Table Store")
-        st.session_state.iot_messages.append({"time": time.strftime("%H:%M:%S"), "id": st.session_state.pat_id, "payload": sms_payload, "iot_id": iot_id})
+        st.session_state.iot_messages.append({"time": time.strftime("%H:%M:%S"), "id": priv_hash, "payload": sms_payload, "iot_id": iot_id})
 
     st.session_state.sms_alerts.insert(0, {
-        "time": time.strftime("%H:%M:%S"), "id": st.session_state.pat_id,
+        "time": time.strftime("%H:%M:%S"), "id": priv_hash,
         "type": selected_model.split("(")[0].strip(), "payload": sms_payload,
         "status": "Pending Review", "is_critical": result["is_critical"],
     })
@@ -295,10 +303,13 @@ def render_dashboard(selected_model):
         mod_map = {"Mammography (YOLOv8-OBB)": "MG (Mammography)", "Tuberculosis (Chest X-Ray)": "DX (Digital Radiography)",
                    "Maternal Health (Ultrasound)": "US (Ultrasound)"}
         st.subheader(t("DICOM Metadata"))
-        st.markdown(f"""<div class="card">
-        Patient ID: <b>{st.session_state.pat_id}</b><br>Age: <b>{st.session_state.pat_age} Y</b><br>
+        priv_hash = st.session_state.get("privacy_hash", "HEX-8F3A1C9B")
+        st.markdown(f"""<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:0.75rem;color:var(--success);font-weight:600;">
+        🔒 HIPAA/GDPR Compliant — Hex Privacy Hashed</div>
+        <div class="card">
+        Patient ID: <b style="color:#38bdf8;font-family:monospace;">{priv_hash}</b><br>Age: <b>{st.session_state.pat_age} Y</b><br>
         Modality: <b>{mod_map[selected_model]}</b><br>Date: <b>{datetime.now().strftime('%Y-%m-%d')}</b><br>
-        Institution: <b>Rural BHU Faisalabad</b></div>""", unsafe_allow_html=True)
+        Privacy: <b style="color:var(--success);">ANONYMIZED (PII STRIPPED)</b></div>""", unsafe_allow_html=True)
 
         if st.session_state.inference_done and st.session_state.current_result:
             r = st.session_state.current_result

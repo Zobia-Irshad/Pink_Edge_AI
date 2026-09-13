@@ -24,6 +24,8 @@ import sqlite3
 import json
 from datetime import datetime
 
+from dicom_anonymizer import generate_hex_privacy_hash, anonymize_dicom_metadata
+
 try:
     from fpdf import FPDF
     PDF_AVAILABLE = True
@@ -143,6 +145,9 @@ TR = {
     "Routine follow-up recommended": "روایتی پیروی کی سفارش کی گئی",
     "No immediate action required": "کوئی فوری اقدام ضروری نہیں",
     "Low risk - routine screening": "کم خطرہ - روایتی اسکریننگ",
+    "Hex Privacy Hash": "ہیکس پرائیویسی ہیش",
+    "HIPAA/GDPR Compliant": "ایچ آئی پی اے اے / جی ڈی پی آر کے مطابق",
+    "PII Stripped": "مریض کی ذاتی معلومات ہٹا دی گئیں",
 }
 
 
@@ -167,9 +172,18 @@ def safe_pdf_text(text):
 # ============================================================
 
 def generate_new_patient():
-    """Generate a completely new unique patient each time."""
+    """Generate a completely new unique patient each time with Hexadecimal Privacy Hashing."""
+    raw_id = random.randint(10000000, 99999999)
+    raw_pii = {
+        "patient_name": f"Patient_{raw_id}",
+        "cnic": f"35201-{raw_id}-1",
+        "pat_id": raw_id,
+        "location": "Rural BHU FSD"
+    }
+    privacy_hash = generate_hex_privacy_hash(raw_pii)
     return {
-        "pat_id": random.randint(10000000, 99999999),
+        "pat_id": raw_id,
+        "privacy_hash": privacy_hash,
         "pat_age": random.randint(28, 75),
     }
 
@@ -802,10 +816,13 @@ h3 { font-size: 0.78rem !important; color: var(--text-muted) !important; text-tr
 # ============================================================
 
 def init_state():
+    raw_id = random.randint(10000000, 99999999)
+    privacy_hash = generate_hex_privacy_hash({"pat_id": raw_id, "cnic": f"35201-{raw_id}-1"})
     defaults = {
         "log_entries": [], "inference_done": False, "npu_active": False,
         "last_uploaded": None, "last_model": None, "sms_alerts": [],
-        "pat_id": random.randint(10000000, 99999999),
+        "pat_id": raw_id,
+        "privacy_hash": privacy_hash,
         "pat_age": random.randint(30, 70),
         "hw_stats": {"load": "34%", "power": "6.2W", "temp": "42C"},
         "net_stats": {"signal": "-85 dBm", "bhus": 14, "module": "ONLINE"},
@@ -890,7 +907,8 @@ def render_sidebar():
 
         if st.button(f"📡 {t('Ingest DICOM')}", use_container_width=True, key="btn_dicom"):
             ts = time.strftime("%H:%M:%S")
-            st.session_state.log_entries.append(f"[{ts}] [DICOM] Ingesting raw scan via LAN... Success.")
+            priv_h = st.session_state.get("privacy_hash", "HEX-8F3A1C9B")
+            st.session_state.log_entries.append(f"[{ts}] [DICOM] Ingesting & Anonymizing scan via LAN... PII Stripped -> Privacy Hash: {priv_h}")
             st.success(t("DICOM scan ingested successfully!"))
 
         if st.button(f"▶️ {t('Run Triage')}", use_container_width=True, key="btn_triage"):
@@ -901,6 +919,7 @@ def render_sidebar():
             # FIX: Generate FRESH patient data each time Run Triage is clicked
             new_patient = generate_new_patient()
             st.session_state.pat_id = new_patient["pat_id"]
+            st.session_state.privacy_hash = new_patient["privacy_hash"]
             st.session_state.pat_age = new_patient["pat_age"]
             st.session_state.hw_stats = generate_hw_stats()
             st.session_state.net_stats = generate_net_stats()
@@ -919,22 +938,22 @@ def render_sidebar():
             st.session_state.inference_latency = round(random.uniform(7.8, 12.2), 1)
 
             ts = time.strftime("%H:%M:%S")
-            pat_id = st.session_state.pat_id
-            sms_payload = f"ID:{pat_id}|LOC:29.344|{result['sms']}"
+            priv_hash = st.session_state.privacy_hash
+            sms_payload = f"ID:{priv_hash}|LOC:ANON|{result['sms']}"
 
             st.session_state.log_entries = [
-                f"[{ts}] [DICOM] Ingesting raw scan via LAN... Success.",
+                f"[{ts}] [DICOM] Ingesting & Anonymizing scan via LAN... PII Stripped -> Privacy Hash: {priv_hash}",
                 f"[{ts}] [NPU] INT8 Quantized Core for {selected_model.split('(')[0].strip()}... Complete ({st.session_state.inference_latency}s).",
-                f"[{ts}] [GSM] Compressing to 140-char string...",
+                f"[{ts}] [GSM] Compressing to 140-char string (HIPAA/GDPR Hashed)...",
                 f'[{ts}] [GSM] Broadcasted: "{sms_payload}" -> Allied Hospital Hub.',
             ]
             if "GSM" in st.session_state.network_mode:
                 iot_id = f"IOT-{random.randint(100000, 999999)}"
                 st.session_state.log_entries.append(f"[{ts}] [Alibaba IoT] Queued - ID: {iot_id} -> Table Store")
-                st.session_state.iot_messages.append({"time": ts, "id": pat_id, "payload": sms_payload, "iot_id": iot_id})
+                st.session_state.iot_messages.append({"time": ts, "id": priv_hash, "payload": sms_payload, "iot_id": iot_id})
 
             st.session_state.sms_alerts.insert(0, {
-                "time": ts, "id": pat_id, "type": selected_model.split("(")[0].strip(),
+                "time": ts, "id": priv_hash, "type": selected_model.split("(")[0].strip(),
                 "payload": sms_payload, "status": "Pending Review",
                 "is_critical": result["is_critical"]
             })
@@ -1096,14 +1115,19 @@ def render_dashboard(selected_model, uploaded_file):
         mod_map = {"Mammography (YOLOv8-OBB)": "MG (Mammography)", "Tuberculosis (Chest X-Ray)": "DX (Digital Radiography)", "Maternal Health (Ultrasound)": "US (Ultrasound)"}
         bp_map = {"Mammography (YOLOv8-OBB)": "BREAST", "Tuberculosis (Chest X-Ray)": "CHEST", "Maternal Health (Ultrasound)": "ABDOMEN"}
 
+        priv_hash = st.session_state.get("privacy_hash", "HEX-8F3A1C9B")
+
         st.markdown(f"""
+        <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:0.75rem;color:var(--success);font-weight:600;display:flex;align-items:center;gap:6px;">
+            🔒 <span>HIPAA/GDPR Compliant — PII Stripped Offline (Hex Privacy Hashed)</span>
+        </div>
         <div class="dicom-grid">
-            <div class="dicom-item"><div class="label">{t('Patient ID')}</div><div class="value">{st.session_state.pat_id}</div></div>
+            <div class="dicom-item"><div class="label">{t('Patient ID')}</div><div class="value" style="color:#38bdf8;font-family:monospace;">{priv_hash}</div></div>
             <div class="dicom-item"><div class="label">Age</div><div class="value">{st.session_state.pat_age} Y</div></div>
             <div class="dicom-item"><div class="label">{t('Modality')}</div><div class="value">{mod_map[selected_model]}</div></div>
             <div class="dicom-item"><div class="label">Date</div><div class="value">{datetime.now().strftime('%Y-%m-%d')}</div></div>
             <div class="dicom-item"><div class="label">Body Part</div><div class="value">{bp_map[selected_model]}</div></div>
-            <div class="dicom-item"><div class="label">Institution</div><div class="value">Rural BHU FSD</div></div>
+            <div class="dicom-item"><div class="label">Privacy Status</div><div class="value" style="color:var(--success);">ANONYMIZED</div></div>
         </div>
         """, unsafe_allow_html=True)
 

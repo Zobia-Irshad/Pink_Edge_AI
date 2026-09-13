@@ -66,6 +66,8 @@ All three modalities check for a Roboflow API key and use it if present:
 ```
 GUI.py                    — Tkinter desktop app: UI + local SQLite cache + reports + fallbacks
 streamlit_app.py           — Streamlit web app (responsive) — same logic, imported from GUI.py
+dicom_anonymizer.py         — Offline DICOM anonymization & Hexadecimal Privacy Hashing module (HIPAA/GDPR compliant)
+test_anonymizer.py          — Automated test suite for DICOM PII stripping and hex hashing
 inference.py                — model loading + prediction dispatch for all three modalities
 offline_cv.py                — the offline pixel-diff heuristic (no model, no internet, ever);
                                   run directly (`python offline_cv.py`) to see its measured accuracy

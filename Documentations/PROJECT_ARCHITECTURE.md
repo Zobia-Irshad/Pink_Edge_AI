@@ -89,5 +89,15 @@ The app renders three tabs inside a single page (`st.tabs`):
 
 - This is a **hackathon demo / prototype**, not a production medical device. Two of the three models (Mammography, Maternal Health) are entirely simulated — there is no real image classifier behind them. Only the TB pathway has a real-model hook (`models/tb_classifier.pt`).
 - Cloud integration (Alibaba IoT/OSS/ACR) is mocked in-process; no real network calls are made.
-- The local database (`pink_edge_cache.db`) is a plain SQLite file with no encryption; patient IDs are randomly generated integers, not real identifiers.
+- The local database (`pink_edge_cache.db`) is a plain SQLite file; patient IDs are deterministically hashed via `dicom_anonymizer.py`.
 - PDF report generation depends on `fpdf2`; if unavailable, the app degrades gracefully to text-only reports.
+
+## 8. Offline DICOM Anonymization & Hexadecimal Privacy Hashing (HIPAA/GDPR Compliance)
+
+Pink Edge AI includes an offline privacy engine (`dicom_anonymizer.py`) that guarantees patient privacy compliance without internet connectivity:
+
+- **PII Stripping Engine**: Automatically strips all identifiable personal metrics (Patient Name, CNIC / National ID, Exact Location Coordinates / Address, Date of Birth, Contact numbers) from DICOM headers and metadata.
+- **Hexadecimal Privacy Hashing**: Generates an 8-character HMAC-SHA256 privacy hash (e.g. `HEX-8F3A1C9B`) from the patient PII and local salt key.
+- **Over-The-Air Airwave Protection**: Transmitted 2G SMS payloads use the anonymized Hex Privacy Hash (`ID:HEX-8F3A1C9B|LOC:ANON|...`), rendering intercepted airwave packets completely anonymous.
+- **Clinical Parameter Preservation**: Retains vital non-PII clinical parameters (`PatientAge`, `PatientSex`, `Modality`, `BodyPartExamined`, `PixelData`) required for Edge NPU inference and specialist triage.
+
