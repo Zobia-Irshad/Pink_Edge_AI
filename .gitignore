@@ -6,6 +6,11 @@ runs/
 *.db
 yolov8n-cls.pt
 
+# Secrets & API Keys
+roboflow_key.txt
+*.key
+.env
+
 # Keep the trained TB checkpoint; ignore placeholder model artifacts.
 models/fetal_health.pt
 models/yolov8_obb_int8.pt
