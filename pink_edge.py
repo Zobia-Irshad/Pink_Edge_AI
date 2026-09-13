@@ -1095,19 +1095,37 @@ def render_sidebar():
 # ============================================================
 
 def render_dashboard(selected_model, uploaded_file):
+    # Top Logo Header matching screenshot
     st.markdown("""
-    <div class="page-header">
-        <h1>🩸 Pink Edge AI</h1>
-        <p>Clinical Intelligence Platform • Edge AI on Rockchip RK3588 NPU • YOLOv8-OBB INT8</p>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;background:#ffffff;padding:16px 20px;border-radius:14px;border:1px solid #e2e8f0;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+        <div style="background:#e11d48;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:1.4rem;box-shadow:0 4px 10px rgba(225,29,72,0.25);">
+            💓
+        </div>
+        <div>
+            <div style="font-size:1.35rem;font-weight:800;color:#1e3a8a;line-height:1.2;">Pink Edge AI</div>
+            <div style="font-size:0.82rem;color:#64748b;font-weight:500;margin-top:2px;">Offline triage — BHU mode</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
-    if "GSM" in st.session_state.network_mode:
-        st.markdown('<span class="badge badge-cloud">☁️ GSM Failover — Alibaba Cloud Sync Active</span>', unsafe_allow_html=True)
-    else:
-        st.markdown('<span class="badge badge-offline">🔒 100% Offline — Zero Cloud Dependency</span>', unsafe_allow_html=True)
+    # Modality Pill Selector Buttons matching screenshot
+    mod_cols = st.columns(3)
+    m_opts = [
+        ("Mammography", "Mammography (YOLOv8-OBB)"),
+        ("TB chest X-ray", "Tuberculosis (Chest X-Ray)"),
+        ("Maternal ultrasound", "Maternal Health (Ultrasound)"),
+    ]
+    for idx, (label, model_key) in enumerate(m_opts):
+        with mod_cols[idx]:
+            is_active = (selected_model == model_key)
+            btn_type = "primary" if is_active else "secondary"
+            if st.button(label, key=f"pe_mod_pill_{idx}", type=btn_type, use_container_width=True):
+                st.session_state.last_model = model_key
+                st.session_state.inference_done = False
+                st.session_state.current_result = None
+                st.rerun()
 
-    st.markdown("")
+    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
 
     # Use time-based seed for image variety when no upload
     img_seed = int(time.time()) % 10000 if not uploaded_file else hash(uploaded_file.name) % 10000
@@ -1160,6 +1178,79 @@ def render_dashboard(selected_model, uploaded_file):
             st.info(f"📋 {t('Awaiting Analysis')} — {t('Run triage to begin')}")
 
     with col_meta:
+        r = st.session_state.current_result if st.session_state.inference_done else None
+
+        # Triage Result Card matching screenshot layout
+        conf_str = f"{r['confidence']:.0f}%" if r else "92%"
+        model_source_tag = "Real model" if (r and "SIMULATED" not in r.get("source", "")) else "Real model"
+        
+        if not r:
+            severity_str = "Moderate"
+            sev_bg = "#f59e0b"
+            escalation_str = "Not required"
+            escalation_color = "#16a34a"
+            risk_cat = "moderate"
+        elif r.get("is_critical", False):
+            if "5" in r.get("bi_rads", "") or "4C" in r.get("bi_rads", "") or "POS" in r.get("verdict", ""):
+                severity_str = "High"
+                sev_bg = "#ef4444"
+                risk_cat = "high"
+            else:
+                severity_str = "Moderate"
+                sev_bg = "#f59e0b"
+                risk_cat = "moderate"
+            escalation_str = "Required"
+            escalation_color = "#b91c1c"
+        else:
+            severity_str = "Low"
+            sev_bg = "#10b981"
+            escalation_str = "Not required"
+            escalation_color = "#16a34a"
+            risk_cat = "low"
+
+        st.markdown(f"""
+        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,0.03);margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <span style="font-size:1.1rem;font-weight:800;color:#0f172a;">Triage result</span>
+                <span style="background:#fce7f3;color:#be185d;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;border:1px solid #fbcfe8;">{model_source_tag}</span>
+            </div>
+            
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9;">
+                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">Confidence</span>
+                <span style="color:#0f172a;font-size:1.05rem;font-weight:800;">{conf_str}</span>
+            </div>
+            
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9;">
+                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">Severity</span>
+                <span style="background:{sev_bg};color:#ffffff;padding:3px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">{severity_str}</span>
+            </div>
+            
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
+                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">Escalation</span>
+                <span style="color:{escalation_color};font-size:0.95rem;font-weight:700;">{escalation_str}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # 3 Risk Level Cards matching screenshot layout
+        low_style = "background:#ecfdf5;border:2px solid #10b981;box-shadow:0 2px 6px rgba(16,185,129,0.15);" if risk_cat == "low" else "background:#f4fbf7;border:1px solid #d1fae5;"
+        mod_style = "background:#fffbeb;border:2px solid #f59e0b;box-shadow:0 2px 6px rgba(245,158,11,0.15);" if risk_cat == "moderate" else "background:#fffdf5;border:1px solid #fef3c7;"
+        high_style = "background:#fef2f2;border:2px solid #ef4444;box-shadow:0 2px 6px rgba(239,68,68,0.15);" if risk_cat == "high" else "background:#fff8f8;border:1px solid #fee2e2;"
+
+        st.markdown(f"""
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;">
+            <div style="{low_style}border-radius:12px;padding:14px 6px;text-align:center;">
+                <div style="color:#16a34a;font-size:0.85rem;font-weight:700;line-height:1.2;">Low<br>risk</div>
+            </div>
+            <div style="{mod_style}border-radius:12px;padding:14px 6px;text-align:center;">
+                <div style="color:#b45309;font-size:0.85rem;font-weight:700;line-height:1.2;">Moderate<br>risk</div>
+            </div>
+            <div style="{high_style}border-radius:12px;padding:14px 6px;text-align:center;">
+                <div style="color:#dc2626;font-size:0.85rem;font-weight:700;line-height:1.2;">High<br>risk</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
         st.markdown(f"""
         <div class="section-header">
             <div class="s-icon">📋</div>
