@@ -28,8 +28,6 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 import inference as inf
-from dicom_anonymizer import generate_hex_privacy_hash, anonymize_dicom_metadata
-from auth_manager import AuthManager, ROLE_LHW, ROLE_RADIOLOGIST, ROLE_CONFIGS
 
 
 def _lazy_import_tkinter():
@@ -57,10 +55,10 @@ ACR_DENSITY_OPTIONS = inf.ACR_DENSITY_OPTIONS
 TB_SEVERITY_LEVELS = inf.TB_SEVERITY_LEVELS
 TB_LUNG_ZONES = inf.TB_LUNG_ZONES
 
-C = {  # color tokens — same palette as the Streamlit app's injected CSS
-    "bg": "#0a0e1a", "surface": "#111827", "surface_alt": "#1e293b", "surface_hover": "#334155",
-    "border": "#1e293b", "border_light": "#334155", "text": "#f1f5f9", "text_muted": "#94a3b8",
-    "text_light": "#64748b", "primary": "#14b8a6", "primary_light": "#2dd4bf", "accent": "#ec4899",
+C = {  # color tokens — all-white background theme
+    "bg": "#ffffff", "surface": "#ffffff", "surface_alt": "#f8f9fa", "surface_hover": "#e9ecef",
+    "border": "#e5e7eb", "border_light": "#d1d5db", "text": "#111827", "text_muted": "#4b5563",
+    "text_light": "#6b7280", "primary": "#1a237e", "primary_light": "#3949ab", "accent": "#ec4899",
     "accent_light": "#f472b6", "success": "#10b981", "warning": "#f59e0b", "danger": "#ef4444",
 }
 
@@ -163,67 +161,48 @@ def simulate_acr_check():
 # ============================================================
 def sim_mammography():
     s = [
-        {"bi_rads": BI_RADS_OPTIONS[1], "acr": ACR_DENSITY_OPTIONS[0], "verdict": "No Focal Suspicious Lesion Detected",
-         "sub": "Preliminary AI Screening — Specialist Review Recommended", "loc": "No focal lesion identified", "extra": "ACR Class A",
-         "vicon": "✅", "confidence": random.uniform(95.0, 99.2), "sms": "BI-RADS:1", "is_critical": False,
-         "image_quality": "Optimal for Mammography Triage",
-         "recommendation": "No focal suspicious lesion detected. Routine screening / clinician review recommended."},
-        {"bi_rads": BI_RADS_OPTIONS[2], "acr": ACR_DENSITY_OPTIONS[1], "verdict": "No Focal Suspicious Lesion Detected",
-         "sub": "Benign calcification / cyst pattern", "loc": "Upper Outer Quadrant", "extra": "ACR Class B",
-         "vicon": "✅", "confidence": random.uniform(92.0, 96.5), "sms": "BI-RADS:2", "is_critical": False,
-         "image_quality": "Adequate for Mammography Triage",
-         "recommendation": "Benign appearance. Routine screening per clinical guidelines."},
-        {"bi_rads": BI_RADS_OPTIONS[4], "acr": ACR_DENSITY_OPTIONS[2], "verdict": "Suspicious Finding Detected",
-         "sub": "Preliminary AI Screening: Suspicious morphology — Specialist Review Recommended", "loc": "Upper Outer Quadrant",
+        {"bi_rads": BI_RADS_OPTIONS[1], "acr": ACR_DENSITY_OPTIONS[0], "verdict": "Normal",
+         "sub": "No Anomalies Detected", "loc": "No focal lesion identified", "extra": "ACR Class A",
+         "vicon": "✅", "confidence": random.uniform(95.0, 99.2), "sms": "BI-RADS:1", "is_critical": False},
+        {"bi_rads": BI_RADS_OPTIONS[2], "acr": ACR_DENSITY_OPTIONS[1], "verdict": "Benign Finding",
+         "sub": "Simple cyst identified", "loc": "Upper Outer Quadrant", "extra": "ACR Class B",
+         "vicon": "✅", "confidence": random.uniform(92.0, 96.5), "sms": "BI-RADS:2", "is_critical": False},
+        {"bi_rads": BI_RADS_OPTIONS[4], "acr": ACR_DENSITY_OPTIONS[2], "verdict": "Low Suspicion",
+         "sub": "Suspicious morphology - Biopsy recommended", "loc": "Upper Outer Quadrant",
          "extra": "ACR Class C", "vicon": "⚠️", "confidence": random.uniform(82.0, 88.0),
-         "sms": "BI-RADS:4A", "is_critical": True,
-         "image_quality": "Adequate for Mammography Triage",
-         "recommendation": "Suspicious finding detected — specialist review & clinical correlation recommended."},
-        {"bi_rads": BI_RADS_OPTIONS[7], "acr": ACR_DENSITY_OPTIONS[3], "verdict": "Suspicious Finding Detected",
-         "sub": "Preliminary AI Screening: Spiculated mass detected — Specialist Review Recommended", "loc": "Upper Outer Quadrant", "extra": "ACR Class D",
-         "vicon": "⚠️", "confidence": random.uniform(93.0, 97.5), "sms": "BI-RADS:5", "is_critical": True,
-         "image_quality": "Optimal for Mammography Triage",
-         "recommendation": "Suspicious finding detected — urgent specialist review & biopsy evaluation recommended."},
+         "sms": "BI-RADS:4A", "is_critical": True},
+        {"bi_rads": BI_RADS_OPTIONS[7], "acr": ACR_DENSITY_OPTIONS[3], "verdict": "BI-RADS 5",
+         "sub": "Highly Suspicious - Spiculated mass", "loc": "Upper Outer Quadrant", "extra": "ACR Class D",
+         "vicon": "⚠️", "confidence": random.uniform(93.0, 97.5), "sms": "BI-RADS:5", "is_critical": True},
     ]
     r = random.choice(s)
-    r["source"] = "SIMULATED — fallback mode (see MODEL_SOURCES.md)"
+    r["source"] = "SIMULATED — no downloadable trained weights (see MODEL_SOURCES.md)"
     return r
 
 
 def sim_tb():
     s = [
-        {"bi_rads": "S0 - No active disease", "acr": "Bilateral", "verdict": "No Active TB-Suggestive Lesions Detected",
-         "sub": "AI Triage Result — Clinical Correlation Advised", "loc": "Lungs clear", "extra": "No active lesions",
-         "vicon": "✅", "confidence": random.uniform(94.0, 98.5), "sms": "TB:NEG", "is_critical": False,
-         "image_quality": "Optimal for Chest X-Ray Triage", "referral_priority": "Low (Routine)",
-         "recommendation": "No active TB-suggestive findings detected. Routine clinical correlation per guidelines."},
-        {"bi_rads": "S2 - Moderate (bilateral / cavity < 2 cm)", "acr": "Upper Zone", "verdict": "TB-Suggestive Finding Detected",
-         "sub": "Preliminary AI Triage: Active lesion pattern — Further Evaluation Advised", "loc": "Right Upper Lobe",
+        {"bi_rads": "S0 - No active disease", "acr": "Bilateral", "verdict": "TB Negative",
+         "sub": "No active lesions detected", "loc": "Lungs clear", "extra": "No cavity formation",
+         "vicon": "✅", "confidence": random.uniform(94.0, 98.5), "sms": "TB:NEG", "is_critical": False},
+        {"bi_rads": "S2 - Moderate (bilateral / cavity < 2 cm)", "acr": "Upper Zone", "verdict": "TB Positive",
+         "sub": "Active lesion detected - cavity formation", "loc": "Right Upper Lobe",
          "extra": "Cavity Formation", "vicon": "⚠️", "confidence": random.uniform(85.0, 92.0),
-         "sms": "TB:POS", "is_critical": True,
-         "image_quality": "Adequate for Chest X-Ray Triage", "referral_priority": "High Priority",
-         "recommendation": "TB-suggestive finding detected — confirmatory clinical evaluation (Sputum GeneXpert / Microbiological test) recommended."},
+         "sms": "TB:POS", "is_critical": True},
     ]
     r = random.choice(s)
-    r["source"] = "SIMULATED — fallback mode (real model unavailable this run)"
+    r["source"] = "SIMULATED (fallback — real model unavailable this run)"
     return r
 
 
 def sim_maternal():
     s = [
-        {"bi_rads": "Standard Plane: Trans-thalamic", "acr": "Ultrasound Plane - Trans-thalamic", "verdict": "Standard Plane: Trans-thalamic",
-         "sub": "Fetal Brain Ultrasound Plane Classification", "loc": "Intrauterine / Fetal Head", "extra": f"Gestational Age: {random.randint(18, 36)}W (Plane: Trans-thalamic)",
-         "vicon": "✅", "confidence": random.uniform(96.0, 99.0), "sms": "US:PLANE_OK", "is_critical": False,
-         "image_quality": "Optimal for Plane Identification",
-         "recommendation": "Standard plane identified (Trans-thalamic). Biometric measurements & clinician review recommended."},
-        {"bi_rads": "Standard Plane: Trans-cerebellum", "acr": "Ultrasound Plane - Trans-cerebellum", "verdict": "Standard Plane: Trans-cerebellum",
-         "sub": "Fetal Brain Ultrasound Plane Classification", "loc": "Intrauterine / Fetal Head", "extra": f"Gestational Age: {random.randint(18, 36)}W (Plane: Trans-cerebellum)",
-         "vicon": "✅", "confidence": random.uniform(91.0, 95.0), "sms": "US:PLANE_OK", "is_critical": False,
-         "image_quality": "Adequate for Plane Identification",
-         "recommendation": "Standard plane identified (Trans-cerebellum). Proceed with clinician biometric verification."},
+        {"bi_rads": "BI-RADS 1 - Negative", "acr": "A - Almost entirely fatty", "verdict": "Fetal Health Normal",
+         "sub": "No anomalies detected", "loc": "Intrauterine", "extra": f"Gestational Age: {random.randint(18, 36)}W",
+         "vicon": "✅", "confidence": random.uniform(96.0, 99.0), "sms": "FH:OK", "is_critical": False},
     ]
     r = random.choice(s)
-    r["source"] = "SIMULATED — fallback mode (see MODEL_SOURCES.md)"
+    r["source"] = "SIMULATED — least-developed pathway, no public model matched (see MODEL_SOURCES.md)"
     return r
 
 
@@ -331,19 +310,18 @@ def draw_bbox(image, model_name, result):
         draw.polygon(box, outline=color, width=2)
         for pt in box:
             draw.ellipse([pt[0] - 5, pt[1] - 5, pt[0] + 5, pt[1] + 5], fill=color)
-        label = f"YOLOv8-OBB: {'Suspicious Mass' if is_critical else 'No Focal Finding'} ({conf_str})"
+        label = f"YOLOv8-OBB: {'Malignant' if is_critical else 'Benign'} ({conf_str})"
     elif "Tuberculosis" in model_name:
         center = default_center or (int(w * 0.35), int(h * 0.30))
         bw, bh = default_size or (int(w * 0.12), int(h * 0.10))
         draw.rectangle([center[0] - bw // 2, center[1] - bh // 2, center[0] + bw // 2, center[1] + bh // 2],
                         outline=color, width=2)
-        label = f"TB Triage: {'Suggestive Lesion' if is_critical else 'Clear'} ({conf_str})"
+        label = f"TB Classifier: {'Active Lesion' if is_critical else 'Clear'} ({conf_str})"
     else:
         center = default_center or (int(w * 0.50), int(h * 0.50))
         r = max(default_size) // 2 if default_size else int(w * 0.15)
         draw.ellipse([center[0] - r, center[1] - r, center[0] + r, center[1] + r], outline=color, width=2)
-        plane_label = result.get('verdict', 'Standard Plane') if result else 'Standard Plane'
-        label = f"Fetal Brain Plane: {plane_label} ({conf_str})"
+        label = f"Fetal Health: {'Review Needed' if is_critical else 'Normal'} ({conf_str})"
 
     try:
         font = ImageFont.truetype("consola.ttf", 13)
@@ -363,65 +341,27 @@ def draw_bbox(image, model_name, result):
 # ============================================================
 # REPORTS
 # ============================================================
-# ============================================================
-# REPORTS (Modality-Specific Templates + Clinical Disclaimers)
-# ============================================================
 def generate_text_report(d):
-    modality = d.get("modality", "Unknown")
-    pat_id = d.get("patient_id", "N/A")
-    pat_age = d.get("patient_age", "N/A")
-    date_str = d.get("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    model_used = d.get("model_used", "Pink Edge AI Model Engine")
-    conf = d.get("confidence", 0.0)
-    verdict = d.get("verdict", "No Result")
-    loc = d.get("localization", "N/A")
-    img_quality = d.get("image_quality", "Adequate for Analysis")
-    rec = d.get("recommendation", "Specialist review recommended.")
-    model_src = d.get("model_source", "On-Device Inference Engine")
-
-    r = (f"\nPINK EDGE AI - CLINICAL TRIAGE REPORT\n"
-         f"====================================================\n"
-         f"Report ID: PEA-{pat_id}-{int(time.time())}\n"
-         f"Date & Time: {date_str}\n"
-         f"Institution: Rural BHU / Clinical Facility\n\n"
-         f"PATIENT DEMOGRAPHICS & DICOM METADATA\n"
-         f"------------------------------------\n"
-         f"Patient Privacy ID: {pat_id}\n"
-         f"Age: {pat_age} Years\n"
-         f"Modality: {modality}\n"
-         f"Image Suitability / Quality: {img_quality}\n"
-         f"HIPAA Privacy Status: ANONYMIZED (PII Stripped)\n\n"
-         f"AI PRELIMINARY TRIAGE ANALYSIS\n"
-         f"------------------------------\n"
-         f"Model Engine & Version: {model_used}\n"
-         f"Model Execution Source: {model_src}\n"
-         f"AI Triage Verdict: {verdict}\n"
-         f"Confidence Score: {conf:.1f}%\n"
-         f"Localization / Anatomical Zone: {loc}\n"
-         f"Inference Latency: {d.get('inference_time', 0.0)}s\n\n"
-         f"CLINICAL FINDINGS & RECOMMENDATIONS\n"
-         f"-----------------------------------\n"
-         f"Clinical Reference Category: {d.get('bi_rads', 'N/A')}\n"
-         f"Density / Anatomic Note: {d.get('acr_density', 'N/A')}\n")
-
+    r = (f"\nPINK EDGE AI - CLINICAL DIAGNOSTIC REPORT\n==========================================\n\n"
+         f"PATIENT: {d['patient_id']}    AGE: {d['patient_age']}    DATE: {d['timestamp']}\n"
+         f"MODALITY: {d['modality']}      INSTITUTION: Rural BHU Faisalabad\n\n"
+         f"AI ANALYSIS\n-----------\nModel: {d['model_used']}\nVerdict: {d['verdict']}\n"
+         f"Confidence: {d['confidence']:.1f}%\nInference: {d['inference_time']}s (desktop CPU)\n"
+         f"Localization: {d['localization']}\nSource: {d.get('model_source', 'N/A')}\n\n"
+         f"CLINICAL ASSESSMENT\n-------------------\nBI-RADS / Severity: {d['bi_rads']}\n"
+         f"ACR Density / Zone: {d['acr_density']}\n")
     br = d.get("bi_rads", "")
-    if "5" in br or "4C" in br or "S3" in br or d.get("is_critical"):
-        r += f"Referral Priority: URGENT — High Priority Specialist Evaluation Recommended\n"
+    if "5" in br or "4C" in br or "S3" in br:
+        r += "\nURGENT: Immediate referral. Biopsy/specialist evaluation recommended.\n"
+    elif "4A" in br or "4B" in br or "S2" in br:
+        r += "\nReferral recommended. Further evaluation advised.\n"
+    elif "3" in br or "S1" in br:
+        r += "\nFollow-up imaging recommended.\n"
     else:
-        r += f"Referral Priority: {d.get('referral_priority', 'Low (Routine)')}\n"
-
-    r += (f"Recommended Action: {rec}\n\n"
-          f"CLINICAL CONFIRMATION STATUS\n"
-          f"----------------------------\n"
-          f"[ ] Pending Clinician Review\n"
-          f"[ ] Confirmed by Attending Radiologist / Specialist\n"
-          f"[ ] Diagnostic Override Recorded\n\n"
-          f"MANDATORY CLINICAL DISCLAIMER\n"
-          f"-----------------------------\n"
-          f"NOTICE: This report contains AI-generated preliminary triage outputs intended to assist\n"
-          f"qualified healthcare professionals. It does NOT constitute a definitive medical diagnosis.\n"
-          f"Final clinical decisions and diagnostic confirmation rest solely with the licensed clinician.\n\n"
-          f"Pink Edge AI v5.3 - Clinical Intelligence Platform\n")
+        r += "\nRoutine screening per guidelines.\n"
+    r += (f"\nNETWORK: {d.get('network_mode', 'Offline')}\n"
+          f"SYNC: {'Pending' if d.get('synced') == 0 else 'Complete'}\n\n"
+          f"Generated by Pink Edge AI (Desktop) - Alibaba Cloud AI Hackathon 2026\n")
     return r
 
 
@@ -433,7 +373,7 @@ def generate_pdf_bytes(d):
 
     def safe(txt):
         txt = str(txt)
-        for u, a in {"—": "-", "–": "-", "’": "'", "“": '"', "”": '"', "✅": "[OK]", "⚠️": "[!]"} .items():
+        for u, a in {"—": "-", "–": "-", "’": "'", "“": '"', "”": '"'}.items():
             txt = txt.replace(u, a)
         return txt.encode("latin-1", "replace").decode("latin-1")
 
@@ -442,76 +382,39 @@ def generate_pdf_bytes(d):
     pdf.set_fill_color(13, 148, 136)
     pdf.rect(0, 0, 210, 45, "F")
     pdf.set_text_color(255, 255, 255)
-    pdf.set_font("Helvetica", "B", 18)
-    pdf.cell(0, 14, "PINK EDGE AI", ln=True, align="C")
-    pdf.set_font("Helvetica", "", 10)
-    pdf.cell(0, 6, "Modality-Specific Clinical Triage Report", ln=True, align="C")
-    pdf.cell(0, 5, f"Report ID: PEA-{d.get('patient_id', '000')}-{int(time.time())}", ln=True, align="C")
-    pdf.ln(10)
+    pdf.set_font("Helvetica", "B", 20)
+    pdf.cell(0, 18, "PINK EDGE AI", ln=True, align="C")
+    pdf.set_font("Helvetica", "", 9)
+    pdf.cell(0, 6, "Clinical Diagnostic Report (Desktop)", ln=True, align="C")
+    pdf.cell(0, 5, f"Report ID: PEA-{d['patient_id']}-{int(time.time())}", ln=True, align="C")
+    pdf.ln(12)
     pdf.set_text_color(30, 41, 59)
 
     def section(title, rows):
         pdf.set_font("Helvetica", "B", 11)
-        pdf.cell(0, 7, safe(title), ln=True)
+        pdf.cell(0, 7, title, ln=True)
         pdf.set_draw_color(226, 232, 240)
         pdf.line(10, pdf.get_y(), 200, pdf.get_y())
         pdf.ln(3)
         pdf.set_font("Helvetica", "", 9)
         for label, value in rows:
             pdf.set_text_color(100, 116, 139)
-            pdf.cell(60, 6, safe(f"{label}:"))
+            pdf.cell(50, 6, f"{label}:")
             pdf.set_text_color(30, 41, 59)
             pdf.cell(0, 6, safe(value), ln=True)
-        pdf.ln(4)
+        pdf.ln(5)
 
-    modality = d.get("modality", "General Medical Imaging")
-    section("1. PATIENT DEMOGRAPHICS & DICOM STATUS", [
-        ("Patient Privacy ID", str(d.get("patient_id", "N/A"))),
-        ("Patient Age", f"{d.get('patient_age', 'N/A')} Years"),
-        ("Scan Date & Time", str(d.get("timestamp", datetime.now().strftime("%Y-%m-%d")))),
-        ("Imaging Modality", modality),
-        ("Image Quality / Suitability", str(d.get("image_quality", "Adequate for Triage"))),
-        ("HIPAA Privacy", "ANONYMIZED (PII Stripped)")
-    ])
-
-    ai_rows = [
-        ("AI Model & Version", str(d.get("model_used", "Pink Edge AI Engine"))),
-        ("AI Preliminary Verdict", str(d.get("verdict", "N/A"))),
-        ("Confidence Score", f"{d.get('confidence', 0.0):.1f}%"),
-        ("Localization / Region", str(d.get("localization", "N/A"))),
-        ("Inference Latency", f"{d.get('inference_time', 0.0)}s"),
-        ("Model Execution Source", str(d.get("model_source", "On-Device Inference")))
-    ]
-    if d.get("confidence", 100.0) < 65.0:
-        ai_rows.append(("AI Confidence Warning", "[!] LOW CONFIDENCE (<65%) - Repeat Scan / Specialist Review Advised"))
-
-    section("2. AI PRELIMINARY TRIAGE RESULTS", ai_rows)
-
-    clin_rows = [
-        ("Reference Category", str(d.get("bi_rads", "N/A"))),
-        ("Density / Anatomical Zone", str(d.get("acr_density", "N/A"))),
-        ("Actionable Recommendation", str(d.get("recommendation", "Clinician correlation recommended."))),
-    ]
-    if "TB" in modality or "Chest" in modality or "DX" in modality:
-        clin_rows.insert(2, ("Referral Priority", str(d.get("referral_priority", "High Priority" if d.get("is_critical") else "Low (Routine)"))))
-
-    section("3. CLINICAL RECOMMENDATION & ACTION PLAN", clin_rows)
-
-    section("4. CLINICIAN CONFIRMATION STATUS", [
-        ("Confirmation Status", "[ ] Pending Review    [ ] Confirmed    [ ] Overridden"),
-        ("Reviewing Clinician", "_____________________________________"),
-        ("Signature & Date", "_____________________________________")
-    ])
-
-    pdf.ln(4)
-    pdf.set_draw_color(226, 232, 240)
-    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-    pdf.ln(2)
-    pdf.set_font("Helvetica", "I", 7)
+    section("PATIENT INFORMATION", [("Patient ID", d["patient_id"]), ("Age", f"{d['patient_age']} Years"),
+                                     ("Date", d["timestamp"]), ("Modality", d["modality"])])
+    section("AI ANALYSIS RESULTS", [("Model", d["model_used"]), ("Verdict", d["verdict"]),
+                                     ("Confidence", f"{d['confidence']:.1f}%"),
+                                     ("Inference", f"{d['inference_time']}s"),
+                                     ("Localization", d["localization"]),
+                                     ("Source", d.get("model_source", "N/A"))])
+    section("CLINICAL ASSESSMENT", [("BI-RADS / Severity", d["bi_rads"]), ("ACR Density / Zone", d["acr_density"])])
+    pdf.set_font("Helvetica", "", 7)
     pdf.set_text_color(148, 163, 184)
-    pdf.cell(0, 4, "DISCLAIMER: AI outputs are preliminary triage aids. Final diagnosis rests solely with the attending clinician.", ln=True, align="C")
-    pdf.cell(0, 4, f"Pink Edge AI v5.3 - Platform Report • Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True, align="C")
-
+    pdf.cell(0, 5, "Pink Edge AI (Desktop) - Alibaba Cloud AI Hackathon 2026", ln=True, align="C")
     return bytes(pdf.output(dest="S"))
 
 
@@ -534,9 +437,7 @@ class PinkEdgeApp:
         self.current_image = None
         self.current_result = None
         self.inference_done = False
-        self.user_role = ROLE_LHW
         self.pat_id = random.randint(10000000, 99999999)
-        self.privacy_hash = generate_hex_privacy_hash({"pat_id": self.pat_id, "cnic": f"35201-{self.pat_id}-1"})
         self.pat_age = random.randint(30, 70)
         self.hw_stats = {"load": "34%", "power": "6.2W", "temp": "42C"}
         self.net_stats = {"signal": "-85 dBm", "bhus": 14, "module": "ONLINE"}
@@ -861,10 +762,9 @@ class PinkEdgeApp:
         model = self.model_var.get()
         mod_map = {"Mammography (YOLOv8-OBB)": "MG (Mammography)", "Tuberculosis (Chest X-Ray)": "DX (Digital Radiography)",
                    "Maternal Health (Ultrasound)": "US (Ultrasound)"}
-        priv_h = getattr(self, "privacy_hash", "HEX-8F3A1C9B")
         self.meta_text.configure(text=(
-            f"Patient ID:  {priv_h} (Hex Hashed)\nAge:  {self.pat_age} Y\nModality:  {mod_map[model]}\n"
-            f"Date:  {datetime.now().strftime('%Y-%m-%d')}\nPrivacy:  ANONYMIZED (PII Stripped)"))
+            f"Patient ID:  {self.pat_id}\nAge:  {self.pat_age} Y\nModality:  {mod_map[model]}\n"
+            f"Date:  {datetime.now().strftime('%Y-%m-%d')}\nInstitution:  Rural BHU Faisalabad"))
         if "Tuberculosis" in model:
             self.assess_label1.configure(text="TB Severity")
             self.assess_label2.configure(text="Lung Zone")
@@ -925,11 +825,7 @@ class PinkEdgeApp:
 
     def _run_triage(self):
         model = self.model_var.get()
-        new = {"pat_id": random.randint(10000000, 99999999), "pat_age": random.randint(28, 75)}
-        self.pat_id, self.pat_age = new["pat_id"], new["pat_age"]
-        self.privacy_hash = generate_hex_privacy_hash({"pat_id": self.pat_id, "cnic": f"35201-{self.pat_id}-1"})
-
-        self._log(f"[DICOM] Ingesting & Anonymizing scan via LAN... PII Stripped -> Privacy Hash: {self.privacy_hash}", "dicom")
+        self._log("[DICOM] Ingesting raw scan via LAN... Success.", "dicom")
         self.root.update_idletasks()
 
         t0 = time.time()
@@ -943,17 +839,19 @@ class PinkEdgeApp:
         self.hw_stats = {"load": "97%", "power": f"{random.uniform(5.8, 6.5):.1f}W", "temp": f"{random.randint(38, 45)}C"}
         self.net_stats = {"signal": f"-{random.randint(75, 95)} dBm", "bhus": random.randint(10, 20),
                            "module": "ONLINE" if random.random() > 0.1 else "UNSTABLE"}
+        new = {"pat_id": random.randint(10000000, 99999999), "pat_age": random.randint(28, 75)}
+        self.pat_id, self.pat_age = new["pat_id"], new["pat_age"]
 
         real = "REAL" in result.get("source", "SIMULATED").upper() or "real inference" in result.get("source", "")
         self._log(f"[NPU] {'Real on-device' if real else 'Simulated'} inference for {model.split('(')[0].strip()}... Complete ({self.inference_latency}s).", "npu")
-        sms_payload = f"ID:{self.privacy_hash}|LOC:ANON|{result['sms']}"
+        sms_payload = f"ID:{self.pat_id}|LOC:29.344|{result['sms']}"
         self._log(f'[GSM] Broadcasted: "{sms_payload}" -> Allied Hospital Hub.', "gsm")
         if "GSM" in self.network_var.get():
             iot_id = f"IOT-{random.randint(100000, 999999)}"
             self._log(f"[Alibaba IoT] Queued - ID: {iot_id} -> Table Store", "gsm")
-            self.iot_messages.append({"time": time.strftime("%H:%M:%S"), "id": self.privacy_hash, "payload": sms_payload, "iot_id": iot_id})
+            self.iot_messages.append({"time": time.strftime("%H:%M:%S"), "id": self.pat_id, "payload": sms_payload, "iot_id": iot_id})
 
-        self.sms_alerts.insert(0, {"time": time.strftime("%H:%M:%S"), "id": self.privacy_hash,
+        self.sms_alerts.insert(0, {"time": time.strftime("%H:%M:%S"), "id": self.pat_id,
                                     "type": model.split("(")[0].strip(), "payload": sms_payload,
                                     "status": "Pending Review", "is_critical": result["is_critical"]})
 
