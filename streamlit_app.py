@@ -273,6 +273,128 @@ div[data-baseweb="input"] input {
     border: 1px solid #cbd5e1 !important;
     border-radius: 8px !important;
 }
+* ============= AI CONFIDENCE + LHV OVERRIDE STYLING ============= */
+.ai-recommendation {{ 
+  background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%); /* Pink gradient */
+  border-radius: 14px; padding: 20px; margin: 12px 0; 
+  box-shadow: 0 4px 6px rgba(255, 20, 147, 0.2);
+  color: #ffffff;
+}}
+.ai-recommendation .rec-header {{
+  font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  opacity: 0.95; margin-bottom: 8px;
+}}
+.ai-recommendation .rec-verdict {{
+  font-size: 1.4rem; font-weight: 800; margin: 8px 0;
+}}
+.ai-recommendation .rec-confidence {{
+  font-size: 0.95rem; margin-top: 12px; opacity: 0.95;
+}}
+
+.lhv-decision {{
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); /* Blue gradient */
+  border-radius: 14px; padding: 20px; margin: 12px 0;
+  box-shadow: 0 4px 6px rgba(30, 64, 175, 0.2);
+  color: #ffffff;
+}}
+.lhv-decision .lhv-header {{
+  font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  opacity: 0.95; margin-bottom: 16px;
+}}
+
+.btn-agree {{
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; /* Green */
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+}}
+.btn-agree:hover {{
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+}}
+
+.btn-override {{
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important; /* Red */
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+}}
+.btn-override:hover {{
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(239, 68, 68, 0.4);
+}}
+
+.override-reason-box {{
+  background: #f0f9ff; /* Light blue background */
+  border: 2px solid #3b82f6;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+}}
+.override-reason-box .reason-title {{
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e40af;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}}
+.override-reason-box .reason-option {{
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 8px 12px;
+  transition: background 0.2s ease;
+}}
+.override-reason-box .reason-option:hover {{
+  background: rgba(59, 130, 246, 0.1);
+}}
+.override-reason-box .reason-option input[type="radio"] {{
+  margin-right: 12px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+  width: 18px;
+  height: 18px;
+}}
+.override-reason-box .reason-option label {{
+  cursor: pointer;
+  color: #111827;
+  font-weight: 500;
+  margin: 0;
+}}
+
+.decision-status {{
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 12px;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}}
+
+/* Responsive: narrow viewports */
+@media (max-width: 768px) {{
+  .block-container {{ padding-left: 10px !important; padding-right: 10px !important; }}
+  .page-header {{ padding: 16px 18px; }}
+  .page-header h1 {{ font-size: 1.15rem !important; }}
+  .metric-tile .value {{ font-size: 1.1rem; }}
+  .ai-recommendation, .lhv-decision {{ padding: 16px; }}
+  .ai-recommendation .rec-verdict {{ font-size: 1.2rem; }}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -744,6 +866,86 @@ def render_hospital_hub():
             st.markdown(f"""<div class="alert-card {css}"><b>Alert #{a['id']}</b> ({a['time']})<br>
             <span style="font-family:Consolas,monospace;font-size:0.8rem;">Payload: {a['payload']}<br>
             Type: {a['type']} &nbsp; Status: {a['status']}</span></div>""", unsafe_allow_html=True)
+# AI RECOMMENDATION BOX - USE REAL DATA FROM INFERENCE
+            confidence = a.get("confidence", 75)  # Real confidence from model
+            verdict = a.get("verdict", "🟢 Routine Screening")  # Real verdict from model
+            vicon = a.get("vicon", "🟢")  # Real verdict icon
+            localization = a.get("localization", "N/A")  # Real localization
+            
+            st.markdown(f"""
+            <div class="ai-recommendation">
+                <div class="rec-header">🤖 AI Recommendation</div>
+                <div class="rec-verdict">{vicon} {verdict}</div>
+                <div class="rec-confidence">Confidence: <b>{confidence:.1f}%</b></div>
+                <div style="font-size: 0.9rem; margin-top: 8px; opacity: 0.95;">Localization: {localization}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # LHV DECISION BOX
+            col_agree, col_override = st.columns(2)
+            
+            with col_agree:
+                if st.button(f"✅ Agree", key=f"agree_{alert_id}", use_container_width=True):
+                    st.session_state.lhv_decisions[alert_id]["decision"] = "agree"
+                    st.session_state.show_override_reason[alert_id] = False
+                    st.toast(f"👩‍⚕️ LHV Decision: Agreed with AI recommendation")
+            
+            with col_override:
+                if st.button(f"🔄 Override", key=f"override_{alert_id}", use_container_width=True):
+                    st.session_state.lhv_decisions[alert_id]["decision"] = "override"
+                    st.session_state.show_override_reason[alert_id] = True
+                    st.rerun()
+            
+            # Show LHV Decision status
+            decision = st.session_state.lhv_decisions[alert_id]["decision"]
+            if decision:
+                status_text = "✅ Agreed with AI" if decision == "agree" else "🔴 Overridden"
+                status_color = "#10b981" if decision == "agree" else "#ef4444"
+                st.markdown(f"""
+                <div style="background: {status_color}20; border-left: 4px solid {status_color}; border-radius: 8px; padding: 12px; margin-top: 8px; margin-bottom: 12px;">
+                    <b>👩‍⚕️ LHV Decision:</b> {status_text}
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # OVERRIDE REASON BOX (shown only when Override is selected)
+            if st.session_state.show_override_reason[alert_id] and st.session_state.lhv_decisions[alert_id]["decision"] == "override":
+                st.markdown("""
+                <div class="override-reason-box">
+                    <div class="reason-title">📋 Reason for Override</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                reason_options = [
+                    "👤 Patient History",
+                    "📸 Image Quality",
+                    "🔬 Clinical Symptoms",
+                    "❓ Other"
+                ]
+                
+                selected_reason = st.radio(
+                    "Select reason for override:",
+                    reason_options,
+                    key=f"reason_{alert_id}",
+                    label_visibility="collapsed"
+                )
+                
+                st.session_state.lhv_decisions[alert_id]["reason"] = selected_reason
+                
+                # If "Other" is selected, allow custom text input
+                if "Other" in selected_reason:
+                    custom_reason = st.text_input(
+                        "Please specify the reason:",
+                        key=f"custom_reason_{alert_id}",
+                        placeholder="Enter additional details..."
+                    )
+                    st.session_state.lhv_decisions[alert_id]["reason"] = f"Other: {custom_reason}"
+                
+                # Confirmation button
+                if st.button(f"✓ Confirm Override", key=f"confirm_override_{alert_id}", use_container_width=True):
+                    st.toast(f"✅ Override confirmed. Reason: {st.session_state.lhv_decisions[alert_id]['reason']}")
+                    st.session_state.show_override_reason[alert_id] = False
+            
+            st.markdown("---")
 
 
 # ============================================================
