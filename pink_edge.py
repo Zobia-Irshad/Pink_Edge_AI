@@ -652,33 +652,33 @@ CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Nastaliq+Urdu:wght@400;500;600&display=swap');
 
 :root {
-    --bg: #0a0e1a;
-    --surface: #111827;
-    --surface-alt: #1e293b;
-    --surface-hover: #334155;
-    --border: #1e293b;
-    --border-light: #334155;
-    --text: #f1f5f9;
-    --text-muted: #94a3b8;
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --surface-alt: #f1f5f9;
+    --surface-hover: #e2e8f0;
+    --border: #cbd5e1;
+    --border-light: #e2e8f0;
+    --text: #0f172a;
+    --text-muted: #475569;
     --text-light: #64748b;
-    --primary: #14b8a6;
-    --primary-light: #2dd4bf;
-    --primary-dark: #0d9488;
-    --primary-bg: rgba(20, 184, 166, 0.1);
-    --accent: #ec4899;
-    --accent-light: #f472b6;
-    --accent-dark: #db2777;
-    --accent-bg: rgba(236, 72, 153, 0.1);
-    --success: #10b981;
-    --success-bg: rgba(16, 185, 129, 0.1);
-    --warning: #f59e0b;
-    --warning-bg: rgba(245, 158, 11, 0.1);
-    --danger: #ef4444;
-    --danger-bg: rgba(239, 68, 68, 0.1);
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-    --shadow: 0 4px 6px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-    --shadow-lg: 0 10px 25px rgba(0,0,0,0.5);
+    --primary: #0d9488;
+    --primary-light: #0f766e;
+    --primary-dark: #115e59;
+    --primary-bg: #f0fdf4;
+    --accent: #0284c7;
+    --accent-light: #0369a1;
+    --accent-dark: #075985;
+    --accent-bg: #f0f9ff;
+    --success: #15803d;
+    --success-bg: #f0fdf4;
+    --warning: #b45309;
+    --warning-bg: #fffbeb;
+    --danger: #b91c1c;
+    --danger-bg: #fef2f2;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow: 0 4px 6px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
     --radius: 14px;
     --radius-sm: 10px;
     --radius-xs: 6px;
@@ -742,12 +742,12 @@ h3 { font-size: 0.78rem !important; color: var(--text-muted) !important; text-tr
 .verdict-box.success .v-title { color: var(--success); }
 .verdict-box .v-sub { font-size: 0.88rem; margin-top: 4px; color: var(--text-muted); }
 
-.console-log { background: #060a13; border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; line-height: 1.8; max-height: 300px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; }
-.console-log .c-dicom { color: #60a5fa; }
-.console-log .c-npu { color: #34d399; }
-.console-log .c-gsm { color: #22d3ee; }
-.console-log .c-cloud { color: #fbbf24; }
-.console-log .c-cache { color: #f472b6; }
+.console-log { background: #f1f5f9; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; line-height: 1.8; max-height: 300px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; color: #0f172a; }
+.console-log .c-dicom { color: #0284c7; font-weight: 600; }
+.console-log .c-npu { color: #15803d; font-weight: 600; }
+.console-log .c-gsm { color: #0d9488; font-weight: 600; }
+.console-log .c-cloud { color: #b45309; font-weight: 600; }
+.console-log .c-cache { color: #0369a1; font-weight: 600; }
 .console-log .c-muted { color: #475569; }
 .console-log::-webkit-scrollbar { width: 5px; }
 .console-log::-webkit-scrollbar-track { background: transparent; }
@@ -776,7 +776,7 @@ h3 { font-size: 0.78rem !important; color: var(--text-muted) !important; text-tr
 .cloud-card .c-label { color: var(--text-muted); }
 .cloud-card .c-value { font-weight: 600; }
 
-.arch-box { background: #060a13; border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 18px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; line-height: 1.8; color: #94a3b8; }
+.arch-box { background: #f1f5f9; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 18px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; line-height: 1.8; color: #0f172a; }
 
 .section-header { display: flex; align-items: center; gap: 10px; margin: 16px 0 10px; }
 .section-header .s-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; background: var(--primary-bg); border: 1px solid rgba(20, 184, 166, 0.2); }

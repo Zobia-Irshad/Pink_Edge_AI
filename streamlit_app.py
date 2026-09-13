@@ -23,47 +23,256 @@ import GUI as core  # noqa: the shared logic module — see module docstring abo
 st.set_page_config(page_title="Pink Edge AI", page_icon="🩸", layout="wide", initial_sidebar_state="expanded")
 
 # ============================================================
-# RESPONSIVE DARK THEME (same color tokens as GUI.py's `C` / the original app's CSS)
+# COLOR TOKENS & PROFESSIONAL CLINICAL LIGHT THEME
 # ============================================================
-C = core.C
-CSS = f"""
+C = {
+    "bg": "#f8fafc",
+    "surface": "#ffffff",
+    "surface_alt": "#f1f5f9",
+    "surface_hover": "#e2e8f0",
+    "border": "#cbd5e1",
+    "border_light": "#e2e8f0",
+    "text": "#0f172a",
+    "text_muted": "#475569",
+    "text_light": "#64748b",
+    "primary": "#0d9488",
+    "primary_light": "#0f766e",
+    "accent": "#0284c7",
+    "accent_light": "#0369a1",
+    "success": "#16a34a",
+    "warning": "#d97706",
+    "danger": "#dc2626",
+}
+
+CSS = """
 <style>
-.stApp {{ background: {C['bg']}; color: {C['text']}; }}
-.block-container {{ padding-top: 2rem !important; padding-bottom: 2rem !important; max-width: 1300px !important; }}
-section[data-testid="stSidebar"] {{ background: {C['surface']} !important; }}
-h1, h2, h3, h4 {{ color: {C['text']} !important; }}
-.page-header {{ background: linear-gradient(135deg, {C['primary']} 0%, {C['accent']} 100%);
-  border-radius: 14px; padding: 22px 28px; margin-bottom: 16px; }}
-.page-header h1 {{ color: #fff !important; margin: 0 !important; font-size: 1.4rem !important; }}
-.page-header p {{ color: rgba(255,255,255,0.85); font-size: 0.85rem; margin: 6px 0 0 0; }}
-.badge {{ display: inline-flex; padding: 5px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }}
-.badge-offline {{ background: rgba(16,185,129,0.12); color: {C['success']}; border: 1px solid rgba(16,185,129,0.3); }}
-.badge-cloud {{ background: rgba(245,158,11,0.12); color: {C['warning']}; border: 1px solid rgba(245,158,11,0.3); }}
-.card {{ background: {C['surface']}; border: 1px solid {C['border']}; border-radius: 14px; padding: 16px; margin: 6px 0; }}
-.metric-tile {{ background: {C['surface']}; border: 1px solid {C['border']}; border-radius: 10px; padding: 12px; text-align: center; }}
-.metric-tile .label {{ color: {C['text_muted']}; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.6px; }}
-.metric-tile .value {{ font-size: 1.4rem; font-weight: 800; margin-top: 4px; }}
-.verdict-box {{ border-radius: 12px; padding: 20px; text-align: center; margin: 8px 0; }}
-.verdict-box.success {{ background: rgba(16,185,129,0.08); border: 2px solid rgba(16,185,129,0.3); }}
-.verdict-box.danger {{ background: rgba(239,68,68,0.08); border: 2px solid rgba(239,68,68,0.3); }}
-.verdict-box .v-icon {{ font-size: 1.6rem; }}
-.verdict-box .v-title {{ font-size: 1.3rem; font-weight: 800; }}
-.verdict-box.success .v-title {{ color: {C['success']}; }}
-.verdict-box.danger .v-title {{ color: {C['danger']}; }}
-.verdict-box .v-sub {{ font-size: 0.85rem; margin-top: 4px; color: {C['text_muted']}; }}
-.console-log {{ background: #060a13; border: 1px solid {C['border_light']}; border-radius: 10px; padding: 14px;
-  font-family: 'Consolas', monospace; font-size: 0.76rem; line-height: 1.7; max-height: 260px; overflow-y: auto; }}
-.alert-card {{ border-radius: 10px; padding: 14px; margin: 6px 0; border-left: 4px solid; }}
-.alert-card.critical {{ background: rgba(239,68,68,0.08); border-color: {C['danger']}; }}
-.alert-card.ok {{ background: rgba(16,185,129,0.08); border-color: {C['success']}; }}
-.source-tag {{ font-size: 0.72rem; color: {C['text_muted']}; font-family: Consolas, monospace; }}
-/* --- responsive: narrow viewports (phones/small tablets) --- */
-@media (max-width: 768px) {{
-  .block-container {{ padding-left: 10px !important; padding-right: 10px !important; }}
-  .page-header {{ padding: 16px 18px; }}
-  .page-header h1 {{ font-size: 1.15rem !important; }}
-  .metric-tile .value {{ font-size: 1.1rem; }}
-}}
+/* Main App Background & High Contrast Default Text */
+.stApp {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+/* Sidebar Styling */
+section[data-testid="stSidebar"] {
+    background-color: #ffffff !important;
+    border-right: 1px solid #cbd5e1 !important;
+}
+section[data-testid="stSidebar"] * {
+    color: #0f172a !important;
+}
+
+/* Container Padding */
+.block-container {
+    padding-top: 1.8rem !important;
+    padding-bottom: 2rem !important;
+    max-width: 1300px !important;
+}
+
+/* Headings & Text Overrides — Guaranteed Readability */
+h1, h2, h3, h4, h5, h6, label, p, span, div, li, td, th {
+    color: #0f172a !important;
+}
+.stMarkdown p, .stMarkdown label, .stMarkdown span {
+    color: #0f172a !important;
+}
+
+/* Header Banner */
+.page-header {
+    background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
+    border-radius: 12px;
+    padding: 22px 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+}
+.page-header h1 {
+    color: #ffffff !important;
+    margin: 0 !important;
+    font-size: 1.5rem !important;
+    font-weight: 800 !important;
+}
+.page-header p {
+    color: #f0fdf4 !important;
+    font-size: 0.88rem !important;
+    margin: 6px 0 0 0 !important;
+}
+
+/* Badges */
+.badge {
+    display: inline-flex;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+.badge-offline {
+    background: #f0fdf4 !important;
+    color: #15803d !important;
+    border: 1px solid #86efac !important;
+}
+.badge-cloud {
+    background: #fffbeb !important;
+    color: #b45309 !important;
+    border: 1px solid #fde68a !important;
+}
+
+/* Cards & Metric Tiles */
+.card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 12px !important;
+    padding: 18px !important;
+    margin: 8px 0 !important;
+    color: #0f172a !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+}
+.card b, .card span {
+    color: #0f172a !important;
+}
+
+.metric-tile {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    padding: 14px !important;
+    text-align: center !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+}
+.metric-tile .label {
+    color: #475569 !important;
+    font-size: 0.74rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.6px !important;
+}
+.metric-tile .value {
+    color: #0d9488 !important;
+    font-size: 1.4rem !important;
+    font-weight: 800 !important;
+    margin-top: 4px !important;
+}
+
+/* Verdict Boxes */
+.verdict-box {
+    border-radius: 12px !important;
+    padding: 20px !important;
+    text-align: center !important;
+    margin: 12px 0 !important;
+}
+.verdict-box.success {
+    background: #f0fdf4 !important;
+    border: 2px solid #86efac !important;
+}
+.verdict-box.success .v-title {
+    color: #15803d !important;
+}
+.verdict-box.danger {
+    background: #fef2f2 !important;
+    border: 2px solid #fca5a5 !important;
+}
+.verdict-box.danger .v-title {
+    color: #b91c1c !important;
+}
+.verdict-box.warning {
+    background: #fffbeb !important;
+    border: 2px solid #fde68a !important;
+}
+.verdict-box.warning .v-title {
+    color: #b45309 !important;
+}
+.verdict-box .v-icon {
+    font-size: 1.8rem !important;
+}
+.verdict-box .v-title {
+    font-size: 1.3rem !important;
+    font-weight: 800 !important;
+}
+.verdict-box .v-sub {
+    font-size: 0.88rem !important;
+    margin-top: 4px !important;
+    color: #334155 !important;
+    font-weight: 600 !important;
+}
+
+/* Telemetry Log */
+.console-log {
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    padding: 14px !important;
+    color: #0f172a !important;
+    font-family: 'Consolas', 'Courier New', monospace !important;
+    font-size: 0.78rem !important;
+    line-height: 1.7 !important;
+    max-height: 260px !important;
+    overflow-y: auto !important;
+}
+
+/* Alert Cards */
+.alert-card {
+    border-radius: 10px !important;
+    padding: 14px !important;
+    margin: 6px 0 !important;
+    border-left: 4px solid !important;
+}
+.alert-card.critical {
+    background: #fef2f2 !important;
+    border-color: #ef4444 !important;
+    color: #991b1b !important;
+}
+.alert-card.ok {
+    background: #f0fdf4 !important;
+    border-color: #10b981 !important;
+    color: #166534 !important;
+}
+
+.source-tag {
+    font-size: 0.75rem !important;
+    color: #475569 !important;
+    font-family: monospace !important;
+    font-weight: 700 !important;
+}
+
+/* Streamlit Native Components — Crisp Light Styling */
+div[data-baseweb="select"] > div {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+}
+div[data-baseweb="select"] span {
+    color: #0f172a !important;
+}
+div[data-baseweb="input"] input {
+    color: #0f172a !important;
+    background-color: #ffffff !important;
+}
+.stButton > button {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    font-weight: 600 !important;
+}
+.stButton > button:hover {
+    background-color: #f1f5f9 !important;
+    border-color: #0d9488 !important;
+    color: #0d9488 !important;
+}
+.stTabs [data-baseweb="tab-list"] {
+    background-color: #ffffff !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+}
+.stTabs [data-baseweb="tab"] {
+    color: #475569 !important;
+    font-weight: 700 !important;
+}
+.stTabs [aria-selected="true"] {
+    color: #0d9488 !important;
+}
+.stDataFrame, [data-testid="stTable"] {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
