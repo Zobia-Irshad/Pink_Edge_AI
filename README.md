@@ -67,6 +67,8 @@ All three modalities check for a Roboflow API key and use it if present:
 
 GUI.py                    — Tkinter desktop app: UI + local SQLite cache + reports + fallbacks
 streamlit_app.py           — Streamlit web app (responsive) — same logic, imported from GUI.py
+auth_manager.py             — Multi-tenant biometric / PIN access control module (LHW vs. Senior Radiologist RBAC)
+test_auth.py                — Automated test suite for RBAC PIN authentication and permissions
 dicom_anonymizer.py         — Offline DICOM anonymization & Hexadecimal Privacy Hashing module (HIPAA/GDPR compliant)
 test_anonymizer.py          — Automated test suite for DICOM PII stripping and hex hashing
 inference.py                — model loading + prediction dispatch for all three modalities

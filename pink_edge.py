@@ -25,6 +25,7 @@ import json
 from datetime import datetime
 
 from dicom_anonymizer import generate_hex_privacy_hash, anonymize_dicom_metadata
+from auth_manager import AuthManager, ROLE_LHW, ROLE_RADIOLOGIST, ROLE_CONFIGS
 
 try:
     from fpdf import FPDF
@@ -819,6 +820,7 @@ def init_state():
     raw_id = random.randint(10000000, 99999999)
     privacy_hash = generate_hex_privacy_hash({"pat_id": raw_id, "cnic": f"35201-{raw_id}-1"})
     defaults = {
+        "user_role": ROLE_LHW,
         "log_entries": [], "inference_done": False, "npu_active": False,
         "last_uploaded": None, "last_model": None, "sms_alerts": [],
         "pat_id": raw_id,
@@ -854,6 +856,43 @@ def render_sidebar():
             </div>
         </div>
         """, unsafe_allow_html=True)
+
+        # RBAC AUTHENTICATION PANEL
+        current_role = st.session_state.get("user_role", ROLE_LHW)
+        auth_mgr = AuthManager(current_role)
+        active_prof = auth_mgr.get_active_profile()
+
+        st.markdown(f"""
+        <div style="background:{active_prof['color']}15;border:1px solid {active_prof['color']}50;border-radius:6px;padding:8px 10px;margin-bottom:12px;">
+            <div style="font-size:0.72rem;color:var(--text-muted);font-weight:600;">ACTIVE USER PROFILE</div>
+            <div style="font-size:0.88rem;font-weight:700;color:{active_prof['color']};margin-top:2px;">{active_prof['badge']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("##### 🔐 Biometric / PIN Auth")
+        ac1, ac2 = st.columns(2)
+        with ac1:
+            if st.button("👤 LHW (1111)", use_container_width=True, key="quick_lhw",
+                         type="primary" if current_role == ROLE_LHW else "secondary"):
+                st.session_state.user_role = ROLE_LHW
+                st.rerun()
+        with ac2:
+            if st.button("👨‍⚕️ Doctor (9999)", use_container_width=True, key="quick_rad",
+                         type="primary" if current_role == ROLE_RADIOLOGIST else "secondary"):
+                st.session_state.user_role = ROLE_RADIOLOGIST
+                st.rerun()
+
+        pin_input = st.text_input("Enter Numeric PIN", type="password", placeholder="PIN (1111 / 9999)", label_visibility="collapsed", key="pin_in")
+        if pin_input:
+            authenticated = auth_mgr.authenticate_pin(pin_input)
+            if authenticated:
+                st.session_state.user_role = authenticated
+                st.success(f"Authenticated: {ROLE_CONFIGS[authenticated]['name']}")
+                st.rerun()
+            else:
+                st.error("Invalid PIN")
+
+        st.markdown("---")
 
         st.markdown(f"#### {t('Language')}")
         lc1, lc2 = st.columns(2)
@@ -1095,7 +1134,11 @@ def render_dashboard(selected_model, uploaded_file):
                 val_class = "accent" if result["is_critical"] else "success"
                 st.markdown(f'<div class="metric-tile"><div class="label">{t("Confidence")}</div><div class="value {val_class}">{conf_str}</div></div>', unsafe_allow_html=True)
             with mc3:
-                latency_str = f"{st.session_state.inference_latency}s"
+                auth_m = AuthManager(st.session_state.get("user_role", ROLE_LHW))
+                if auth_m.has_permission("view_hardware_stats"):
+                    latency_str = f"{st.session_state.inference_latency}s"
+                else:
+                    latency_str = "INT8 Edge"
                 st.markdown(f'<div class="metric-tile"><div class="label">{t("Latency")}</div><div class="value primary">{latency_str}</div></div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="image-viewer">', unsafe_allow_html=True)
@@ -1165,20 +1208,24 @@ def render_dashboard(selected_model, uploaded_file):
             </div>
             """, unsafe_allow_html=True)
 
-            st.markdown(f"""
-            <div class="section-header">
-                <div class="s-icon">✏️</div>
-                <div class="s-title">{t('Confirm Assessment')}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            auth_m = AuthManager(st.session_state.get("user_role", ROLE_LHW))
+            if auth_m.has_permission("override_assessment"):
+                st.markdown(f"""
+                <div class="section-header">
+                    <div class="s-icon">✏️</div>
+                    <div class="s-title">{t('Confirm Assessment')}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-            default_br = st.session_state.bi_rads_selected or BI_RADS_OPTIONS[7]
-            br_idx = BI_RADS_OPTIONS.index(default_br) if default_br in BI_RADS_OPTIONS else 7
-            st.session_state.bi_rads_selected = st.selectbox(t("BI-RADS Assessment"), BI_RADS_OPTIONS, index=br_idx, key="br_dd")
+                default_br = st.session_state.bi_rads_selected or BI_RADS_OPTIONS[7]
+                br_idx = BI_RADS_OPTIONS.index(default_br) if default_br in BI_RADS_OPTIONS else 7
+                st.session_state.bi_rads_selected = st.selectbox(t("BI-RADS Assessment"), BI_RADS_OPTIONS, index=br_idx, key="br_dd")
 
-            default_acr = st.session_state.acr_density_selected or ACR_DENSITY_OPTIONS[2]
-            acr_idx = ACR_DENSITY_OPTIONS.index(default_acr) if default_acr in ACR_DENSITY_OPTIONS else 2
-            st.session_state.acr_density_selected = st.selectbox(t("ACR Breast Density"), ACR_DENSITY_OPTIONS, index=acr_idx, key="acr_dd")
+                default_acr = st.session_state.acr_density_selected or ACR_DENSITY_OPTIONS[2]
+                acr_idx = ACR_DENSITY_OPTIONS.index(default_acr) if default_acr in ACR_DENSITY_OPTIONS else 2
+                st.session_state.acr_density_selected = st.selectbox(t("ACR Breast Density"), ACR_DENSITY_OPTIONS, index=acr_idx, key="acr_dd")
+            else:
+                st.info("🔒 BI-RADS Diagnostic Override Controls locked for LHW profile. (Radiologist Authorization required to modify).")
 
             if result["is_critical"]:
                 st.warning(f"⚠️ {t('Immediate Action Required')}: {t('Patient should be referred for specialist consultation')}")
@@ -1219,28 +1266,30 @@ def render_dashboard(selected_model, uploaded_file):
             if st.session_state.cache_saved:
                 st.success(t("Report safely cached to offline hardware node."))
 
-    st.markdown("---")
-    st.markdown(f"""
-    <div class="section-header">
-        <div class="s-icon">📊</div>
-        <div class="s-title">{t('Telemetry Log')}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    auth_m = AuthManager(st.session_state.get("user_role", ROLE_LHW))
+    if auth_m.has_permission("view_telemetry_logs"):
+        st.markdown("---")
+        st.markdown(f"""
+        <div class="section-header">
+            <div class="s-icon">📊</div>
+            <div class="s-title">{t('Telemetry Log')}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    if st.session_state.log_entries:
-        log_html = '<div class="console-log">'
-        for entry in st.session_state.log_entries:
-            if "[DICOM" in entry: cls = "c-dicom"
-            elif "[NPU" in entry: cls = "c-npu"
-            elif "[GSM" in entry: cls = "c-gsm"
-            elif "[Alibaba" in entry: cls = "c-cloud"
-            elif "[SQLite" in entry: cls = "c-cache"
-            else: cls = "c-muted"
-            log_html += f'<div class="{cls}">{entry}</div>'
-        log_html += '</div>'
-        st.markdown(log_html, unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="console-log"><span class="c-muted">> System initialized. Awaiting commands...</span></div>', unsafe_allow_html=True)
+        if st.session_state.log_entries:
+            log_html = '<div class="console-log">'
+            for entry in st.session_state.log_entries:
+                if "[DICOM" in entry: cls = "c-dicom"
+                elif "[NPU" in entry: cls = "c-npu"
+                elif "[GSM" in entry: cls = "c-gsm"
+                elif "[Alibaba" in entry: cls = "c-cloud"
+                elif "[SQLite" in entry: cls = "c-cache"
+                else: cls = "c-muted"
+                log_html += f'<div class="{cls}">{entry}</div>'
+            log_html += '</div>'
+            st.markdown(log_html, unsafe_allow_html=True)
+        else:
+            st.markdown('<div class="console-log"><span class="c-muted">> System initialized. Awaiting commands...</span></div>', unsafe_allow_html=True)
 
 
 # ============================================================

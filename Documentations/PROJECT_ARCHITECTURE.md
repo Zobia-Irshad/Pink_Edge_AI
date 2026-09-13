@@ -101,3 +101,12 @@ Pink Edge AI includes an offline privacy engine (`dicom_anonymizer.py`) that gua
 - **Over-The-Air Airwave Protection**: Transmitted 2G SMS payloads use the anonymized Hex Privacy Hash (`ID:HEX-8F3A1C9B|LOC:ANON|...`), rendering intercepted airwave packets completely anonymous.
 - **Clinical Parameter Preservation**: Retains vital non-PII clinical parameters (`PatientAge`, `PatientSex`, `Modality`, `BodyPartExamined`, `PixelData`) required for Edge NPU inference and specialist triage.
 
+## 9. Multi-Tenant Biometric Access Control & RBAC (LHW vs. Senior Radiologist Profiles)
+
+The platform features a gatekeeper access control engine (`auth_manager.py`) providing data security and liability protection:
+
+- **Lady Health Worker (LHW) Profile (PIN `1111`)**: Tailored for village health workers. Provides simplified patient intake and clear binary triage guidance (`✅ Normal` vs `⚠️ Referral Required`), while locking diagnostic overrides, raw NPU latency metrics, telemetry console, and cloud sync.
+- **Senior Radiologist Profile (PIN `9999`)**: Unlocks full clinical intelligence suite, BI-RADS 0–5 & ACR density diagnostic override selectors, raw INT8 NPU performance metrics, telemetry console, Hospital Hub receiving terminal, and Alibaba Cloud Sync / OTA update controls.
+- **Biometric / RFID Card Auth Simulation**: Supports 1-touch profile switching for fast workflow testing.
+
+

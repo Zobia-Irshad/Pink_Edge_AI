@@ -29,6 +29,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 import inference as inf
 from dicom_anonymizer import generate_hex_privacy_hash, anonymize_dicom_metadata
+from auth_manager import AuthManager, ROLE_LHW, ROLE_RADIOLOGIST, ROLE_CONFIGS
 
 
 def _lazy_import_tkinter():
@@ -438,6 +439,7 @@ class PinkEdgeApp:
         self.current_image = None
         self.current_result = None
         self.inference_done = False
+        self.user_role = ROLE_LHW
         self.pat_id = random.randint(10000000, 99999999)
         self.privacy_hash = generate_hex_privacy_hash({"pat_id": self.pat_id, "cnic": f"35201-{self.pat_id}-1"})
         self.pat_age = random.randint(30, 70)

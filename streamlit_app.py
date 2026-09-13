@@ -76,9 +76,11 @@ core.init_db()
 def init_state():
     import random
     from dicom_anonymizer import generate_hex_privacy_hash
+    from auth_manager import ROLE_LHW
     raw_id = random.randint(10000000, 99999999)
     privacy_hash = generate_hex_privacy_hash({"pat_id": raw_id, "cnic": f"35201-{raw_id}-1"})
     defaults = {
+        "user_role": ROLE_LHW,
         "urdu_mode": False, "network_mode": "Fully Offline", "show_bbox": True,
         "log_entries": [], "inference_done": False, "last_model": None,
         "current_result": None, "current_image": None, "uploaded_name": None,
@@ -103,12 +105,39 @@ t = core.t
 # SIDEBAR
 # ============================================================
 def render_sidebar():
+    from auth_manager import AuthManager, ROLE_LHW, ROLE_RADIOLOGIST, ROLE_CONFIGS
     with st.sidebar:
         st.markdown(
             '<div style="background:linear-gradient(135deg,{p} 0%,{a} 100%);border-radius:10px;'
             'padding:14px;margin-bottom:14px;color:#fff;"><b>🩸 Pink Edge AI</b>'
             '<div style="font-size:0.72rem;opacity:0.85;">Clinical Intelligence Platform</div></div>'
             .format(p=C["primary"], a=C["accent"]), unsafe_allow_html=True)
+
+        current_role = st.session_state.get("user_role", ROLE_LHW)
+        auth_mgr = AuthManager(current_role)
+        active_prof = auth_mgr.get_active_profile()
+
+        st.markdown(f"""
+        <div style="background:{active_prof['color']}15;border:1px solid {active_prof['color']}50;border-radius:6px;padding:6px 8px;margin-bottom:8px;">
+            <div style="font-size:0.68rem;color:var(--text-muted);font-weight:600;">ACTIVE USER PROFILE</div>
+            <div style="font-size:0.82rem;font-weight:700;color:{active_prof['color']};">{active_prof['badge']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        ac1, ac2 = st.columns(2)
+        if ac1.button("👤 LHW", width="stretch"):
+            st.session_state.user_role = ROLE_LHW
+            st.rerun()
+        if ac2.button("👨‍⚕️ Doctor", width="stretch"):
+            st.session_state.user_role = ROLE_RADIOLOGIST
+            st.rerun()
+
+        pin_in = st.text_input("PIN Auth", type="password", placeholder="PIN (1111 / 9999)", label_visibility="collapsed", key="st_pin_in")
+        if pin_in:
+            auth_role = auth_mgr.authenticate_pin(pin_in)
+            if auth_role:
+                st.session_state.user_role = auth_role
+                st.rerun()
 
         lc1, lc2 = st.columns(2)
         if lc1.button("🇬🇧 EN", width="stretch"):
@@ -319,15 +348,20 @@ def render_dashboard(selected_model):
             st.markdown(f"""<div class="card"><span class="source-tag">Source: {r.get('source', 'N/A')}</span><br>
             Localization: <b>{r['loc']}</b><br>Classification: <b>{r['extra']}</b></div>""", unsafe_allow_html=True)
 
-            st.subheader(t("Confirm Assessment"))
-            if "Tuberculosis" in selected_model:
-                opts1, opts2, l1, l2 = core.TB_SEVERITY_LEVELS, core.TB_LUNG_ZONES, "TB Severity", "Lung Zone"
+            from auth_manager import AuthManager, ROLE_LHW
+            auth_m = AuthManager(st.session_state.get("user_role", ROLE_LHW))
+            if auth_m.has_permission("override_assessment"):
+                st.subheader(t("Confirm Assessment"))
+                if "Tuberculosis" in selected_model:
+                    opts1, opts2, l1, l2 = core.TB_SEVERITY_LEVELS, core.TB_LUNG_ZONES, "TB Severity", "Lung Zone"
+                else:
+                    opts1, opts2, l1, l2 = core.BI_RADS_OPTIONS, core.ACR_DENSITY_OPTIONS, "BI-RADS Assessment", "ACR Breast Density"
+                idx1 = opts1.index(r["bi_rads"]) if r["bi_rads"] in opts1 else 0
+                idx2 = opts2.index(r["acr"]) if r["acr"] in opts2 else 0
+                st.session_state.bi_rads_selected = st.selectbox(l1, opts1, index=idx1)
+                st.session_state.acr_density_selected = st.selectbox(l2, opts2, index=idx2)
             else:
-                opts1, opts2, l1, l2 = core.BI_RADS_OPTIONS, core.ACR_DENSITY_OPTIONS, "BI-RADS Assessment", "ACR Breast Density"
-            idx1 = opts1.index(r["bi_rads"]) if r["bi_rads"] in opts1 else 0
-            idx2 = opts2.index(r["acr"]) if r["acr"] in opts2 else 0
-            st.session_state.bi_rads_selected = st.selectbox(l1, opts1, index=idx1)
-            st.session_state.acr_density_selected = st.selectbox(l2, opts2, index=idx2)
+                st.info("🔒 BI-RADS Diagnostic Override Controls locked for LHW profile. (Senior Radiologist PIN 9999 required).")
 
             if r["is_critical"]:
                 st.warning(f"⚠️ {t('Immediate Action Required')}: {t('Patient should be referred for specialist consultation')}")
