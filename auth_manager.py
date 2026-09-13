@@ -1,112 +1,105 @@
 """
-Pink Edge AI — Multi-Tenant Biometric Access Control & RBAC Module
-====================================================================
-Establishes role-based access control (RBAC), clinical data security,
-and liability protection for rural Lady Health Workers (LHW) vs urban
-Senior Radiologists / Supervisors.
+auth_manager.py
+---------------
+Role-based access control (RBAC) for Pink Edge AI.
+
+Defines two user roles:
+  - ROLE_LHW         : Lady Health Worker  — limited permissions
+  - ROLE_RADIOLOGIST : Senior Radiologist  — full permissions (PIN: 9999)
+
+No external dependencies — pure Python stdlib.
 """
 
-from typing import Dict, Any, Optional
-
-# Defined Role Profiles
-ROLE_LHW = "lhw"
+# ── Role constants ──────────────────────────────────────────────────────────
+ROLE_LHW         = "lhw"
 ROLE_RADIOLOGIST = "radiologist"
 
+# ── Role configuration ───────────────────────────────────────────────────────
+# Each role entry contains:
+#   badge       : display label shown in the sidebar
+#   color       : hex accent colour for the profile card
+#   pin         : numeric PIN string to elevate to this role (None = no PIN auth)
+#   permissions : set of capability strings checked by has_permission()
 ROLE_CONFIGS = {
     ROLE_LHW: {
-        "name": "Lady Health Worker (LHW)",
-        "title": "Rural VHU Triage Intake Profile",
+        "badge": "👤 Lady Health Worker (LHW)",
+        "color": "#ff69b4",
         "pin": "1111",
-        "badge": "👤 LHW Rural Intake Mode",
-        "icon": "👤",
-        "color": "#10b981",
-        "description": "Simplified rural intake, binary triage verdict ('Normal' vs 'Referral Required'), and primary screening.",
         "permissions": {
-            "view_binary_verdict": True,
-            "view_patient_intake": True,
-            "download_reports": True,
-            "view_hex_privacy_hash": True,
-            "view_full_metadata": False,
-            "override_assessment": False,
-            "view_telemetry_logs": False,
-            "view_hardware_stats": False,
-            "view_hospital_hub": False,
-            "view_cloud_sync": False,
-            "manage_ota": False,
-        }
+            "view_results",
+            "download_report",
+            "run_triage",
+        },
     },
     ROLE_RADIOLOGIST: {
-        "name": "Senior Radiologist",
-        "title": "Urban Hub Clinical Intelligence Suite",
+        "badge": "👨‍⚕️ Senior Radiologist",
+        "color": "#a855f7",
         "pin": "9999",
-        "badge": "👨‍⚕️ Senior Radiologist Clinical Suite",
-        "icon": "👨‍⚕️",
-        "color": "#0284c7",
-        "description": "Full clinical intelligence suite, raw NPU latency metrics, BI-RADS/ACR overrides, Telemetry Logs, Hospital Hub, & Cloud Sync.",
         "permissions": {
-            "view_binary_verdict": True,
-            "view_patient_intake": True,
-            "download_reports": True,
-            "view_hex_privacy_hash": True,
-            "view_full_metadata": True,
-            "override_assessment": True,
-            "view_telemetry_logs": True,
-            "view_hardware_stats": True,
-            "view_hospital_hub": True,
-            "view_cloud_sync": True,
-            "manage_ota": True,
-        }
-    }
+            "view_results",
+            "download_report",
+            "run_triage",
+            "override_assessment",
+            "view_audit_log",
+            "export_dicom",
+            "manage_users",
+        },
+    },
 }
 
-
+# ── AuthManager class ────────────────────────────────────────────────────────
 class AuthManager:
     """
-    Manages multi-tenant authentication, numeric PIN validation,
-    simulated biometric/RFID logins, and role permissions.
+    Lightweight stateless auth helper.
+
+    Usage
+    -----
+    auth = AuthManager(current_role)
+    auth.has_permission("override_assessment")  # → True / False
+    auth.authenticate_pin("9999")               # → ROLE_RADIOLOGIST or None
+    auth.get_active_profile()                   # → dict with badge, color, …
     """
 
-    def __init__(self, current_role: str = ROLE_LHW):
-        self.current_role = current_role if current_role in ROLE_CONFIGS else ROLE_LHW
+    def __init__(self, role: str = ROLE_LHW):
+        if role not in ROLE_CONFIGS:
+            role = ROLE_LHW
+        self._role = role
 
-    def authenticate_pin(self, pin: str) -> Optional[str]:
+    # ── Properties ──────────────────────────────────────────────────────────
+    @property
+    def role(self) -> str:
+        return self._role
+
+    # ── Public API ───────────────────────────────────────────────────────────
+    def get_active_profile(self) -> dict:
+        """Return the full config dict for the current role."""
+        return ROLE_CONFIGS[self._role]
+
+    def has_permission(self, permission: str) -> bool:
+        """Return True if the current role has the requested permission."""
+        return permission in ROLE_CONFIGS[self._role]["permissions"]
+
+    def authenticate_pin(self, pin: str):
         """
-        Validates numeric PIN and returns the matching role identifier if successful.
-        '1111' -> LHW, '9999' -> Radiologist.
+        Try to match *pin* against all role PINs.
+
+        Returns
+        -------
+        str or None
+            The matching role string if the PIN is valid, otherwise None.
         """
-        pin_clean = str(pin).strip()
-        for role_key, config in ROLE_CONFIGS.items():
-            if config["pin"] == pin_clean:
-                self.current_role = role_key
-                return role_key
+        pin = str(pin).strip()
+        for role, cfg in ROLE_CONFIGS.items():
+            if cfg.get("pin") and cfg["pin"] == pin:
+                return role
         return None
 
-    def simulated_biometric_login(self, role: str) -> bool:
-        """
-        Simulates a 1-touch fingerprint or RFID card scan authentication.
-        """
-        if role in ROLE_CONFIGS:
-            self.current_role = role
-            return True
-        return False
+    # ── Convenience helpers ──────────────────────────────────────────────────
+    def is_radiologist(self) -> bool:
+        return self._role == ROLE_RADIOLOGIST
 
-    def get_active_profile(self) -> Dict[str, Any]:
-        """Returns metadata for the currently active role profile."""
-        return ROLE_CONFIGS[self.current_role]
+    def is_lhw(self) -> bool:
+        return self._role == ROLE_LHW
 
-    def has_permission(self, permission_name: str) -> bool:
-        """Checks if the currently active role has a specific permission."""
-        perms = ROLE_CONFIGS[self.current_role]["permissions"]
-        return perms.get(permission_name, False)
-
-
-# Convenience functions for single-line checks
-def check_pin(pin: str) -> Optional[str]:
-    mgr = AuthManager()
-    return mgr.authenticate_pin(pin)
-
-
-def is_permission_granted(role: str, permission_name: str) -> bool:
-    if role not in ROLE_CONFIGS:
-        return False
-    return ROLE_CONFIGS[role]["permissions"].get(permission_name, False)
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"AuthManager(role={self._role!r})"
