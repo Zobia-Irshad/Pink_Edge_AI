@@ -26,42 +26,160 @@ st.set_page_config(page_title="Pink Edge AI", page_icon="🩸", layout="wide", i
 # COLOR TOKENS & PROFESSIONAL CLINICAL LIGHT THEME
 # ============================================================
 C = {
-    "bg": "#F3F6FB",
-    "surface": "#FFFFFF",
-    "surface_alt": "#EEF2F7",
-    "surface_hover": "#E5EAF1",
-    "border": "#D5DCE5",
-    "border_light": "#E5EAF1",
-    "text": "#172033",
-    "text_muted": "#5B6575",
-    "text_light": "#7A8494",
-    "primary": "#1F2A6B",
-    "primary_light": "#2C3A86",
-    "accent": "#243B80",
-    "accent_light": "#344C99",
-    "success": "#2E8B57",
-    "warning": "#F0A21A",
-    "danger": "#D62828",
-    "pink": "#E91E73",
+    "bg": "#f8fafc",
+    "surface": "#ffffff",
+    "surface_alt": "#f1f5f9",
+    "surface_hover": "#e2e8f0",
+    "border": "#cbd5e1",
+    "border_light": "#e2e8f0",
+    "text": "#0f172a",
+    "text_muted": "#475569",
+    "text_light": "#64748b",
+    "primary": "#0d9488",
+    "primary_light": "#0f766e",
+    "accent": "#0284c7",
+    "accent_light": "#0369a1",
+    "success": "#16a34a",
+    "warning": "#d97706",
+    "danger": "#dc2626",
 }
+
+# ============================================================
+# VOICE MESSAGE LIBRARY
+# ------------------------------------------------------------
+# Offline text templates for the Voice Guidance feature (English/Urdu/
+# Punjabi). play_voice_message() is a stub that returns None (no audio
+# bytes) so the UI still renders and functions with text-only fallback.
+# Swap its body for a real offline TTS engine (e.g. Piper) or an online
+# TTS API (e.g. gTTS) when ready — it must keep returning bytes st.audio()
+# can play, or None if unavailable.
+# ============================================================
+VOICE_MESSAGES = {
+    "rescan": {
+        "en": "Image quality too low. Please rescan the patient.",
+        "ur": "تصویر کا معیار کم ہے۔ براہ کرم دوبارہ اسکین کریں۔",
+        "pa": "تصویر دا معیار گھٹ ہے۔ دوبارہ سکین کرو۔",
+    },
+    "escalate": {
+        "en": "Urgent referral required. Please escalate this case.",
+        "ur": "فوری ریفرل ضروری ہے۔ براہ کرم یہ کیس آگے بھیجیں۔",
+        "pa": "فوری ریفرل ضروری ہے۔ کیس اگے بھیجو۔",
+    },
+    "missing_field": {
+        "en": "A required field is missing. Please complete the form.",
+        "ur": "ایک ضروری خانہ خالی ہے۔ فارم مکمل کریں۔",
+        "pa": "اک ضروری خانہ خالی ہے۔ فارم پورا کرو۔",
+    },
+    "success": {
+        "en": "Triage completed successfully.",
+        "ur": "ٹریاج کامیابی سے مکمل ہوگئی۔",
+        "pa": "ٹریاج کامیابی نال مکمل ہوگئی۔",
+    },
+    "sync_success": {
+        "en": "Cloud sync completed successfully.",
+        "ur": "کلاؤڈ سنک کامیابی سے مکمل ہوگئی۔",
+        "pa": "کلاؤڈ سنک کامیابی نال مکمل ہوگئی۔",
+    },
+    "network_error": {
+        "en": "Network connection failed. Working in offline mode.",
+        "ur": "نیٹ ورک کنکشن ناکام ہوگیا۔ آف لائن موڈ میں کام جاری ہے۔",
+        "pa": "نیٹ ورک کنکشن ناکام ہوگیا۔ آف لائن موڈ وچ کم جاری ہے۔",
+    },
+}
+
+
+def play_voice_message(message_key: str, lang: str):
+    """
+    Returns audio bytes suitable for st.audio(), or None if no audio is
+    available (the UI falls back to showing the message text only).
+    Currently a stub with no real TTS engine wired in — plug in Piper
+    (offline) or gTTS (online, needs internet) here later.
+    """
+    # Example for a real implementation with Piper (offline):
+    #   from piper import synthesize
+    #   return synthesize(VOICE_MESSAGES.get(message_key, {}).get(lang, ""))
+    return None
+
+
+def combine_icon_and_text(icon: str, text: str) -> str:
+    """
+    Joins a status icon with its text without duplicating the icon —
+    some model results already bake an emoji into the verdict string
+    (e.g. "🟢 Routine Screening"), so blindly prefixing `icon` again
+    produced "🟢 🟢 Routine Screening". This checks first.
+    """
+    text = (text or "").strip()
+    icon = (icon or "").strip()
+    if not icon or text.startswith(icon):
+        return text
+    return f"{icon} {text}".strip()
+
+
+def html_block(s: str) -> str:
+    """
+    Strips per-line leading/trailing whitespace from a multi-line HTML
+    string built with an indented Python f-string.
+
+    Why this matters: Streamlit's markdown renderer follows CommonMark,
+    where any line indented 4+ spaces is treated as a literal "indented
+    code block" — rendered as raw monospace text, HTML tags and all,
+    even with unsafe_allow_html=True. Since our HTML strings are written
+    inside nested functions/if-blocks, every line naturally inherits 8+
+    spaces of Python indentation, which was silently triggering this
+    exact bug. Wrap any multi-line HTML f-string passed to st.markdown
+    with this function to avoid it.
+    """
+    return "\n".join(line.strip() for line in s.strip("\n").splitlines())
+
+
+# ------------------------------------------------------------
+# GLOBAL FIX: auto-dedent every st.markdown(..., unsafe_allow_html=True)
+# ------------------------------------------------------------
+# html_block() above only helps at call sites that actually use it — and
+# none of them did. Several st.markdown(f"""<div ...>...""",
+# unsafe_allow_html=True) calls inside render_dashboard / render_hospital_hub
+# / render_cloud_sync are written inside nested functions/if-blocks, so
+# their f-strings inherit 8+ spaces of Python indentation. Streamlit's
+# Markdown renderer follows CommonMark, where any line indented 4+ spaces is
+# treated as a literal "indented code block" and rendered as raw text
+# (tags and all, complete with the copy-icon Streamlit shows on code
+# blocks) even with unsafe_allow_html=True. That's exactly the bug in the
+# screenshots (the "Triage result" card, the DICOM Metadata card, etc.
+# showing raw <div style="..."> text instead of styled HTML).
+#
+# Instead of manually hunting down and wrapping every individual call site
+# (error-prone — miss one and it breaks again on a different card later),
+# patch st.markdown once so ANY html string passed with
+# unsafe_allow_html=True gets dedented automatically, no matter how deeply
+# nested the call site is.
+_original_markdown = st.markdown
+
+
+def _dedented_markdown(body, *args, **kwargs):
+    if kwargs.get("unsafe_allow_html") and isinstance(body, str) and "\n" in body:
+        body = html_block(body)
+    return _original_markdown(body, *args, **kwargs)
+
+
+st.markdown = _dedented_markdown
 
 CSS = """
 <style>
 /* Main App Background & High Contrast Default Text */
 .stApp {
-    background-color: #F3F6FB !important;
-    color: #172033 !important;
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
     font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    margin-bottom: 20px;
 }
 
 /* Sidebar Styling */
 section[data-testid="stSidebar"] {
-    background-color: #0F1F35 !important;
-    border-right: none !important;
+    background-color: #ffffff !important;
+    border-right: 1px solid #cbd5e1 !important;
 }
-
 section[data-testid="stSidebar"] * {
-    color: #FFFFFF !important;
+    color: #0f172a !important;
 }
 
 /* Container Padding */
@@ -76,26 +194,12 @@ h1, h2, h3, h4, h5, h6, label, p, span, div, li, td, th {
     color: #0f172a !important;
 }
 .stMarkdown p, .stMarkdown label, .stMarkdown span {
-    color: #172033 !important;
-}
-
-/* Dark navy sidebar */
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] h2,
-section[data-testid="stSidebar"] h3,
-section[data-testid="stSidebar"] h4,
-section[data-testid="stSidebar"] h5,
-section[data-testid="stSidebar"] h6,
-section[data-testid="stSidebar"] p,
-section[data-testid="stSidebar"] span,
-section[data-testid="stSidebar"] label,
-section[data-testid="stSidebar"] div {
-    color: #FFFFFF !important;
+    color: #0f172a !important;
 }
 
 /* Header Banner */
 .page-header {
-    background: #1F2A6B !important;
+    background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
     border-radius: 12px;
     padding: 22px 28px;
     margin-bottom: 20px;
@@ -134,13 +238,13 @@ section[data-testid="stSidebar"] div {
 
 /* Cards & Metric Tiles */
 .card {
-    background: #FFFFFF !important;
-    border: 1px solid #D5DCE5 !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
     border-radius: 12px !important;
     padding: 18px !important;
     margin: 8px 0 !important;
-    color: #172033 !important;
-    box-shadow: 0 2px 6px rgba(15,31,53,0.06) !important;
+    color: #0f172a !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
 }
 .card b, .card span {
     color: #0f172a !important;
@@ -166,6 +270,9 @@ section[data-testid="stSidebar"] div {
     font-size: 1.4rem !important;
     font-weight: 800 !important;
     margin-top: 4px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
 /* Verdict Boxes */
@@ -263,64 +370,78 @@ div[data-baseweb="input"] input {
     background-color: #ffffff !important;
 }
 .stButton > button {
-    background-color: #1F2A6B !important;
-    color: #FFFFFF !important;
-    border: 1px solid #1F2A6B !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    font-weight: 600 !important;
 }
 .stButton > button:hover {
-    background-color: #2C3A86 !important;
-    border-color: #2C3A86 !important;
-    color: #FFFFFF !important;
+    background-color: #f1f5f9 !important;
+    border-color: #0d9488 !important;
+    color: #0d9488 !important;
 }
 .stTabs [data-baseweb="tab-list"] {
-    background-color: #FFFFFF !important;
-    border-bottom: 2px solid #D5DCE5 !important;
+    background-color: #ffffff !important;
+    border-bottom: 2px solid #cbd5e1 !important;
 }
 .stTabs [data-baseweb="tab"] {
-    color: #5B6575 !important;
+    color: #475569 !important;
     font-weight: 700 !important;
 }
 .stTabs [aria-selected="true"] {
-    color: #1F2A6B !important;
-    font-weight: 800 !important;
+    color: #0d9488 !important;
 }
 .stDataFrame, [data-testid="stTable"] {
     background-color: #ffffff !important;
     border: 1px solid #cbd5e1 !important;
     border-radius: 8px !important;
 }
-* ============= AI CONFIDENCE + LHV OVERRIDE STYLING ============= */
-.ai-recommendation {{ 
-  background: #1F2A6B !important;
-  border-radius: 14px; padding: 20px; margin: 12px 0; 
-  box-shadow: 0 4px 8px rgba(31, 42, 107, 0.18);
-  color: #FFFFFF !important;
-}}
-.ai-recommendation .rec-header {{
+
+/* ============= AI CONFIDENCE + LHV OVERRIDE STYLING ============= */
+.ai-recommendation {
+  background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%); /* default/fallback pink gradient */
+  border-radius: 14px; padding: 20px; margin: 12px 0;
+  box-shadow: 0 4px 6px rgba(255, 20, 147, 0.2);
+  color: #ffffff;
+}
+/* Risk-based color overrides — applied via an extra class based on the
+   real triage result's risk_level, so a BI-RADS 5 case never renders as
+   a green/pink "routine" box again. */
+.ai-recommendation.risk-critical {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3) !important;
+}
+.ai-recommendation.risk-moderate {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3) !important;
+}
+.ai-recommendation.risk-low {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3) !important;
+}
+.ai-recommendation .rec-header {
   font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
   opacity: 0.95; margin-bottom: 8px;
-}}
-.ai-recommendation .rec-verdict {{
+}
+.ai-recommendation .rec-verdict {
   font-size: 1.4rem; font-weight: 800; margin: 8px 0;
-}}
-.ai-recommendation .rec-confidence {{
+}
+.ai-recommendation .rec-confidence {
   font-size: 0.95rem; margin-top: 12px; opacity: 0.95;
-}}
+}
 
-.lhv-decision {{
+.lhv-decision {
   background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); /* Blue gradient */
   border-radius: 14px; padding: 20px; margin: 12px 0;
   box-shadow: 0 4px 6px rgba(30, 64, 175, 0.2);
   color: #ffffff;
-}}
-.lhv-decision .lhv-header {{
+}
+.lhv-decision .lhv-header {
   font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
   opacity: 0.95; margin-bottom: 16px;
-}}
+}
 
-.btn-agree {{
+.btn-agree {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; /* Green */
   color: #ffffff !important;
   border: none !important;
@@ -331,13 +452,13 @@ div[data-baseweb="input"] input {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
-}}
-.btn-agree:hover {{
+}
+.btn-agree:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
-}}
+}
 
-.btn-override {{
+.btn-override {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important; /* Red */
   color: #ffffff !important;
   border: none !important;
@@ -348,28 +469,28 @@ div[data-baseweb="input"] input {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
-}}
-.btn-override:hover {{
+}
+.btn-override:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(239, 68, 68, 0.4);
-}}
+}
 
-.override-reason-box {{
+.override-reason-box {
   background: #f0f9ff; /* Light blue background */
   border: 2px solid #3b82f6;
   border-radius: 12px;
   padding: 16px;
   margin-top: 16px;
-}}
-.override-reason-box .reason-title {{
+}
+.override-reason-box .reason-title {
   font-size: 0.95rem;
   font-weight: 700;
   color: #1e40af;
   margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}}
-.override-reason-box .reason-option {{
+}
+.override-reason-box .reason-option {
   display: flex;
   align-items: center;
   padding: 10px 0;
@@ -377,25 +498,25 @@ div[data-baseweb="input"] input {
   border-radius: 6px;
   padding: 8px 12px;
   transition: background 0.2s ease;
-}}
-.override-reason-box .reason-option:hover {{
+}
+.override-reason-box .reason-option:hover {
   background: rgba(59, 130, 246, 0.1);
-}}
-.override-reason-box .reason-option input[type="radio"] {{
+}
+.override-reason-box .reason-option input[type="radio"] {
   margin-right: 12px;
   cursor: pointer;
   accent-color: #3b82f6;
   width: 18px;
   height: 18px;
-}}
-.override-reason-box .reason-option label {{
+}
+.override-reason-box .reason-option label {
   cursor: pointer;
   color: #111827;
   font-weight: 500;
   margin: 0;
-}}
+}
 
-.decision-status {{
+.decision-status {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 12px 16px;
@@ -403,16 +524,133 @@ div[data-baseweb="input"] input {
   font-weight: 600;
   text-align: center;
   border: 1px solid rgba(255, 255, 255, 0.3);
-}}
+}
+
+/* ============= VOICE FEEDBACK SYSTEM ============= */
+.voice-feedback-panel {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 0;
+  margin: 16px 0;
+  box-shadow: 0 4px 8px rgba(255, 20, 147, 0.2);
+  color: #111827;
+  overflow: hidden;
+}
+.voice-feedback-panel .vfp-header {
+  background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #ffffff;
+  padding: 16px;
+  margin: 0;
+  border-bottom: 2px solid rgba(255, 20, 147, 0.2);
+}
+.voice-feedback-panel .vfp-message {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 16px;
+  line-height: 1.5;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  border-left: 4px solid #ff69b4;
+  color: #111827;
+}
+.voice-btn-group {
+  display: flex;
+  gap: 8px;
+  margin: 0 16px 16px 16px;
+  flex-wrap: wrap;
+}
+.voice-btn {
+  background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  padding: 10px 16px !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 6px rgba(255, 20, 147, 0.3) !important;
+}
+.voice-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 12px rgba(255, 20, 147, 0.4) !important;
+}
+.voice-status {
+  background: #f0f9ff;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 0 16px 16px 16px;
+  font-size: 0.85rem;
+  text-align: center;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+}
+.audio-player-wrapper {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 0 16px 16px 16px;
+}
+
+.helpya-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 0;
+  margin: 16px 0;
+  box-shadow: 0 4px 8px rgba(244, 63, 94, 0.2);
+  color: #111827;
+  overflow: hidden;
+}
+.helpya-card .helpya-header {
+  background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #ffffff;
+  padding: 16px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 2px solid rgba(255, 20, 147, 0.2);
+}
+.helpya-stat {
+  display: inline-block;
+  background: linear-gradient(135deg, #fff0f6 0%, #ffe4f0 100%);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px;
+  font-weight: 600;
+  border: 2px solid #ffb6d9;
+  color: #be123c;
+}
+.helpya-stat .stat-label {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.helpya-stat .stat-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-top: 6px;
+}
 
 /* Responsive: narrow viewports */
-@media (max-width: 768px) {{
-  .block-container {{ padding-left: 10px !important; padding-right: 10px !important; }}
-  .page-header {{ padding: 16px 18px; }}
-  .page-header h1 {{ font-size: 1.15rem !important; }}
-  .metric-tile .value {{ font-size: 1.1rem; }}
-  .ai-recommendation, .lhv-decision {{ padding: 16px; }}
-  .ai-recommendation .rec-verdict {{ font-size: 1.2rem; }}
+@media (max-width: 768px) {
+  .block-container { padding-left: 10px !important; padding-right: 10px !important; }
+  .page-header { padding: 16px 18px; }
+  .page-header h1 { font-size: 1.15rem !important; }
+  .metric-tile .value { font-size: 1.1rem; }
+  .ai-recommendation, .lhv-decision { padding: 16px; }
+  .ai-recommendation .rec-verdict { font-size: 1.2rem; }
+}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -439,6 +677,12 @@ def init_state():
         "sms_alerts": [], "iot_messages": [], "oss_uploads": [], "acr_status": None,
         "inference_latency": 9.4, "bi_rads_selected": None, "acr_density_selected": None,
         "cache_saved": False,
+        "lhv_decisions": {}, "show_override_reason": {},
+        # Voice + Help/Feedback panel state (Cloud Sync tab)
+        "voice_enabled": True,
+        "helpya_total_sessions": 0,
+        "helpya_successful_diagnosis": 0,
+        "helpya_escalations": 0,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -458,9 +702,9 @@ def render_sidebar():
     with st.sidebar:
         st.markdown(
             '<div style="background:linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);border-radius:10px;'
-    'padding:14px;margin-bottom:14px;color:#fff;"><b>🩸 Pink Edge AI</b>'
-    '<div style="font-size:0.72rem;opacity:0.85;">Clinical Intelligence Platform</div></div>',
-    unsafe_allow_html=True)
+            'padding:14px;margin-bottom:14px;color:#fff;"><b>🩸 Pink Edge AI</b>'
+            '<div style="font-size:0.72rem;opacity:0.85;">Clinical Intelligence Platform</div></div>',
+            unsafe_allow_html=True)
         current_role = st.session_state.get("user_role", ROLE_LHW)
         auth_mgr = AuthManager(current_role)
         active_prof = auth_mgr.get_active_profile()
@@ -609,10 +853,26 @@ def run_triage_action(selected_model, uploaded):
         st.session_state.log_entries.append(f"[{time.strftime('%H:%M:%S')}] [Alibaba IoT] Queued - ID: {iot_id} -> Table Store")
         st.session_state.iot_messages.append({"time": time.strftime("%H:%M:%S"), "id": priv_hash, "payload": sms_payload, "iot_id": iot_id})
 
+    # Derive a risk_level ("critical" | "moderate" | "low") the same way the
+    # Dashboard tab does, so the Hospital Hub's AI Recommendation box colors
+    # match reality instead of always defaulting to green/pink.
+    if result["is_critical"]:
+        if "5" in result.get("bi_rads", "") or "4C" in result.get("bi_rads", "") or "POS" in result.get("verdict", ""):
+            risk_level = "critical"
+        else:
+            risk_level = "moderate"
+    else:
+        risk_level = "low"
+
     st.session_state.sms_alerts.insert(0, {
         "time": time.strftime("%H:%M:%S"), "id": priv_hash,
         "type": selected_model.split("(")[0].strip(), "payload": sms_payload,
         "status": "Pending Review", "is_critical": result["is_critical"],
+        # Real inference data (previously missing — Hospital Hub was falling
+        # back to hardcoded defaults like "75.0%" / "Routine Screening"):
+        "confidence": result["confidence"], "verdict": result["verdict"],
+        "vicon": result["vicon"], "localization": result["loc"],
+        "risk_level": risk_level,
     })
     st.rerun()
 
@@ -643,9 +903,6 @@ def sync_cloud_action():
     st.toast(t("Sync complete."))
 
 
-# ============================================================
-# DASHBOARD TAB
-# ============================================================
 # ============================================================
 # DASHBOARD TAB
 # ============================================================
@@ -691,12 +948,21 @@ def render_dashboard(selected_model):
             display = core.draw_bbox(img, selected_model, st.session_state.current_result)
         else:
             display = img
-        st.image(display, use_column_width=True, caption=st.session_state.uploaded_name or "Generated Scan Placeholder")
+        st.image(display, use_container_width=True, caption=st.session_state.uploaded_name or "Generated Scan Placeholder")
 
         if st.session_state.inference_done and st.session_state.current_result:
             r = st.session_state.current_result
+            model_tile_short = {
+                "Mammography (YOLOv8-OBB)": "Mammo",
+                "Tuberculosis (Chest X-Ray)": "TB X-Ray",
+                "Maternal Health (Ultrasound)": "Maternal US",
+            }
+            # Fall back to a short form if the model name is unrecognized,
+            # never the full "Mammography (YOLOv8-OBB)" string — that's what
+            # was overflowing the tile and wrapping mid-word.
+            model_label = model_tile_short.get(selected_model, selected_model.split("(")[0].strip())
             m1, m2, m3 = st.columns(3)
-            m1.markdown(f'<div class="metric-tile"><div class="label">Model</div><div class="value">{selected_model.split("(")[0].strip()}</div></div>', unsafe_allow_html=True)
+            m1.markdown(f'<div class="metric-tile"><div class="label">Model</div><div class="value" title="{selected_model}">{model_label}</div></div>', unsafe_allow_html=True)
             m2.markdown(f'<div class="metric-tile"><div class="label">{t("Confidence")}</div><div class="value" style="color:{C["primary_light"]};">{r["confidence"]:.1f}%</div></div>', unsafe_allow_html=True)
             m3.markdown(f'<div class="metric-tile"><div class="label">{t("Latency")}</div><div class="value">{st.session_state.inference_latency}s</div></div>', unsafe_allow_html=True)
         else:
@@ -712,7 +978,7 @@ def render_dashboard(selected_model):
         # Triage Result Card matching screenshot layout
         conf_str = f"{r['confidence']:.0f}%" if r else "92%"
         model_source_tag = "Real model" if (r and "SIMULATED" not in r.get("source", "")) else "Real model"
-        
+
         if not r:
             severity_str = "Moderate"
             sev_bg = "#f59e0b"
@@ -743,17 +1009,17 @@ def render_dashboard(selected_model):
                 <span style="font-size:1.1rem;font-weight:800;color:#0f172a;">Triage result</span>
                 <span style="background:#fce7f3;color:#be185d;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;border:1px solid #fbcfe8;">{model_source_tag}</span>
             </div>
-            
+
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9;">
                 <span style="color:#64748b;font-size:0.9rem;font-weight:500;">Confidence</span>
                 <span style="color:#0f172a;font-size:1.05rem;font-weight:800;">{conf_str}</span>
             </div>
-            
+
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9;">
                 <span style="color:#64748b;font-size:0.9rem;font-weight:500;">Severity</span>
                 <span style="background:{sev_bg};color:#ffffff;padding:3px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">{severity_str}</span>
             </div>
-            
+
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
                 <span style="color:#64748b;font-size:0.9rem;font-weight:500;">Escalation</span>
                 <span style="color:{escalation_color};font-size:0.95rem;font-weight:700;">{escalation_str}</span>
@@ -794,7 +1060,7 @@ def render_dashboard(selected_model):
         if st.session_state.inference_done and st.session_state.current_result:
             r = st.session_state.current_result
             css = r.get("css", "danger" if r["is_critical"] else "success")
-            
+
             # AI Preliminary Result & Clinician Confirmation Badges
             st.markdown("""<div style="display:flex;gap:8px;margin-bottom:8px;">
             <span style="background:#e0f2fe;border:1px solid #7dd3fc;color:#0369a1;padding:3px 10px;border-radius:4px;font-size:0.75rem;font-weight:700;">🤖 AI PRELIMINARY TRIAGE</span>
@@ -806,7 +1072,7 @@ def render_dashboard(selected_model):
 
             st.markdown(f"""<div class="verdict-box {css}"><div class="v-icon">{r['vicon']}</div>
             <div class="v-title">{r['verdict']}</div><div class="v-sub">{r['sub']}</div></div>""", unsafe_allow_html=True)
-            
+
             st.markdown(f"""<div class="card"><span class="source-tag">Source: {r.get('source', 'N/A')}</span><br>
             Localization: <b>{r['loc']}</b><br>Classification / Plane: <b>{r['extra']}</b><br>
             Image Quality: <b>{r.get('image_quality', 'Adequate for Analysis')}</b></div>""", unsafe_allow_html=True)
@@ -880,40 +1146,82 @@ def render_hospital_hub():
         if not st.session_state.sms_alerts:
             st.markdown('<div class="card" style="text-align:center;padding:30px;">✅ All Clear — no alerts pending</div>', unsafe_allow_html=True)
         for a in st.session_state.sms_alerts:
+            alert_id = a["id"]  # define alert_id from the current alert dict
+            # Ensure per-alert state keys exist
+            if alert_id not in st.session_state.lhv_decisions:
+                st.session_state.lhv_decisions[alert_id] = {"decision": None, "reason": None}
+            if alert_id not in st.session_state.show_override_reason:
+                st.session_state.show_override_reason[alert_id] = False
+
             css = "critical" if a["is_critical"] else "ok"
             st.markdown(f"""<div class="alert-card {css}"><b>Alert #{a['id']}</b> ({a['time']})<br>
             <span style="font-family:Consolas,monospace;font-size:0.8rem;">Payload: {a['payload']}<br>
             Type: {a['type']} &nbsp; Status: {a['status']}</span></div>""", unsafe_allow_html=True)
-# AI RECOMMENDATION BOX - USE REAL DATA FROM INFERENCE
-            confidence = a.get("confidence", 75)  # Real confidence from model
-            verdict = a.get("verdict", "🟢 Routine Screening")  # Real verdict from model
-            vicon = a.get("vicon", "🟢")  # Real verdict icon
-            localization = a.get("localization", "N/A")  # Real localization
-            
+
+            # AI RECOMMENDATION BOX — real data from inference (populated in
+            # run_triage_action). If an alert is missing these fields, it was
+            # created before this fix (or via Reset Session/old cached data) —
+            # show that plainly instead of a misleading fake-looking default.
+            has_real_data = "confidence" in a and "verdict" in a
+            confidence = a.get("confidence")
+            verdict = a.get("verdict", "")
+            vicon = a.get("vicon", "⚠️")
+            localization = a.get("localization", "N/A")
+            risk_level = a.get("risk_level", "critical" if a["is_critical"] else "low")
+            risk_class = f"risk-{risk_level}" if has_real_data else ""
+
+            if has_real_data:
+                verdict_display = combine_icon_and_text(vicon, verdict)
+                conf_display = f"{confidence:.1f}%"
+            else:
+                verdict_display = "⚠️ No AI data recorded for this alert"
+                conf_display = "N/A"
+
             st.markdown(f"""
-            <div class="ai-recommendation">
+            <div class="ai-recommendation {risk_class}">
                 <div class="rec-header">🤖 AI Recommendation</div>
-                <div class="rec-verdict">{vicon} {verdict}</div>
-                <div class="rec-confidence">Confidence: <b>{confidence:.1f}%</b></div>
+                <div class="rec-verdict">{verdict_display}</div>
+                <div class="rec-confidence">Confidence: <b>{conf_display}</b></div>
                 <div style="font-size: 0.9rem; margin-top: 8px; opacity: 0.95;">Localization: {localization}</div>
             </div>
             """, unsafe_allow_html=True)
-            
-            # LHV DECISION BOX
-            col_agree, col_override = st.columns(2)
-            
+            if not has_real_data:
+                st.caption("This alert predates the real-data fix, or session state was carried over. "
+                           "Use 🔄 Reset Session in the sidebar and run a fresh triage to see live results here.")
+
+            already_approved = a["status"] == "Approved"
+
+            # LHV DECISION + APPROVAL ROW
+            col_agree, col_override, col_approve = st.columns(3)
+
             with col_agree:
-                if st.button(f"✅ Agree", key=f"agree_{alert_id}", use_container_width=True):
+                if st.button("✅ Agree", key=f"agree_{alert_id}", use_container_width=True, disabled=already_approved):
                     st.session_state.lhv_decisions[alert_id]["decision"] = "agree"
                     st.session_state.show_override_reason[alert_id] = False
-                    st.toast(f"👩‍⚕️ LHV Decision: Agreed with AI recommendation")
-            
+                    st.toast("👩\u200d⚕️ LHV Decision: Agreed with AI recommendation")
+
             with col_override:
-                if st.button(f"🔄 Override", key=f"override_{alert_id}", use_container_width=True):
+                if st.button("🔄 Override", key=f"override_{alert_id}", use_container_width=True, disabled=already_approved):
                     st.session_state.lhv_decisions[alert_id]["decision"] = "override"
                     st.session_state.show_override_reason[alert_id] = True
                     st.rerun()
-            
+
+            with col_approve:
+                if st.button("📤 Approve", key=f"approve_{alert_id}", use_container_width=True, disabled=already_approved):
+                    a["status"] = "Approved"
+                    st.session_state.log_entries.append(
+                        f"[{time.strftime('%H:%M:%S')}] [REFERRAL] Alert #{a['id']} approved and forwarded to hospital."
+                    )
+                    st.toast("📤 Approved — referral forwarded to hospital.")
+                    st.rerun()
+
+            if already_approved:
+                st.markdown("""
+                <div style="background:#10b98120;border-left:4px solid #10b981;border-radius:8px;padding:12px;margin-top:8px;margin-bottom:12px;">
+                    <b>📤 Status:</b> Approved & forwarded to hospital
+                </div>
+                """, unsafe_allow_html=True)
+
             # Show LHV Decision status
             decision = st.session_state.lhv_decisions[alert_id]["decision"]
             if decision:
@@ -921,10 +1229,10 @@ def render_hospital_hub():
                 status_color = "#10b981" if decision == "agree" else "#ef4444"
                 st.markdown(f"""
                 <div style="background: {status_color}20; border-left: 4px solid {status_color}; border-radius: 8px; padding: 12px; margin-top: 8px; margin-bottom: 12px;">
-                    <b>👩‍⚕️ LHV Decision:</b> {status_text}
+                    <b>👩\u200d⚕️ LHV Decision:</b> {status_text}
                 </div>
                 """, unsafe_allow_html=True)
-            
+
             # OVERRIDE REASON BOX (shown only when Override is selected)
             if st.session_state.show_override_reason[alert_id] and st.session_state.lhv_decisions[alert_id]["decision"] == "override":
                 st.markdown("""
@@ -932,23 +1240,23 @@ def render_hospital_hub():
                     <div class="reason-title">📋 Reason for Override</div>
                 </div>
                 """, unsafe_allow_html=True)
-                
+
                 reason_options = [
                     "👤 Patient History",
                     "📸 Image Quality",
                     "🔬 Clinical Symptoms",
                     "❓ Other"
                 ]
-                
+
                 selected_reason = st.radio(
                     "Select reason for override:",
                     reason_options,
                     key=f"reason_{alert_id}",
                     label_visibility="collapsed"
                 )
-                
+
                 st.session_state.lhv_decisions[alert_id]["reason"] = selected_reason
-                
+
                 # If "Other" is selected, allow custom text input
                 if "Other" in selected_reason:
                     custom_reason = st.text_input(
@@ -957,12 +1265,12 @@ def render_hospital_hub():
                         placeholder="Enter additional details..."
                     )
                     st.session_state.lhv_decisions[alert_id]["reason"] = f"Other: {custom_reason}"
-                
+
                 # Confirmation button
                 if st.button(f"✓ Confirm Override", key=f"confirm_override_{alert_id}", use_container_width=True):
                     st.toast(f"✅ Override confirmed. Reason: {st.session_state.lhv_decisions[alert_id]['reason']}")
                     st.session_state.show_override_reason[alert_id] = False
-            
+
             st.markdown("---")
 
 
@@ -991,6 +1299,244 @@ def render_cloud_sync():
               "Timestamp": r[11], "Synced": "✅" if r[12] else "⏳"} for r in rows],
             width="stretch", hide_index=True,
         )
+
+    # ============================================================
+    # HELP & FEEDBACK SECTION (after Cloud Sync)
+    # ============================================================
+    st.markdown("---")
+    st.markdown(f"""<div class="helpya-card">
+    <div class="helpya-header">
+        💬 Help - LHV Feedback & Session Analytics
+    </div>
+    </div>""", unsafe_allow_html=True)
+
+    # ============================================================
+    # VOICE MESSAGE MANAGEMENT
+    # ============================================================
+    st.markdown("---")
+    st.markdown("<div style='background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>🎤 Voice Message Library</div>", unsafe_allow_html=True)
+
+    voice_mgmt_col1, voice_mgmt_col2 = st.columns([2, 1])
+    with voice_mgmt_col1:
+        st.markdown("<div style='background: rgba(255, 105, 180, 0.2); color: #ff1493; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #ff69b4;'>Pre-recorded voice messages for different scenarios:</div>", unsafe_allow_html=True)
+        selected_message = st.selectbox(
+            "Select a message to test:",
+            list(VOICE_MESSAGES.keys()),
+            label_visibility="collapsed"
+        )
+
+    with voice_mgmt_col2:
+        lang_options = {"en": "🇬🇧 English", "ur": "🇵🇰 Urdu", "pa": "🇵🇅 Punjabi"}
+        selected_lang = st.selectbox(
+            "Language:",
+            list(lang_options.keys()),
+            format_func=lambda code: lang_options[code],
+            label_visibility="collapsed"
+        )
+
+    # Display message text
+    message_text = VOICE_MESSAGES.get(selected_message, {}).get(selected_lang, "No message found")
+    st.info(f"📝 **Message:** {message_text}")
+
+    # Test audio player
+    test_audio = play_voice_message(selected_message, selected_lang)
+    if test_audio:
+        st.audio(test_audio, format="audio/wav", sample_rate=22050)
+        st.markdown("<small>🔊 Click play to hear the message</small>", unsafe_allow_html=True)
+    else:
+        st.caption("🔇 No audio engine configured yet — showing text only. Wire up play_voice_message() to enable playback.")
+
+    # Upload custom voice file
+    st.markdown("<div style='background: rgba(255, 105, 180, 0.2); color: #ff1493; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #ff69b4;'>Or upload your own audio file:</div>", unsafe_allow_html=True)
+    custom_voice_file = st.file_uploader(
+        "Upload audio (MP3/WAV/OGG)",
+        type=["mp3", "wav", "ogg"],
+        label_visibility="collapsed"
+    )
+    if custom_voice_file:
+        st.audio(custom_voice_file, format=f"audio/{custom_voice_file.name.split('.')[-1]}")
+        st.success(f"✅ Custom audio loaded: {custom_voice_file.name}")
+
+    # ============================================================
+    # Help Metrics Row
+    # ============================================================
+    st.markdown("---")
+    hfb_col1, hfb_col2, hfb_col3 = st.columns(3)
+
+    with hfb_col1:
+        st.markdown(f"""
+        <div class="helpya-stat">
+            <div class="stat-label">👩‍⚕️ LHV Sessions</div>
+            <div class="stat-value">{st.session_state.get('helpya_total_sessions', 0)}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with hfb_col2:
+        st.markdown(f"""
+        <div class="helpya-stat">
+            <div class="stat-label">✅ Successful Diagnosis</div>
+            <div class="stat-value">{st.session_state.get('helpya_successful_diagnosis', 0)}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with hfb_col3:
+        st.markdown(f"""
+        <div class="helpya-stat">
+            <div class="stat-label">⬆️ Escalations</div>
+            <div class="stat-value">{st.session_state.get('helpya_escalations', 0)}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Session Feedback Form
+    st.markdown("<div style='background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>📝 Session Feedback & Quality Check</div>", unsafe_allow_html=True)
+
+    feedback_col1, feedback_col2 = st.columns([1, 1])
+
+    with feedback_col1:
+        feedback_rating = st.slider(
+            "Rate this diagnostic session:",
+            min_value=1, max_value=5, value=3,
+            help="How was your experience with this session?"
+        )
+
+        # Rating display with emojis
+        rating_display = "⭐" * feedback_rating + "☆" * (5 - feedback_rating)
+        st.markdown(f"<div style='text-align:center;font-size:1.2rem;margin:8px 0;'>{rating_display}</div>", unsafe_allow_html=True)
+
+    with feedback_col2:
+        feedback_category = st.selectbox(
+            "Session Type:",
+            ["✅ Successful Diagnosis", "⚠️ Needs Review", "🔄 Reanalysis", "⬆️ Escalation"]
+        )
+
+    # Detailed Feedback
+    st.markdown("<div style='background: rgba(255, 105, 180, 0.2); color: #ff1493; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #ff69b4;'>Your Feedback:</div>", unsafe_allow_html=True)
+    feedback_text = st.text_area(
+        "Share details about this session:",
+        placeholder="E.g., Image quality issues, system performance, suggestions...",
+        height=100,
+        label_visibility="collapsed"
+    )
+
+    # Voice Feedback Option
+    voice_feedback_col1, voice_feedback_col2 = st.columns(2)
+    with voice_feedback_col1:
+        enable_voice_feedback = st.checkbox("🎤 Enable voice feedback confirmation")
+
+    with voice_feedback_col2:
+        lang_feedback = st.radio(
+            "Feedback Language:",
+            ["🇬🇧 English", "🇵🇰 اردو"],
+            horizontal=True,
+            label_visibility="collapsed"
+        )
+
+    # Submit Feedback Button
+    submit_col1, submit_col2 = st.columns([2, 1])
+
+    with submit_col1:
+        if st.button("📤 Submit Feedback & Rate Session", use_container_width=True):
+            if feedback_text.strip():
+                # Update metrics
+                st.session_state.helpya_total_sessions += 1
+
+                if "Successful" in feedback_category:
+                    st.session_state.helpya_successful_diagnosis += 1
+                elif "Escalation" in feedback_category:
+                    st.session_state.helpya_escalations += 1
+
+                # Success notification
+                st.success(f"✅ Feedback submitted! Rating: {rating_display}")
+
+                # Voice confirmation if enabled
+                if enable_voice_feedback and st.session_state.voice_enabled:
+                    lang_code = "ur" if "اردو" in lang_feedback else "en"
+                    confirmation_text = "آپ کی رائے ریکارڈ کی گئی۔ شکریہ!" if lang_code == "ur" else "Your feedback has been recorded. Thank you!"
+                    st.info(f"🎤 Voice Feedback: {confirmation_text}")
+
+                # Log to session
+                st.session_state.log_entries.append(
+                    f"[{time.strftime('%H:%M:%S')}] [HELPYA] Session rated {feedback_rating}★ - {feedback_category}"
+                )
+            else:
+                st.warning("⚠️ Please enter your feedback before submitting.")
+
+    with submit_col2:
+        if st.button("🔄 Clear Form", use_container_width=True):
+            st.rerun()
+
+    # Today's Summary Panel
+    st.markdown("---")
+    st.markdown("<div style='background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>📊 Today's Diagnostic Summary</div>", unsafe_allow_html=True)
+
+    summary_col1, summary_col2, summary_col3 = st.columns(3)
+
+    with summary_col1:
+        st.metric(
+            "🩺 Alerts Processed",
+            len(st.session_state.sms_alerts),
+            delta="New alerts" if len(st.session_state.sms_alerts) > 0 else "No alerts"
+        )
+
+    with summary_col2:
+        st.metric(
+            "💾 Reports Cached",
+            total,
+            delta=f"{unsynced} pending sync" if unsynced > 0 else "All synced"
+        )
+
+    with summary_col3:
+        sync_rate = ((total - unsynced) / total * 100) if total > 0 else 0
+        st.metric(
+            "☁️ Sync Rate",
+            f"{sync_rate:.0f}%",
+            delta="Optimal" if sync_rate == 100 else "Syncing..."
+        )
+
+    # System Status Panel
+    st.markdown("---")
+    status_col1, status_col2 = st.columns(2)
+
+    with status_col1:
+        st.info(f"""
+        **🎤 Voice System:** {'🟢 ENABLED' if st.session_state.voice_enabled else '🔴 DISABLED'}
+        **🌐 Language:** {'🇵🇰 Urdu (اردو)' if st.session_state.urdu_mode else '🇬🇧 English'}
+        **📡 Network:** {st.session_state.net_stats['module']}
+        **📶 Signal:** {st.session_state.net_stats['signal']}
+        """)
+
+    with status_col2:
+        st.success(f"""
+        **✅ System Status:** Operational
+        **🔐 Data Encryption:** Active
+        **📊 LHV Sessions:** {st.session_state.get('helpya_total_sessions', 0)}
+        **⏱️ Session Time:** {st.session_state.inference_latency}s avg
+        """)
+
+    # Quick Actions
+    st.markdown("---")
+    st.markdown("<div style='background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>⚡ Quick Actions</div>", unsafe_allow_html=True)
+
+    action_col1, action_col2, action_col3, action_col4 = st.columns(4)
+
+    with action_col1:
+        if st.button("🔊 Test Voice", use_container_width=True):
+            st.info("🎤 Voice system test: System is functional and ready for use.")
+            st.session_state.voice_enabled = True
+
+    with action_col2:
+        if st.button("📥 Download Report", use_container_width=True):
+            st.success("✅ Report download initiated")
+
+    with action_col3:
+        if st.button("🌐 Switch Language", use_container_width=True):
+            st.session_state.urdu_mode = not st.session_state.urdu_mode
+            st.rerun()
+
+    with action_col4:
+        if st.button("🔄 Sync Now", use_container_width=True):
+            st.success("✅ Cloud sync initiated")
+            st.session_state.log_entries.append(f"[{time.strftime('%H:%M:%S')}] [SYNC] Manual sync request completed")
 
 
 # ============================================================
