@@ -215,21 +215,20 @@ def _confidence(change_score):
 
 _MODALITY_VOCAB = {
     "tb": {
-        "pos_verdict": "TB Positive", "neg_verdict": "TB Negative",
+        "pos_verdict": "TB-Suggestive Finding Detected", "neg_verdict": "No Active TB-Suggestive Lesions Detected",
         "pos_bi_rads_by_tier": ["S1 - Minimal (unilateral, no cavity)", "S2 - Moderate (bilateral / cavity < 2 cm)",
                                  "S3 - Advanced (large cavity / miliary pattern)"],
         "neg_bi_rads": "S0 - No active disease", "acr_pos": "Upper Zone", "acr_neg": "Bilateral",
         "sms_pos": "TB:POS", "sms_neg": "TB:NEG",
     },
     "maternal": {
-        "pos_verdict": "Abnormal Finding Detected", "neg_verdict": "Fetal Health Normal",
-        "pos_bi_rads_by_tier": ["BI-RADS 4A - Low suspicion (Biopsy recommended)",
-                                 "BI-RADS 4B - Moderate suspicion", "BI-RADS 4C - High suspicion"],
-        "neg_bi_rads": "BI-RADS 1 - Negative", "acr_pos": "C - Heterogeneously dense",
-        "acr_neg": "A - Almost entirely fatty", "sms_pos": "FH:ABN", "sms_neg": "FH:OK",
+        "pos_verdict": "Standard Plane: Trans-thalamic", "neg_verdict": "Standard Plane: Trans-thalamic",
+        "pos_bi_rads_by_tier": ["Standard Plane: Trans-thalamic", "Standard Plane: Trans-cerebellum", "Standard Plane: Trans-ventricular"],
+        "neg_bi_rads": "Standard Plane: Trans-thalamic", "acr_pos": "Ultrasound Plane - Trans-thalamic",
+        "acr_neg": "Ultrasound Plane - Trans-thalamic", "sms_pos": "US:PLANE_OK", "sms_neg": "US:PLANE_OK",
     },
     "mammography": {
-        "pos_verdict": "BI-RADS 5", "neg_verdict": "Normal",
+        "pos_verdict": "Suspicious Finding Detected", "neg_verdict": "No Focal Suspicious Lesion Detected",
         "pos_bi_rads_by_tier": ["BI-RADS 4A - Low suspicion (Biopsy recommended)", "BI-RADS 4B - Moderate suspicion",
                                  "BI-RADS 5 - Highly suggestive of malignancy"],
         "neg_bi_rads": "BI-RADS 1 - Negative", "acr_pos": "C - Heterogeneously dense",

@@ -248,16 +248,20 @@ def generate_tb_result():
 
 
 def generate_fetal_result():
-    """Generate varied fetal health results."""
+    """Generate varied fetal brain ultrasound plane classification results."""
     scenarios = [
-        {"bi_rads": BI_RADS_OPTIONS[1], "acr": ACR_DENSITY_OPTIONS[0], "verdict": "Fetal Health Normal",
-         "sub": "No anomalies detected", "css": "success", "loc": "Intrauterine",
-         "extra": f"Gestational Age: {random.randint(18, 36)}W", "vicon": "✅",
-         "confidence": random.uniform(96.0, 99.0), "sms": "FH:OK", "is_critical": False},
-        {"bi_rads": BI_RADS_OPTIONS[1], "acr": ACR_DENSITY_OPTIONS[0], "verdict": "Fetal Health Normal",
-         "sub": "Normal cardiac activity", "css": "success", "loc": "Intrauterine",
-         "extra": f"Gestational Age: {random.randint(20, 38)}W", "vicon": "✅",
-         "confidence": random.uniform(95.0, 98.5), "sms": "FH:OK", "is_critical": False},
+        {"bi_rads": "Standard Plane: Trans-thalamic", "acr": "Ultrasound Plane - Trans-thalamic", "verdict": "Standard Plane: Trans-thalamic",
+         "sub": "Fetal Brain Ultrasound Plane Classification", "css": "success", "loc": "Intrauterine / Fetal Head",
+         "extra": f"Gestational Age: {random.randint(18, 36)}W (Plane: Trans-thalamic)", "vicon": "✅",
+         "confidence": random.uniform(96.0, 99.0), "sms": "US:PLANE_OK", "is_critical": False,
+         "image_quality": "Optimal for Plane Identification",
+         "recommendation": "Standard plane identified (Trans-thalamic). Biometric measurements & clinician review recommended."},
+        {"bi_rads": "Standard Plane: Trans-cerebellum", "acr": "Ultrasound Plane - Trans-cerebellum", "verdict": "Standard Plane: Trans-cerebellum",
+         "sub": "Fetal Brain Ultrasound Plane Classification", "css": "success", "loc": "Intrauterine / Fetal Head",
+         "extra": f"Gestational Age: {random.randint(20, 38)}W (Plane: Trans-cerebellum)", "vicon": "✅",
+         "confidence": random.uniform(92.0, 96.5), "sms": "US:PLANE_OK", "is_critical": False,
+         "image_quality": "Adequate for Plane Identification",
+         "recommendation": "Standard plane identified (Trans-cerebellum). Proceed with clinician biometric verification."},
     ]
     return random.choice(scenarios)
 
