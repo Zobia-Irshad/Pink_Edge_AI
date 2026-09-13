@@ -342,11 +342,23 @@ def render_dashboard(selected_model):
 
         if st.session_state.inference_done and st.session_state.current_result:
             r = st.session_state.current_result
-            css = "danger" if r["is_critical"] else "success"
+            css = r.get("css", "danger" if r["is_critical"] else "success")
+            
+            # AI Preliminary Result & Clinician Confirmation Badges
+            st.markdown("""<div style="display:flex;gap:8px;margin-bottom:8px;">
+            <span style="background:rgba(56,189,248,0.15);border:1px solid #38bdf8;color:#38bdf8;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;">🤖 AI PRELIMINARY TRIAGE</span>
+            <span style="background:rgba(245,158,11,0.15);border:1px solid #f59e0b;color:#f59e0b;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;">📋 CLINICIAN REVIEW: PENDING</span>
+            </div>""", unsafe_allow_html=True)
+
+            if r.get("confidence", 100.0) < 65.0:
+                st.warning("⚠️ Low AI Confidence (<65%): Unable to reach definitive triage threshold. Specialist evaluation recommended.")
+
             st.markdown(f"""<div class="verdict-box {css}"><div class="v-icon">{r['vicon']}</div>
             <div class="v-title">{r['verdict']}</div><div class="v-sub">{r['sub']}</div></div>""", unsafe_allow_html=True)
+            
             st.markdown(f"""<div class="card"><span class="source-tag">Source: {r.get('source', 'N/A')}</span><br>
-            Localization: <b>{r['loc']}</b><br>Classification: <b>{r['extra']}</b></div>""", unsafe_allow_html=True)
+            Localization: <b>{r['loc']}</b><br>Classification / Plane: <b>{r['extra']}</b><br>
+            Image Quality: <b>{r.get('image_quality', 'Adequate for Analysis')}</b></div>""", unsafe_allow_html=True)
 
             from auth_manager import AuthManager, ROLE_LHW
             auth_m = AuthManager(st.session_state.get("user_role", ROLE_LHW))
@@ -361,18 +373,22 @@ def render_dashboard(selected_model):
                 st.session_state.bi_rads_selected = st.selectbox(l1, opts1, index=idx1)
                 st.session_state.acr_density_selected = st.selectbox(l2, opts2, index=idx2)
             else:
-                st.info("🔒 BI-RADS Diagnostic Override Controls locked for LHW profile. (Senior Radiologist PIN 9999 required).")
+                st.info("🔒 Assessment Override Controls locked for LHW profile. (Senior Radiologist PIN 9999 required).")
 
+            rec_text = r.get("recommendation", "Patient should be referred for specialist consultation")
             if r["is_critical"]:
-                st.warning(f"⚠️ {t('Immediate Action Required')}: {t('Patient should be referred for specialist consultation')}")
+                st.warning(f"⚠️ {t('Action Plan')}: {rec_text}")
             else:
-                st.success(f"✅ {t('Low risk - routine screening')}")
+                st.success(f"✅ {t('Action Plan')}: {rec_text}")
 
             report_data = {
                 "patient_id": st.session_state.pat_id, "patient_age": st.session_state.pat_age,
                 "modality": mod_map[selected_model], "model_used": selected_model.split("(")[0].strip(),
                 "bi_rads": st.session_state.bi_rads_selected, "acr_density": st.session_state.acr_density_selected,
                 "verdict": r["verdict"], "localization": r["loc"], "confidence": r["confidence"],
+                "image_quality": r.get("image_quality", "Adequate for Triage"),
+                "recommendation": r.get("recommendation", "Specialist review recommended."),
+                "referral_priority": r.get("referral_priority", "High Priority" if r["is_critical"] else "Low (Routine)"),
                 "inference_time": st.session_state.inference_latency, "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "network_mode": st.session_state.network_mode, "model_source": r.get("source", "N/A"), "synced": 0,
             }

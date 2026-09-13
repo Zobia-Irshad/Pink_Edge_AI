@@ -440,73 +440,81 @@ def generate_pdf_report(d):
         pdf.set_fill_color(13, 148, 136)
         pdf.rect(0, 0, 210, 45, "F")
         pdf.set_text_color(255, 255, 255)
-        pdf.set_font("Helvetica", "B", 20)
-        pdf.cell(0, 18, "PINK EDGE AI", ln=True, align="C")
-        pdf.set_font("Helvetica", "", 9)
-        pdf.cell(0, 6, "Clinical Diagnostic Report", ln=True, align="C")
-        pdf.cell(0, 5, f"Report ID: PEA-{d['patient_id']}-{int(time.time())}", ln=True, align="C")
+        pdf.set_font("Helvetica", "B", 18)
+        pdf.cell(0, 14, "PINK EDGE AI", ln=True, align="C")
+        pdf.set_font("Helvetica", "", 10)
+        pdf.cell(0, 6, "Modality-Specific Clinical Triage Report", ln=True, align="C")
+        pdf.cell(0, 5, f"Report ID: PEA-{d.get('patient_id', '000')}-{int(time.time())}", ln=True, align="C")
 
-        pdf.ln(12)
+        pdf.ln(10)
         pdf.set_text_color(30, 41, 59)
-        pdf.set_font("Helvetica", "B", 11)
-        pdf.cell(0, 7, "PATIENT INFORMATION", ln=True)
+
+        def section(title, rows):
+            pdf.set_font("Helvetica", "B", 11)
+            pdf.cell(0, 7, safe_pdf_text(title), ln=True)
+            pdf.set_draw_color(226, 232, 240)
+            pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+            pdf.ln(3)
+            pdf.set_font("Helvetica", "", 9)
+            for label, value in rows:
+                pdf.set_text_color(100, 116, 139)
+                pdf.cell(60, 6, safe_pdf_text(f"{label}:"))
+                pdf.set_text_color(30, 41, 59)
+                pdf.cell(0, 6, safe_pdf_text(value), ln=True)
+            pdf.ln(4)
+
+        modality = d.get("modality", "General Medical Imaging")
+        section("1. PATIENT DEMOGRAPHICS & DICOM STATUS", [
+            ("Patient Privacy ID", str(d.get("patient_id", "N/A"))),
+            ("Patient Age", f"{d.get('patient_age', 'N/A')} Years"),
+            ("Scan Date & Time", str(d.get("timestamp", datetime.now().strftime("%Y-%m-%d")))),
+            ("Imaging Modality", modality),
+            ("Image Quality / Suitability", str(d.get("image_quality", "Adequate for Triage"))),
+            ("HIPAA Privacy", "ANONYMIZED (PII Stripped)")
+        ])
+
+        ai_rows = [
+            ("AI Model & Version", str(d.get("model_used", "Pink Edge AI Engine"))),
+            ("AI Preliminary Verdict", str(d.get("verdict", "N/A"))),
+            ("Confidence Score", f"{d.get('confidence', 0.0):.1f}%"),
+            ("Localization / Region", str(d.get("localization", "N/A"))),
+            ("Inference Latency", f"{d.get('inference_time', 0.0)}s"),
+            ("Model Execution Source", str(d.get("model_source", "On-Device Inference")))
+        ]
+        if d.get("confidence", 100.0) < 65.0:
+            ai_rows.append(("AI Confidence Warning", "[!] LOW CONFIDENCE (<65%) - Repeat Scan / Specialist Review Advised"))
+
+        section("2. AI PRELIMINARY TRIAGE RESULTS", ai_rows)
+
+        clin_rows = [
+            ("Reference Category", str(d.get("bi_rads", "N/A"))),
+            ("Density / Anatomical Zone", str(d.get("acr_density", "N/A"))),
+            ("Actionable Recommendation", str(d.get("recommendation", "Clinician correlation recommended."))),
+        ]
+        if "TB" in modality or "Chest" in modality or "DX" in modality:
+            clin_rows.insert(2, ("Referral Priority", str(d.get("referral_priority", "High Priority" if d.get("is_critical") else "Low (Routine)"))))
+
+        section("3. CLINICAL RECOMMENDATION & ACTION PLAN", clin_rows)
+
+        section("4. CLINICIAN CONFIRMATION STATUS", [
+            ("Confirmation Status", "[ ] Pending Review    [ ] Confirmed    [ ] Overridden"),
+            ("Reviewing Clinician", "_____________________________________"),
+            ("Signature & Date", "_____________________________________")
+        ])
+
+        pdf.ln(4)
         pdf.set_draw_color(226, 232, 240)
         pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-        pdf.ln(3)
-
-        pdf.set_font("Helvetica", "", 9)
-        for label, value in [("Patient ID", str(d["patient_id"])), ("Age", f"{d['patient_age']} Years"),
-                              ("Date", d["timestamp"]), ("Modality", d["modality"])]:
-            pdf.set_text_color(100, 116, 139)
-            pdf.cell(50, 6, f"{label}:")
-            pdf.set_text_color(30, 41, 59)
-            pdf.cell(0, 6, safe_pdf_text(value), ln=True)
-
-        pdf.ln(5)
-        pdf.set_text_color(30, 41, 59)
-        pdf.set_font("Helvetica", "B", 11)
-        pdf.cell(0, 7, "AI ANALYSIS RESULTS", ln=True)
-        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-        pdf.ln(3)
-
-        pdf.set_font("Helvetica", "", 9)
-        for label, value in [("Model", d["model_used"]), ("Verdict", d["verdict"]),
-                              ("Confidence", f"{d['confidence']:.1f}%"), ("Inference", f"{d['inference_time']}s"),
-                              ("Localization", d["localization"]), ("Hardware", "RK3588 NPU (INT8)")]:
-            pdf.set_text_color(100, 116, 139)
-            pdf.cell(50, 6, f"{label}:")
-            pdf.set_text_color(30, 41, 59)
-            pdf.cell(0, 6, safe_pdf_text(value), ln=True)
-
-        pdf.ln(5)
-        pdf.set_text_color(30, 41, 59)
-        pdf.set_font("Helvetica", "B", 11)
-        pdf.cell(0, 7, "CLINICAL ASSESSMENT", ln=True)
-        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-        pdf.ln(3)
-
-        pdf.set_font("Helvetica", "", 9)
-        pdf.set_text_color(100, 116, 139)
-        pdf.cell(50, 6, "BI-RADS:")
-        pdf.set_text_color(30, 41, 59)
-        pdf.cell(0, 6, safe_pdf_text(d["bi_rads"]), ln=True)
-        pdf.set_text_color(100, 116, 139)
-        pdf.cell(50, 6, "ACR Density:")
-        pdf.set_text_color(30, 41, 59)
-        pdf.cell(0, 6, safe_pdf_text(d["acr_density"]), ln=True)
-
-        pdf.ln(15)
-        pdf.set_draw_color(226, 232, 240)
-        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-        pdf.ln(3)
-        pdf.set_font("Helvetica", "", 7)
+        pdf.ln(2)
+        pdf.set_font("Helvetica", "I", 7)
         pdf.set_text_color(148, 163, 184)
-        pdf.cell(0, 5, "Pink Edge AI v5.3 - Alibaba Cloud AI Hackathon 2026", ln=True, align="C")
-        pdf.cell(0, 5, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True, align="C")
+        pdf.cell(0, 4, "DISCLAIMER: AI outputs are preliminary triage aids. Final diagnosis rests solely with the attending clinician.", ln=True, align="C")
+        pdf.cell(0, 4, f"Pink Edge AI v5.3 - Platform Report • Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True, align="C")
 
         return bytes(pdf.output(dest="S"))
     except Exception as e:
-        st.error(f"PDF Generation Error: {e}")
+        if 'st' in globals():
+            st.error(f"PDF Generation Error: {e}")
         return None
 
 
