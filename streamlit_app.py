@@ -317,11 +317,10 @@ def render_sidebar():
     from auth_manager import AuthManager, ROLE_LHW, ROLE_RADIOLOGIST, ROLE_CONFIGS
     with st.sidebar:
         st.markdown(
-            '<div style="background:linear-gradient(135deg,{p} 0%,{a} 100%);border-radius:10px;'
-            'padding:14px;margin-bottom:14px;color:#fff;"><b>🩸 Pink Edge AI</b>'
-            '<div style="font-size:0.72rem;opacity:0.85;">Clinical Intelligence Platform</div></div>'
-            .format(p=C["primary"], a=C["accent"]), unsafe_allow_html=True)
-
+            '<div style="background:linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);border-radius:10px;'
+    'padding:14px;margin-bottom:14px;color:#fff;"><b>🩸 Pink Edge AI</b>'
+    '<div style="font-size:0.72rem;opacity:0.85;">Clinical Intelligence Platform</div></div>',
+    unsafe_allow_html=True)
         current_role = st.session_state.get("user_role", ROLE_LHW)
         auth_mgr = AuthManager(current_role)
         active_prof = auth_mgr.get_active_profile()
