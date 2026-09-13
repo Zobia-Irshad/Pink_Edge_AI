@@ -21,3 +21,4 @@ huggingface_hub>=0.20.0
 # Optional: only needed if you provide a Roboflow API key for the real mammography model
 # (see MODEL_SOURCES.md). Safe to leave installed even if unused.
 roboflow>=1.1.0
+dicom-anonymizer
