@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<!--
+Author Name:  Imaad Ullah Khan
+Author Email: yameenimaad@gmail.com
+AI Helper:    Claude
+Pink Edge AI — HTML/JS web edition (third UI, alongside GUI.py and streamlit_app.py)
+=====================================================================================
+Plain HTML/CSS/vanilla-JS front end. No build step, no framework — talks to ../App/web_api.py
+over a small REST API (see app.js); that backend calls straight into GUI.py/inference.py, so
+every result shown here is the same real/offline model output the other two editions show, from
+the same shared SQLite cache. Run via Start_Web_GUI.bat at the repo root, or `python web_api.py`
+from inside App/, then open http://127.0.0.1:5000.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pink Edge AI</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-icon">🩸</span>
+    <div>
+      <div class="brand-title">Pink Edge AI</div>
+      <div class="brand-sub">Clinical Intelligence Platform — HTML/JS edition</div>
+    </div>
+  </div>
+  <div class="topbar-controls">
+    <div class="pill-toggle" id="roleToggle">
+      <button class="pill active" data-role="lhw">👤 LHW</button>
+      <button class="pill" data-role="radiologist">👨‍⚕️ Doctor</button>
+    </div>
+    <input id="pinInput" class="pin-input" type="password" placeholder="PIN (1111 / 9999)" maxlength="8">
+    <div class="pill-toggle" id="langToggle">
+      <button class="pill active" data-lang="en">🇬🇧 EN</button>
+      <button class="pill" data-lang="ur">🇵🇰 اردو</button>
+    </div>
+    <span id="offlineBadge" class="badge badge-offline">🔒 100% Offline</span>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ============================================================ -->
+  <!-- SIDEBAR -->
+  <!-- ============================================================ -->
+  <aside class="sidebar">
+    <div class="card">
+      <div class="label" data-t="Select AI Model">Select AI Model</div>
+      <div id="modelPills" class="pill-stack"></div>
+    </div>
+
+    <div class="card">
+      <div class="label" data-t="Upload Patient Scan">Upload Patient Scan</div>
+      <input id="imageInput" type="file" accept="image/png,image/jpeg">
+      <div class="hint">No file? Run Triage generates a synthetic placeholder scan instead.</div>
+    </div>
+
+    <label class="checkbox-row">
+      <input type="checkbox" id="bboxToggle" checked>
+      <span data-t="Show Detection Overlay">Show Detection Overlay</span>
+    </label>
+
+    <button id="runBtn" class="btn btn-primary btn-block">▶️ <span data-t="Run Triage">Run Triage</span></button>
+    <button id="cacheBtn" class="btn btn-block" disabled>💾 <span data-t="Save to Cache">Save to Cache</span></button>
+
+    <div class="card" id="modelStatusCard">
+      <div class="label">Model backing (this run)</div>
+      <div id="modelStatusList" class="muted small">Checking…</div>
+    </div>
+
+    <div class="card">
+      <div class="label" data-t="Hardware Diagnostics">Hardware Diagnostics</div>
+      <div class="console-log small" id="hwStats">RK3588 &nbsp;● ACTIVE<br>NPU Load &nbsp;--<br>Power &nbsp;--<br>Temp &nbsp;--</div>
+    </div>
+  </aside>
+
+  <!-- ============================================================ -->
+  <!-- MAIN -->
+  <!-- ============================================================ -->
+  <section class="content">
+    <nav class="tabs">
+      <button class="tab active" data-tab="dashboard">🩺 <span data-t="Dashboard">Dashboard</span></button>
+      <button class="tab" data-tab="cache">☁️ <span data-t="Cloud Sync">Cloud Sync</span></button>
+    </nav>
+
+    <!-- DASHBOARD TAB -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <div class="grid-2">
+        <div>
+          <h3 data-t="Medical Image Analysis">Medical Image Analysis</h3>
+          <div class="image-frame">
+            <img id="scanImage" alt="Scan" src="">
+          </div>
+          <div class="caption" id="scanCaption">Awaiting analysis…</div>
+
+          <div class="metric-row" id="metricRow" hidden>
+            <div class="metric-tile"><div class="label">Model</div><div class="value" id="mModel">—</div></div>
+            <div class="metric-tile"><div class="label" data-t="Confidence">Confidence</div><div class="value" id="mConfidence">—</div></div>
+            <div class="metric-tile"><div class="label" data-t="Latency">Latency</div><div class="value" id="mLatency">—</div></div>
+          </div>
+
+          <h3 data-t="Telemetry Log">Telemetry Log</h3>
+          <div class="console-log" id="telemetryLog">&gt; System initialized. Awaiting commands...</div>
+        </div>
+
+        <div>
+          <div class="card result-card">
+            <div class="result-card-head">
+              <span data-t="Triage result">Triage result</span>
+              <span class="source-pill" id="sourcePill">—</span>
+            </div>
+            <div class="result-row"><span class="muted" data-t="Confidence">Confidence</span><b id="rConfidence">—</b></div>
+            <div class="result-row"><span class="muted">Severity</span><span class="chip" id="rSeverity">—</span></div>
+            <div class="result-row"><span class="muted">Escalation</span><b id="rEscalation">—</b></div>
+          </div>
+
+          <div class="risk-grid">
+            <div class="risk-tile risk-low" id="riskLow">Low<br>risk</div>
+            <div class="risk-tile risk-moderate" id="riskMod">Moderate<br>risk</div>
+            <div class="risk-tile risk-high" id="riskHigh">High<br>risk</div>
+          </div>
+
+          <h3 data-t="DICOM Metadata">DICOM Metadata</h3>
+          <div class="privacy-banner">🔒 HIPAA/GDPR Compliant — Hex Privacy Hashed</div>
+          <div class="card small">
+            Patient ID: <b class="mono" id="metaId">—</b><br>
+            Age: <b id="metaAge">—</b><br>
+            Modality: <b id="metaModality">—</b><br>
+            Date: <b id="metaDate">—</b><br>
+            Privacy: <b class="text-success">ANONYMIZED (PII STRIPPED)</b>
+          </div>
+
+          <div id="verdictSection" hidden>
+            <div class="badge-row">
+              <span class="badge badge-info">🤖 AI PRELIMINARY TRIAGE</span>
+              <span class="badge badge-warn">📋 CLINICIAN REVIEW: PENDING</span>
+            </div>
+            <div id="lowConfWarning" class="banner banner-warn" hidden>
+              ⚠️ Low AI Confidence (&lt;65%): Unable to reach definitive triage threshold. Specialist evaluation recommended.
+            </div>
+            <div class="verdict-box" id="verdictBox">
+              <div class="v-icon" id="verdictIcon">—</div>
+              <div class="v-title" id="verdictTitle">—</div>
+              <div class="v-sub" id="verdictSub">—</div>
+            </div>
+            <div class="card small">
+              <span class="source-tag" id="verdictSource">Source: —</span><br>
+              Localization: <b id="verdictLoc">—</b><br>
+              Classification / Plane: <b id="verdictExtra">—</b><br>
+              Image Quality: <b id="verdictQuality">Adequate for Analysis</b>
+            </div>
+
+            <div id="overrideSection" hidden>
+              <h4 data-t="Confirm Assessment">Confirm Assessment</h4>
+              <label class="label" id="override1Label">BI-RADS Assessment</label>
+              <select id="override1" class="select-box"></select>
+              <label class="label" id="override2Label">ACR Breast Density</label>
+              <select id="override2" class="select-box"></select>
+            </div>
+            <div id="overrideLocked" class="banner banner-info" hidden>
+              🔒 Assessment Override Controls locked for LHW profile. (Senior Radiologist PIN 9999 required).
+            </div>
+
+            <div class="banner" id="actionPlan"></div>
+
+            <div class="download-row">
+              <button class="btn btn-block" id="downloadTextBtn">📝 <span data-t="Download Text Report">Download Text Report</span></button>
+              <button class="btn btn-block" id="downloadPdfBtn">📄 <span data-t="Download PDF Report">Download PDF Report</span></button>
+            </div>
+            <div id="cacheSavedMsg" class="banner banner-success" hidden>Report cached.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLOUD SYNC / CACHE TAB -->
+    <div class="tab-panel" id="panel-cache">
+      <h2>☁️ <span data-t="Cloud Sync">Cloud Sync</span> &amp; Cache</h2>
+      <div class="metric-row">
+        <div class="metric-tile"><div class="label" data-t="Cached Reports">Cached Reports</div><div class="value" id="cTotal">0</div></div>
+        <div class="metric-tile"><div class="label" data-t="Unsynced">Unsynced</div><div class="value text-danger" id="cUnsynced">0</div></div>
+        <div class="metric-tile"><div class="label" data-t="Synced">Synced</div><div class="value text-success" id="cSynced">0</div></div>
+      </div>
+      <button class="btn" id="syncBtn">☁️ <span data-t="Sync to Cloud">Sync to Cloud</span></button>
+      <button class="btn" id="refreshCacheBtn">🔄 Refresh</button>
+      <h3 data-t="Local Cache Status">Local Cache Status</h3>
+      <div class="table-wrap">
+        <table id="cacheTable">
+          <thead><tr><th>ID</th><th>Patient</th><th>Modality</th><th>BI-RADS/Severity</th><th>Verdict</th><th>Timestamp</th><th>Synced</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="muted small" id="cacheEmptyMsg" data-t="No reports cached">No reports cached</div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">Pink Edge AI (HTML/JS edition) — same real models as the desktop/Streamlit apps, static front end</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

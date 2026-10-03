@@ -1,12 +1,14 @@
 # Pink Edge AI — Offline Desktop + Responsive Web Editions
 
-Two sibling UIs over the same shared logic, ported from the original hackathon Streamlit demo (see
-`App/Archive/Misc/`): a Tkinter **desktop** app (`GUI.py`) and a responsive **Streamlit web** app
-(`streamlit_app.py`). Both share the same SQLite report cache and the same model backend
-(`inference.py`). Everything the desktop/web editions need lives in **`App/`**; two standalone,
-optional pieces live at the repo root next to it instead — a local Android build (`Apk/`) and
-RK3588 edge-node deployment code (`RK3588 SBC/`) — since neither is part of running the desktop/web
-app itself. See `## Project layout`.
+Three sibling UIs over the same shared logic, ported from the original hackathon Streamlit demo
+(see `App/Archive/Misc/`): a Tkinter **desktop** app (`GUI.py`), a responsive **Streamlit web** app
+(`streamlit_app.py`), and a plain **HTML/CSS/JS web** app (`Web GUI/`, backed by `App/web_api.py`).
+All three share the same SQLite report cache and the same model backend (`inference.py`); the
+HTML/JS edition is its own set of files (no Streamlit, no shared markup) talking to that backend
+over a small REST API instead of importing `GUI.py`'s UI code directly. Everything the desktop/
+Streamlit editions need lives in **`App/`**; two standalone, optional pieces live at the repo root
+next to it instead — a local Android build (`Apk/`) and RK3588 edge-node deployment code
+(`RK3588 SBC/`) — since neither is part of running the app itself. See `## Project layout`.
 
 ## What this is
 
@@ -114,7 +116,15 @@ or manually: `cd App`, `pip install -r requirements.txt`, `streamlit run streaml
 (opens `http://localhost:8501` in your browser; `--server.address 0.0.0.0` if you want it reachable
 from another device on your LAN)
 
-Both launchers `cd` into `App/` for you, then share `App/requirements.txt`. First run downloads
+**Web (plain HTML/CSS/JS, a separate third edition):**
+```
+Start_Web_GUI.bat
+```
+or manually: `cd App`, `pip install -r requirements.txt`, `python web_api.py`, then open
+`http://127.0.0.1:5000` (that one process serves both the API and the static files in `Web GUI/`).
+See [Web GUI/README.md](Web%20GUI/README.md) for what this edition is and isn't yet.
+
+All three launchers `cd` into `App/` for you, then share `App/requirements.txt`. First run downloads
 ~1-2 GB of Python deps (PyTorch/Ultralytics) plus the offline fallback model weights (needs
 internet once). The offline fallbacks then run without internet on every later run; the
 Roboflow-hosted primaries need internet + a key every time (see above) — weights/datasets are
@@ -139,14 +149,27 @@ All three modalities check for a Roboflow API key and use it if present:
 ## Project layout
 
 ```
-README.md, Start.bat, Start_Web.bat    — this file + the two one-click launchers (stay at repo root)
+README.md, Start.bat, Start_Web.bat,    — this file + the three one-click launchers (stay at
+  Start_Web_GUI.bat                        repo root)
+index.html                 — GitHub Pages landing page: a static, dependency-free description of
+                                the project (what it is, the three editions, the measured
+                                accuracy table with its caveats, the data defects found and
+                                fixed, the validation suites). Deliberately NOT a live demo —
+                                the model backend can't run in a browser, so it claims no
+                                inference. Its numbers mirror Documentations/MODEL_SOURCES.md;
+                                update that file first, then this page.
 Apk/                       — optional: local Android build (Kivy + Buildozer), see Apk/README.md
 RK3588 SBC/                — optional: RK3588 edge-node deployment code, see its own README.md
+Web GUI/                   — the third edition's front end: static index.html/style.css/app.js,
+                                talking to App/web_api.py over REST; see Web GUI/README.md
 
 App/
   GUI.py                    — Tkinter desktop app: UI + local SQLite cache + reports + fallbacks
   streamlit_app.py           — Streamlit web app (responsive) — same logic, imported from GUI.py;
                                   includes the global st.markdown auto-dedent patch (see fix above)
+  web_api.py                  — Flask backend for the HTML/JS edition (Web GUI/ at repo root) — a
+                                  thin REST wrapper around GUI.py/inference.py, no UI code of its
+                                  own; also serves Web GUI/'s static files at the same address
   auth_manager.py             — RBAC module (LHW vs. Senior Radiologist), stdlib only
   dicom_anonymizer.py         — Offline DICOM anonymization & hex privacy hashing, stdlib only
   inference.py                — model loading + prediction dispatch for all three modalities
