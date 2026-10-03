@@ -1,17 +1,37 @@
 {
   "architecture": "mobilenet_v3_small (ImageNet-pretrained backbone, frozen) + linear head (trained)",
-  "img_size": 128,
+  "img_size": 160,
   "classes": [
     "negative",
     "positive"
   ],
-  "train_positive": 150,
-  "train_negative": 150,
-  "test_positive": 40,
-  "test_negative": 40,
-  "held_out_test_accuracy_pct": 82.5,
-  "epochs": 6,
+  "train_counts": {
+    "negative": 2601,
+    "positive": 2601
+  },
+  "held_out_counts": {
+    "negative": 900,
+    "positive": 900
+  },
+  "held_out_test_accuracy_pct": 89.88888888888889,
+  "held_out_recall_pct_per_class": {
+    "negative": 86.4,
+    "positive": 93.3
+  },
+  "held_out_confusion_true_by_predicted": [
+    [
+      778,
+      122
+    ],
+    [
+      60,
+      840
+    ]
+  ],
+  "chance_accuracy_pct": 50.0,
+  "epochs": 8,
   "batch_size": 16,
-  "lr": 0.001,
-  "trained_at": "2026-09-13 00:43:12"
+  "lr": 0.0003,
+  "unfreeze_last_blocks": 3,
+  "trained_at": "2026-10-03 18:43:45"
 }
