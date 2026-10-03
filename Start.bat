@@ -2,8 +2,9 @@
 REM Pink Edge AI (Desktop) launcher.
 REM First run downloads real model weights from Hugging Face (a few hundred MB) and installs
 REM Python deps if missing -- needs internet once. After that, GUI.py runs fully offline.
+REM All the actual code/data lives in App\ -- this launcher just cd's in and runs it.
 
-cd /d "%~dp0"
+cd /d "%~dp0App"
 
 where python >nul 2>nul
 if errorlevel 1 (

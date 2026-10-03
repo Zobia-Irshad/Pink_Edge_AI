@@ -1,9 +1,10 @@
 @echo off
-REM Pink Edge AI (Streamlit web edition) launcher — opens a local browser UI, same real models
+REM Pink Edge AI (Streamlit web edition) launcher -- opens a local browser UI, same real models
 REM and SQLite cache as the desktop app (Start.bat / GUI.py). First run needs internet once to
 REM download model weights + Python deps; after that it's a local-only web server (no cloud calls).
+REM All the actual code/data lives in App\ -- this launcher just cd's in and runs it.
 
-cd /d "%~dp0"
+cd /d "%~dp0App"
 
 where python >nul 2>nul
 if errorlevel 1 (
