@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """
+
+Author Name:  Imaad Ullah Khan
+Author Email: yameenimaad@gmail.com
+AI Helper:    Claude
 Pink Edge AI — Offline Desktop Clinical Intelligence Platform
 ================================================================
 Tkinter port of the original Streamlit demo (Data/Pink_Edge_AI-main/pink_edge.py), wired to real
@@ -28,6 +32,19 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 import inference as inf
+from dicom_anonymizer import generate_hex_privacy_hash
+
+
+def _privacy_hash_for(pat_id):
+    """The hex privacy hash that stands in for a patient identifier anywhere data leaves this
+    device (the GSM broadcast, the IoT queue, the hospital-hub alert feed).
+
+    The README promises PII is hashed "before anything is displayed, cached, or transmitted", and
+    the Streamlit edition already did this — the desktop edition did not: it broadcast the raw
+    id and a literal coordinate (`ID:{pat_id}|LOC:29.344|...`). Tests/privacy_leak_test.py caught
+    the discrepancy; this brings the two editions onto the same guarantee. Mirrors the web
+    edition's input shape so the same patient hashes identically in both."""
+    return generate_hex_privacy_hash({"pat_id": pat_id, "cnic": f"35201-{pat_id}-1"})
 
 
 def _lazy_import_tkinter():
@@ -55,11 +72,35 @@ ACR_DENSITY_OPTIONS = inf.ACR_DENSITY_OPTIONS
 TB_SEVERITY_LEVELS = inf.TB_SEVERITY_LEVELS
 TB_LUNG_ZONES = inf.TB_LUNG_ZONES
 
-C = {  # color tokens — all-white background theme
-    "bg": "#ffffff", "surface": "#ffffff", "surface_alt": "#f8f9fa", "surface_hover": "#e9ecef",
-    "border": "#e5e7eb", "border_light": "#d1d5db", "text": "#111827", "text_muted": "#4b5563",
-    "text_light": "#6b7280", "primary": "#1a237e", "primary_light": "#3949ab", "accent": "#ec4899",
-    "accent_light": "#f472b6", "success": "#10b981", "warning": "#f59e0b", "danger": "#ef4444",
+# ============================================================
+# THEME — the single source of truth for both editions. streamlit_app.py imports this dict
+# (`C = core.C`) instead of defining its own, so the desktop and web UIs can't drift apart again:
+# they previously disagreed on every brand colour (desktop indigo+pink vs. web teal+sky) and on
+# four of the six semantic colours.
+#
+# Pink-forward, matching the project's own name and its flagship breast-screening modality, on a
+# light clinical slate ground. Every colour used for *text or icons on a light surface* clears
+# WCAG AA (4.5:1); the previous success/warning/danger values did not (#10b981 was 2.3:1,
+# #f59e0b 1.9:1, #ef4444 3.3:1), so those are now darker shades of the same hues.
+# ============================================================
+C = {
+    # neutrals (slate)
+    "bg": "#f8fafc", "surface": "#ffffff", "surface_alt": "#f1f5f9", "surface_hover": "#e2e8f0",
+    "border": "#cbd5e1", "border_light": "#e2e8f0",
+    "text": "#0f172a", "text_muted": "#475569", "text_light": "#64748b",
+    # brand (rose) — `primary_light` is the *higher-contrast* shade: it's used for emphasis text
+    # (confidence readout, headings, table headers) and pressed/hover states, not for tinting.
+    "primary": "#be185d", "primary_light": "#9d174d",
+    # secondary (sky), for informational emphasis that isn't the brand
+    "accent": "#0369a1", "accent_light": "#075985",
+    # semantic — these carry clinical meaning (a danger verdict is a real finding), so both
+    # editions must agree on them exactly.
+    "success": "#15803d", "warning": "#b45309", "danger": "#b91c1c",
+    # tints, for card/banner backgrounds behind the semantic colours above
+    "primary_bg": "#fdf2f8", "success_bg": "#f0fdf4", "warning_bg": "#fffbeb", "danger_bg": "#fef2f2",
+    # console panels (telemetry log, hardware stats, network trace) — deliberately dark, a
+    # terminal-style readout embedded in the light UI, not a leftover of the old dark theme.
+    "console_bg": "#060a13", "console_text": "#94a3b8",
 }
 
 TR = {
@@ -439,6 +480,7 @@ class PinkEdgeApp:
         self.inference_done = False
         self.pat_id = random.randint(10000000, 99999999)
         self.pat_age = random.randint(30, 70)
+        self.privacy_hash = _privacy_hash_for(self.pat_id)
         self.hw_stats = {"load": "34%", "power": "6.2W", "temp": "42C"}
         self.net_stats = {"signal": "-85 dBm", "bhus": 14, "module": "ONLINE"}
         self.sms_alerts = []
@@ -552,7 +594,7 @@ class PinkEdgeApp:
 
         ttk.Separator(parent).pack(fill="x", padx=14, pady=10)
         ttk.Label(parent, text="Hardware Diagnostics", style="Card.TLabel", font=("Segoe UI", 8, "bold")).pack(anchor="w", **pad)
-        self.hw_panel = tk.Text(parent, height=6, width=28, bg="#060a13", fg="#94a3b8", bd=0,
+        self.hw_panel = tk.Text(parent, height=6, width=28, bg=C["console_bg"], fg=C["console_text"], bd=0,
                                  font=("Consolas", 8), highlightthickness=0)
         self.hw_panel.pack(padx=14, fill="x")
         self._update_hw_panel()
@@ -596,9 +638,9 @@ class PinkEdgeApp:
         self.metric_lat = self._metric_tile(metrics, "Latency", "—")
 
         ttk.Label(left, text="Telemetry Log", style="H2.TLabel").pack(anchor="w", pady=(8, 2))
-        self.log_text = tk.Text(left, height=8, bg="#060a13", fg="#94a3b8", bd=0, font=("Consolas", 9), highlightthickness=0)
+        self.log_text = tk.Text(left, height=8, bg=C["console_bg"], fg=C["console_text"], bd=0, font=("Consolas", 9), highlightthickness=0)
         self.log_text.pack(fill="both", expand=False)
-        for tag, color in [("dicom", "#60a5fa"), ("npu", "#34d399"), ("gsm", "#22d3ee"),
+        for tag, color in [("dicom", "#7dd3fc"), ("npu", "#86efac"), ("gsm", "#bae6fd"),
                             ("cache", "#f472b6"), ("muted", "#475569")]:
             self.log_text.tag_configure(tag, foreground=color)
 
@@ -677,7 +719,7 @@ class PinkEdgeApp:
         right.pack(side="left", fill="y", padx=(8, 0))
         right.pack_propagate(False)
         ttk.Label(right, text="Network Status", style="Card.TLabel", font=("Segoe UI", 10, "bold")).pack(anchor="w", padx=12, pady=6)
-        self.net_panel = tk.Text(right, height=6, bg="#060a13", fg="#94a3b8", bd=0, font=("Consolas", 8), highlightthickness=0)
+        self.net_panel = tk.Text(right, height=6, bg=C["console_bg"], fg=C["console_text"], bd=0, font=("Consolas", 8), highlightthickness=0)
         self.net_panel.pack(fill="x", padx=12)
         stats = ttk.Frame(right, style="Card.TFrame")
         stats.pack(fill="x", padx=12, pady=10)
@@ -841,17 +883,20 @@ class PinkEdgeApp:
                            "module": "ONLINE" if random.random() > 0.1 else "UNSTABLE"}
         new = {"pat_id": random.randint(10000000, 99999999), "pat_age": random.randint(28, 75)}
         self.pat_id, self.pat_age = new["pat_id"], new["pat_age"]
+        self.privacy_hash = _privacy_hash_for(self.pat_id)
 
         real = "REAL" in result.get("source", "SIMULATED").upper() or "real inference" in result.get("source", "")
         self._log(f"[NPU] {'Real on-device' if real else 'Simulated'} inference for {model.split('(')[0].strip()}... Complete ({self.inference_latency}s).", "npu")
-        sms_payload = f"ID:{self.pat_id}|LOC:29.344|{result['sms']}"
+        # Anything leaving the device carries the hash and a redacted location, never the raw
+        # identifier or a real coordinate — see _privacy_hash_for() and Tests/privacy_leak_test.py.
+        sms_payload = f"ID:{self.privacy_hash}|LOC:ANON|{result['sms']}"
         self._log(f'[GSM] Broadcasted: "{sms_payload}" -> Allied Hospital Hub.', "gsm")
         if "GSM" in self.network_var.get():
             iot_id = f"IOT-{random.randint(100000, 999999)}"
             self._log(f"[Alibaba IoT] Queued - ID: {iot_id} -> Table Store", "gsm")
-            self.iot_messages.append({"time": time.strftime("%H:%M:%S"), "id": self.pat_id, "payload": sms_payload, "iot_id": iot_id})
+            self.iot_messages.append({"time": time.strftime("%H:%M:%S"), "id": self.privacy_hash, "payload": sms_payload, "iot_id": iot_id})
 
-        self.sms_alerts.insert(0, {"time": time.strftime("%H:%M:%S"), "id": self.pat_id,
+        self.sms_alerts.insert(0, {"time": time.strftime("%H:%M:%S"), "id": self.privacy_hash,
                                     "type": model.split("(")[0].strip(), "payload": sms_payload,
                                     "status": "Pending Review", "is_critical": result["is_critical"]})
 

@@ -3,6 +3,10 @@ auth_manager.py
 ---------------
 Role-based access control (RBAC) for Pink Edge AI.
 
+Author Name:  Imaad Ullah Khan
+Author Email: yameenimaad@gmail.com
+AI Helper:    Claude
+
 Defines two user roles:
   - ROLE_LHW         : Lady Health Worker  — limited permissions
   - ROLE_RADIOLOGIST : Senior Radiologist  — full permissions (PIN: 9999)
@@ -23,7 +27,7 @@ ROLE_RADIOLOGIST = "radiologist"
 ROLE_CONFIGS = {
     ROLE_LHW: {
         "badge": "👤 Lady Health Worker (LHW)",
-        "color": "#ff69b4",
+        "color": "#be185d",  # brand rose — matches GUI.py C["primary"]
         "pin": "1111",
         "permissions": {
             "view_results",
@@ -33,7 +37,7 @@ ROLE_CONFIGS = {
     },
     ROLE_RADIOLOGIST: {
         "badge": "👨‍⚕️ Senior Radiologist",
-        "color": "#a855f7",
+        "color": "#6d28d9",  # violet-700 (the old #a855f7 was 3.5:1 on white, below WCAG AA)
         "pin": "9999",
         "permissions": {
             "view_results",

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """
+
+Author Name:  Imaad Ullah Khan
+Author Email: yameenimaad@gmail.com
+AI Helper:    Claude
 Pink Edge AI — offline, non-neural triage fallback (classical pixel-difference comparison).
 ================================================================================================
 No trained model, no internet, no API key, no huggingface_hub/torch/ultralytics dependency at

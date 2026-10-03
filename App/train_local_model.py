@@ -6,6 +6,10 @@ Models/<Modality>/positive|negative/ — see offline_cv.py's own docstring for t
 evaluates it on the dataset's own held-out `test` split, and saves the trained weights to
 Models/<Modality>/local_model.pt.
 
+Author Name:  Imaad Ullah Khan
+Author Email: yameenimaad@gmail.com
+AI Helper:    Claude
+
 Architecture: torchvision's MobileNetV3-Small with an ImageNet-pretrained backbone (frozen) plus a
 freshly-trained linear classifier head — a standard, fast transfer-learning setup that's practical
 on CPU-only hardware (no GPU assumed here) while still starting from real learned visual features

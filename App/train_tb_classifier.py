@@ -1,3 +1,9 @@
+# Pink Edge AI — TB classifier training script.
+#
+# Author Name:  Imaad Ullah Khan
+# Author Email: yameenimaad@gmail.com
+# AI Helper:    Claude
+
 from __future__ import annotations
 
 import random

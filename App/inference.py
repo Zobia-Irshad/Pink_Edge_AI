@@ -4,6 +4,10 @@ Pink Edge AI (Desktop) — real on-device model loaders/predictors.
 ====================================================================
 One function per modality: `load_<modality>()` (lazy, cached) and `predict_<modality>(pil_image)`.
 
+Author Name:  Imaad Ullah Khan
+Author Email: yameenimaad@gmail.com
+AI Helper:    Claude
+
 Every predict_* returns either a result-dict shaped like the app's simulated scenarios
 (bi_rads, acr, verdict, sub, loc, extra, vicon, confidence, sms, is_critical, source) or None
 if no real model could be loaded — in which case GUI.py falls back to its own simulated

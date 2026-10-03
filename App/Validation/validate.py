@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """
+
+Author Name:  Imaad Ullah Khan
+Author Email: yameenimaad@gmail.com
+AI Helper:    Claude
 Pink Edge AI (Desktop) — validation suite.
 ============================================
 Self-contained smoke/validation test for GUI.py + inference.py + streamlit_app.py — 18 checks:

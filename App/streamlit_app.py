@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """
+
+Author Name:  Imaad Ullah Khan
+Author Email: yameenimaad@gmail.com
+AI Helper:    Claude
 Pink Edge AI — Streamlit (responsive web) edition
 ====================================================
 A responsive web UI, sibling to the Tkinter desktop app (GUI.py) — same shared logic, same model
@@ -25,24 +29,14 @@ st.set_page_config(page_title="Pink Edge AI", page_icon="🩸", layout="wide", i
 # ============================================================
 # COLOR TOKENS & PROFESSIONAL CLINICAL LIGHT THEME
 # ============================================================
-C = {
-    "bg": "#f8fafc",
-    "surface": "#ffffff",
-    "surface_alt": "#f1f5f9",
-    "surface_hover": "#e2e8f0",
-    "border": "#cbd5e1",
-    "border_light": "#e2e8f0",
-    "text": "#0f172a",
-    "text_muted": "#475569",
-    "text_light": "#64748b",
-    "primary": "#0d9488",
-    "primary_light": "#0f766e",
-    "accent": "#0284c7",
-    "accent_light": "#0369a1",
-    "success": "#16a34a",
-    "warning": "#d97706",
-    "danger": "#dc2626",
-}
+# Imported from GUI.py rather than redefined here — one source of truth for both editions. These
+# two used to keep their own separate dicts and had drifted apart on every brand colour and on
+# four of the six semantic ones; see GUI.py's THEME block for the palette and its rationale.
+#
+# NOTE: the CSS below is a plain string, not an f-string (it's full of literal CSS braces), so it
+# repeats these values as literals rather than interpolating them. Keep the two in sync when
+# changing a colour — `python Tests/smoke_test.py` checks for exactly that drift.
+C = core.C
 
 # ============================================================
 # VOICE MESSAGE LIBRARY
@@ -231,7 +225,7 @@ h1, h2, h3, h4, h5, h6, label, p, span, div, li, td, th {
 
 /* Header Banner */
 .page-header {
-    background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
+    background: linear-gradient(135deg, #be185d 0%, #0369a1 100%);
     border-radius: 12px;
     padding: 22px 28px;
     margin-bottom: 20px;
@@ -298,7 +292,7 @@ h1, h2, h3, h4, h5, h6, label, p, span, div, li, td, th {
     letter-spacing: 0.6px !important;
 }
 .metric-tile .value {
-    color: #0d9488 !important;
+    color: #be185d !important;
     font-size: 1.4rem !important;
     font-weight: 800 !important;
     margin-top: 4px !important;
@@ -372,12 +366,12 @@ h1, h2, h3, h4, h5, h6, label, p, span, div, li, td, th {
 }
 .alert-card.critical {
     background: #fef2f2 !important;
-    border-color: #ef4444 !important;
+    border-color: #b91c1c !important;
     color: #991b1b !important;
 }
 .alert-card.ok {
     background: #f0fdf4 !important;
-    border-color: #10b981 !important;
+    border-color: #15803d !important;
     color: #166534 !important;
 }
 
@@ -409,8 +403,8 @@ div[data-baseweb="input"] input {
 }
 .stButton > button:hover {
     background-color: #f1f5f9 !important;
-    border-color: #0d9488 !important;
-    color: #0d9488 !important;
+    border-color: #be185d !important;
+    color: #be185d !important;
 }
 .stTabs [data-baseweb="tab-list"] {
     background-color: #ffffff !important;
@@ -421,7 +415,7 @@ div[data-baseweb="input"] input {
     font-weight: 700 !important;
 }
 .stTabs [aria-selected="true"] {
-    color: #0d9488 !important;
+    color: #be185d !important;
 }
 .stDataFrame, [data-testid="stTable"] {
     background-color: #ffffff !important;
@@ -431,25 +425,25 @@ div[data-baseweb="input"] input {
 
 /* ============= AI CONFIDENCE + LHV OVERRIDE STYLING ============= */
 .ai-recommendation {
-  background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%); /* default/fallback pink gradient */
+  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); /* default/fallback pink gradient */
   border-radius: 14px; padding: 20px; margin: 12px 0;
-  box-shadow: 0 4px 6px rgba(255, 20, 147, 0.2);
+  box-shadow: 0 4px 6px rgba(157, 23, 77, 0.2);
   color: #ffffff;
 }
 /* Risk-based color overrides — applied via an extra class based on the
    real triage result's risk_level, so a BI-RADS 5 case never renders as
    a green/pink "routine" box again. */
 .ai-recommendation.risk-critical {
-  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
-  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3) !important;
+  background: linear-gradient(135deg, #b91c1c 0%, #b91c1c 100%) !important;
+  box-shadow: 0 4px 6px rgba(185, 28, 28, 0.3) !important;
 }
 .ai-recommendation.risk-moderate {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  background: linear-gradient(135deg, #b45309 0%, #b45309 100%) !important;
   box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3) !important;
 }
 .ai-recommendation.risk-low {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3) !important;
+  background: linear-gradient(135deg, #15803d 0%, #15803d 100%) !important;
+  box-shadow: 0 4px 6px rgba(21, 128, 61, 0.3) !important;
 }
 .ai-recommendation .rec-header {
   font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
@@ -463,9 +457,9 @@ div[data-baseweb="input"] input {
 }
 
 .lhv-decision {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); /* Blue gradient */
+  background: linear-gradient(135deg, #075985 0%, #0369a1 100%); /* Blue gradient */
   border-radius: 14px; padding: 20px; margin: 12px 0;
-  box-shadow: 0 4px 6px rgba(30, 64, 175, 0.2);
+  box-shadow: 0 4px 6px rgba(7, 89, 133, 0.2);
   color: #ffffff;
 }
 .lhv-decision .lhv-header {
@@ -474,7 +468,7 @@ div[data-baseweb="input"] input {
 }
 
 .btn-agree {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; /* Green */
+  background: linear-gradient(135deg, #15803d 0%, #15803d 100%) !important; /* Green */
   color: #ffffff !important;
   border: none !important;
   border-radius: 8px;
@@ -483,15 +477,15 @@ div[data-baseweb="input"] input {
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 6px rgba(21, 128, 61, 0.3);
 }
 .btn-agree:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 6px 12px rgba(21, 128, 61, 0.4);
 }
 
 .btn-override {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important; /* Red */
+  background: linear-gradient(135deg, #b91c1c 0%, #b91c1c 100%) !important; /* Red */
   color: #ffffff !important;
   border: none !important;
   border-radius: 8px;
@@ -500,16 +494,16 @@ div[data-baseweb="input"] input {
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 4px 6px rgba(185, 28, 28, 0.3);
 }
 .btn-override:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 6px 12px rgba(185, 28, 28, 0.4);
 }
 
 .override-reason-box {
   background: #f0f9ff; /* Light blue background */
-  border: 2px solid #3b82f6;
+  border: 2px solid #0369a1;
   border-radius: 12px;
   padding: 16px;
   margin-top: 16px;
@@ -517,7 +511,7 @@ div[data-baseweb="input"] input {
 .override-reason-box .reason-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #1e40af;
+  color: #075985;
   margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -532,18 +526,18 @@ div[data-baseweb="input"] input {
   transition: background 0.2s ease;
 }
 .override-reason-box .reason-option:hover {
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(3, 105, 161, 0.1);
 }
 .override-reason-box .reason-option input[type="radio"] {
   margin-right: 12px;
   cursor: pointer;
-  accent-color: #3b82f6;
+  accent-color: #0369a1;
   width: 18px;
   height: 18px;
 }
 .override-reason-box .reason-option label {
   cursor: pointer;
-  color: #111827;
+  color: #0f172a;
   font-weight: 500;
   margin: 0;
 }
@@ -564,12 +558,12 @@ div[data-baseweb="input"] input {
   border-radius: 14px;
   padding: 0;
   margin: 16px 0;
-  box-shadow: 0 4px 8px rgba(255, 20, 147, 0.2);
-  color: #111827;
+  box-shadow: 0 4px 8px rgba(157, 23, 77, 0.2);
+  color: #0f172a;
   overflow: hidden;
 }
 .voice-feedback-panel .vfp-header {
-  background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%);
   font-size: 0.95rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -577,7 +571,7 @@ div[data-baseweb="input"] input {
   color: #ffffff;
   padding: 16px;
   margin: 0;
-  border-bottom: 2px solid rgba(255, 20, 147, 0.2);
+  border-bottom: 2px solid rgba(157, 23, 77, 0.2);
 }
 .voice-feedback-panel .vfp-message {
   font-size: 1.05rem;
@@ -585,10 +579,10 @@ div[data-baseweb="input"] input {
   margin: 16px;
   line-height: 1.5;
   padding: 12px;
-  background: #f5f5f5;
+  background: #f1f5f9;
   border-radius: 8px;
-  border-left: 4px solid #ff69b4;
-  color: #111827;
+  border-left: 4px solid #be185d;
+  color: #0f172a;
 }
 .voice-btn-group {
   display: flex;
@@ -597,7 +591,7 @@ div[data-baseweb="input"] input {
   flex-wrap: wrap;
 }
 .voice-btn {
-  background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%) !important;
+  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%) !important;
   border: none !important;
   color: #ffffff !important;
   padding: 10px 16px !important;
@@ -606,11 +600,11 @@ div[data-baseweb="input"] input {
   font-size: 0.9rem !important;
   cursor: pointer !important;
   transition: all 0.3s ease !important;
-  box-shadow: 0 4px 6px rgba(255, 20, 147, 0.3) !important;
+  box-shadow: 0 4px 6px rgba(157, 23, 77, 0.3) !important;
 }
 .voice-btn:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 6px 12px rgba(255, 20, 147, 0.4) !important;
+  box-shadow: 0 6px 12px rgba(157, 23, 77, 0.4) !important;
 }
 .voice-status {
   background: #f0f9ff;
@@ -620,10 +614,10 @@ div[data-baseweb="input"] input {
   font-size: 0.85rem;
   text-align: center;
   border: 1px solid #bfdbfe;
-  color: #1e40af;
+  color: #075985;
 }
 .audio-player-wrapper {
-  background: #f5f5f5;
+  background: #f1f5f9;
   border-radius: 8px;
   padding: 12px 16px;
   margin: 0 16px 16px 16px;
@@ -635,11 +629,11 @@ div[data-baseweb="input"] input {
   padding: 0;
   margin: 16px 0;
   box-shadow: 0 4px 8px rgba(244, 63, 94, 0.2);
-  color: #111827;
+  color: #0f172a;
   overflow: hidden;
 }
 .helpya-card .helpya-header {
-  background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%);
   font-size: 1.15rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -650,17 +644,17 @@ div[data-baseweb="input"] input {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 2px solid rgba(255, 20, 147, 0.2);
+  border-bottom: 2px solid rgba(157, 23, 77, 0.2);
 }
 .helpya-stat {
   display: inline-block;
-  background: linear-gradient(135deg, #fff0f6 0%, #ffe4f0 100%);
+  background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
   border-radius: 12px;
   padding: 16px;
   margin: 12px;
   font-weight: 600;
-  border: 2px solid #ffb6d9;
-  color: #be123c;
+  border: 2px solid #fbcfe8;
+  color: #be185d;
 }
 .helpya-stat .stat-label {
   font-size: 0.8rem;
@@ -738,7 +732,7 @@ def render_sidebar():
     from auth_manager import AuthManager, ROLE_LHW, ROLE_RADIOLOGIST, ROLE_CONFIGS
     with st.sidebar:
         st.markdown(
-            '<div style="background:linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);border-radius:10px;'
+            '<div style="background:linear-gradient(135deg, #be185d 0%, #9d174d 100%);border-radius:10px;'
             'padding:14px;margin-bottom:14px;color:#fff;"><b>🩸 Pink Edge AI</b>'
             '<div style="font-size:0.72rem;opacity:0.85;">Clinical Intelligence Platform</div></div>',
             unsafe_allow_html=True)
@@ -947,11 +941,11 @@ def render_dashboard(selected_model):
     # Top Logo Header matching screenshot
     st.markdown("""
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;background:#ffffff;padding:16px 20px;border-radius:14px;border:1px solid #e2e8f0;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
-        <div style="background:#e11d48;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:1.4rem;box-shadow:0 4px 10px rgba(225,29,72,0.25);">
+        <div style="background:#be185d;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:1.4rem;box-shadow:0 4px 10px rgba(225,29,72,0.25);">
             💓
         </div>
         <div>
-            <div style="font-size:1.35rem;font-weight:800;color:#1e3a8a;line-height:1.2;">Pink Edge AI</div>
+            <div style="font-size:1.35rem;font-weight:800;color:#075985;line-height:1.2;">Pink Edge AI</div>
             <div style="font-size:0.82rem;color:#64748b;font-weight:500;margin-top:2px;">Offline triage — BHU mode</div>
         </div>
     </div>
@@ -1018,26 +1012,26 @@ def render_dashboard(selected_model):
 
         if not r:
             severity_str = "Moderate"
-            sev_bg = "#f59e0b"
+            sev_bg = "#b45309"
             escalation_str = "Not required"
-            escalation_color = "#16a34a"
+            escalation_color = "#15803d"
             risk_cat = "moderate"
         elif r.get("is_critical", False):
             if "5" in r.get("bi_rads", "") or "4C" in r.get("bi_rads", "") or "POS" in r.get("verdict", ""):
                 severity_str = "High"
-                sev_bg = "#ef4444"
+                sev_bg = "#b91c1c"
                 risk_cat = "high"
             else:
                 severity_str = "Moderate"
-                sev_bg = "#f59e0b"
+                sev_bg = "#b45309"
                 risk_cat = "moderate"
             escalation_str = "Required"
             escalation_color = "#b91c1c"
         else:
             severity_str = "Low"
-            sev_bg = "#10b981"
+            sev_bg = "#15803d"
             escalation_str = "Not required"
-            escalation_color = "#16a34a"
+            escalation_color = "#15803d"
             risk_cat = "low"
 
         st.markdown(f"""
@@ -1065,20 +1059,20 @@ def render_dashboard(selected_model):
         """, unsafe_allow_html=True)
 
         # 3 Risk Level Cards matching screenshot layout
-        low_style = "background:#ecfdf5;border:2px solid #10b981;box-shadow:0 2px 6px rgba(16,185,129,0.15);" if risk_cat == "low" else "background:#f4fbf7;border:1px solid #d1fae5;"
-        mod_style = "background:#fffbeb;border:2px solid #f59e0b;box-shadow:0 2px 6px rgba(245,158,11,0.15);" if risk_cat == "moderate" else "background:#fffdf5;border:1px solid #fef3c7;"
-        high_style = "background:#fef2f2;border:2px solid #ef4444;box-shadow:0 2px 6px rgba(239,68,68,0.15);" if risk_cat == "high" else "background:#fff8f8;border:1px solid #fee2e2;"
+        low_style = "background:#ecfdf5;border:2px solid #15803d;box-shadow:0 2px 6px rgba(16,185,129,0.15);" if risk_cat == "low" else "background:#f4fbf7;border:1px solid #d1fae5;"
+        mod_style = "background:#fffbeb;border:2px solid #b45309;box-shadow:0 2px 6px rgba(180, 83, 9,0.15);" if risk_cat == "moderate" else "background:#fffdf5;border:1px solid #fef3c7;"
+        high_style = "background:#fef2f2;border:2px solid #b91c1c;box-shadow:0 2px 6px rgba(239,68,68,0.15);" if risk_cat == "high" else "background:#fdf2f8;border:1px solid #fee2e2;"
 
         st.markdown(f"""
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;">
             <div style="{low_style}border-radius:12px;padding:14px 6px;text-align:center;">
-                <div style="color:#16a34a;font-size:0.85rem;font-weight:700;line-height:1.2;">Low<br>risk</div>
+                <div style="color:#15803d;font-size:0.85rem;font-weight:700;line-height:1.2;">Low<br>risk</div>
             </div>
             <div style="{mod_style}border-radius:12px;padding:14px 6px;text-align:center;">
                 <div style="color:#b45309;font-size:0.85rem;font-weight:700;line-height:1.2;">Moderate<br>risk</div>
             </div>
             <div style="{high_style}border-radius:12px;padding:14px 6px;text-align:center;">
-                <div style="color:#dc2626;font-size:0.85rem;font-weight:700;line-height:1.2;">High<br>risk</div>
+                <div style="color:#b91c1c;font-size:0.85rem;font-weight:700;line-height:1.2;">High<br>risk</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1090,7 +1084,7 @@ def render_dashboard(selected_model):
         st.markdown(f"""<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:0.75rem;color:var(--success);font-weight:600;">
         🔒 HIPAA/GDPR Compliant — Hex Privacy Hashed</div>
         <div class="card">
-        Patient ID: <b style="color:#0284c7;font-family:monospace;">{priv_hash}</b><br>Age: <b>{st.session_state.pat_age} Y</b><br>
+        Patient ID: <b style="color:#0369a1;font-family:monospace;">{priv_hash}</b><br>Age: <b>{st.session_state.pat_age} Y</b><br>
         Modality: <b>{mod_map[selected_model]}</b><br>Date: <b>{datetime.now().strftime('%Y-%m-%d')}</b><br>
         Privacy: <b style="color:var(--success);">ANONYMIZED (PII STRIPPED)</b></div>""", unsafe_allow_html=True)
 
@@ -1254,7 +1248,7 @@ def render_hospital_hub():
 
             if already_approved:
                 st.markdown("""
-                <div style="background:#10b98120;border-left:4px solid #10b981;border-radius:8px;padding:12px;margin-top:8px;margin-bottom:12px;">
+                <div style="background:#15803d20;border-left:4px solid #15803d;border-radius:8px;padding:12px;margin-top:8px;margin-bottom:12px;">
                     <b>📤 Status:</b> Approved & forwarded to hospital
                 </div>
                 """, unsafe_allow_html=True)
@@ -1263,7 +1257,7 @@ def render_hospital_hub():
             decision = st.session_state.lhv_decisions[alert_id]["decision"]
             if decision:
                 status_text = "✅ Agreed with AI" if decision == "agree" else "🔴 Overridden"
-                status_color = "#10b981" if decision == "agree" else "#ef4444"
+                status_color = "#15803d" if decision == "agree" else "#b91c1c"
                 st.markdown(f"""
                 <div style="background: {status_color}20; border-left: 4px solid {status_color}; border-radius: 8px; padding: 12px; margin-top: 8px; margin-bottom: 12px;">
                     <b>👩\u200d⚕️ LHV Decision:</b> {status_text}
@@ -1351,11 +1345,11 @@ def render_cloud_sync():
     # VOICE MESSAGE MANAGEMENT
     # ============================================================
     st.markdown("---")
-    st.markdown("<div style='background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>🎤 Voice Message Library</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>🎤 Voice Message Library</div>", unsafe_allow_html=True)
 
     voice_mgmt_col1, voice_mgmt_col2 = st.columns([2, 1])
     with voice_mgmt_col1:
-        st.markdown("<div style='background: rgba(255, 105, 180, 0.2); color: #ff1493; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #ff69b4;'>Pre-recorded voice messages for different scenarios:</div>", unsafe_allow_html=True)
+        st.markdown("<div style='background: rgba(190, 24, 93, 0.2); color: #9d174d; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #be185d;'>Pre-recorded voice messages for different scenarios:</div>", unsafe_allow_html=True)
         selected_message = st.selectbox(
             "Select a message to test:",
             list(VOICE_MESSAGES.keys()),
@@ -1384,7 +1378,7 @@ def render_cloud_sync():
         st.caption("🔇 No audio engine configured yet — showing text only. Wire up play_voice_message() to enable playback.")
 
     # Upload custom voice file
-    st.markdown("<div style='background: rgba(255, 105, 180, 0.2); color: #ff1493; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #ff69b4;'>Or upload your own audio file:</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: rgba(190, 24, 93, 0.2); color: #9d174d; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #be185d;'>Or upload your own audio file:</div>", unsafe_allow_html=True)
     custom_voice_file = st.file_uploader(
         "Upload audio (MP3/WAV/OGG)",
         type=["mp3", "wav", "ogg"],
@@ -1425,7 +1419,7 @@ def render_cloud_sync():
         """, unsafe_allow_html=True)
 
     # Session Feedback Form
-    st.markdown("<div style='background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>📝 Session Feedback & Quality Check</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>📝 Session Feedback & Quality Check</div>", unsafe_allow_html=True)
 
     feedback_col1, feedback_col2 = st.columns([1, 1])
 
@@ -1447,7 +1441,7 @@ def render_cloud_sync():
         )
 
     # Detailed Feedback
-    st.markdown("<div style='background: rgba(255, 105, 180, 0.2); color: #ff1493; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #ff69b4;'>Your Feedback:</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: rgba(190, 24, 93, 0.2); color: #9d174d; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #be185d;'>Your Feedback:</div>", unsafe_allow_html=True)
     feedback_text = st.text_area(
         "Share details about this session:",
         placeholder="E.g., Image quality issues, system performance, suggestions...",
@@ -1504,7 +1498,7 @@ def render_cloud_sync():
 
     # Today's Summary Panel
     st.markdown("---")
-    st.markdown("<div style='background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>📊 Today's Diagnostic Summary</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>📊 Today's Diagnostic Summary</div>", unsafe_allow_html=True)
 
     summary_col1, summary_col2, summary_col3 = st.columns(3)
 
@@ -1552,7 +1546,7 @@ def render_cloud_sync():
 
     # Quick Actions
     st.markdown("---")
-    st.markdown("<div style='background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>⚡ Quick Actions</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>⚡ Quick Actions</div>", unsafe_allow_html=True)
 
     action_col1, action_col2, action_col3, action_col4 = st.columns(4)
 

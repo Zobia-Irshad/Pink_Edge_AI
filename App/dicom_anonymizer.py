@@ -3,6 +3,10 @@ dicom_anonymizer.py
 -------------------
 Lightweight DICOM privacy utility for Pink Edge AI.
 
+Author Name:  Imaad Ullah Khan
+Author Email: yameenimaad@gmail.com
+AI Helper:    Claude
+
 Provides deterministic SHA-256 privacy hashes for patient identifiers
 and helpers for anonymizing sensitive DICOM metadata.
 
