@@ -5,6 +5,10 @@ x86_64 wheels. Converts an ONNX-exported model (e.g. `yolo export model=best.pt 
 opset=12` from an ultralytics YOLOv8 mammography checkpoint) to Rockchip's `.rknn` format for
 on-device NPU inference via rknn-toolkit-lite2 (see rknn_infer.py, which runs ON the board).
 
+Author Name:  Imaad Ullah Khan
+Author Email: yameenimaad@gmail.com
+AI Helper:    Claude
+
 Install rknn-toolkit2 first (not a normal PyPI package -- pull the wheel matching your Python
 version from https://github.com/airockchip/rknn-toolkit2/releases):
     pip install rknn-toolkit2

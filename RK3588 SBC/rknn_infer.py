@@ -3,6 +3,10 @@
 Runs ON the RK3588 board. Loads a `.rknn` model (produced by convert_to_rknn.py on an x86 dev
 machine) via rknn-toolkit-lite2 and runs one image through the NPU.
 
+Author Name:  Imaad Ullah Khan
+Author Email: yameenimaad@gmail.com
+AI Helper:    Claude
+
 Install the on-device runtime first (aarch64 wheel -- different package from rknn-toolkit2, and
 installed ON the board, not the dev machine; pull it from
 https://github.com/airockchip/rknn-toolkit2/tree/master/rknn-toolkit-lite2):

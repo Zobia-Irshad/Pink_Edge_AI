@@ -164,8 +164,22 @@ App/
   .streamlit/config.toml       — theme config (Streamlit Cloud reads this relative to the app entrypoint)
 
   Tests/
+    smoke_test.py              — fast end-to-end check (~30s, no model downloads): starts the real
+                                    Streamlit app, drives role/language/modality switching, Run
+                                    Triage and Save to Cache, then verifies theme consistency
+                                    across GUI.py / streamlit_app.py / .streamlit/config.toml
+    fabrication_audit.py       — which displayed fields are measured vs. generated (same image in
+                                    3x, diff the results; flags generated fields in a result that
+                                    claims real inference)
+    privacy_leak_test.py       — PII handling at every sink: GSM/IoT broadcast, SQLite cache,
+                                    generated reports, API-key hygiene
     test_auth.py               — unit tests for auth_manager.py (RBAC, PIN auth, permissions)
     test_anonymizer.py         — unit tests for dicom_anonymizer.py (PII hashing)
+
+  Evidence/
+    generate_evidence.py       — runs all seven suites, writes a dated evidence document with the
+                                    SHA-256 of every attested file
+    EVIDENCE_REPORT.md         — the generated report (regenerate rather than hand-edit)
 
   Tools/
     receiver.py                 — standalone DICOM C-STORE listener (local PACS bridge); not
@@ -191,6 +205,8 @@ App/
 
   Validation/
     validate.py             — validation suite, run with `python Validation/validate.py` (from App/)
+    validate_offline.py     — the same pipeline with the network forcibly removed (proves the
+                                 offline claim; a control check first proves the block is real)
 
   Test Data/                — real sample images validate.py runs through the real models
     Tuberculosis/            — sample chest X-rays
@@ -199,6 +215,7 @@ App/
 
   Documentations/           — reference docs
     MODEL_SOURCES.md         — exactly which model backs which modality, and why
+    PRIVACY_POLICY.md        — what data is handled, where it goes, and what is NOT protected
     USER_GUIDE.md            — end-user walkthrough of the app
     TECHNICAL_REFERENCE.md   — the original hackathon submission's own API/Backend/Frontend/Model/
                                  Architecture docs, combined into one file — describes that original
@@ -230,13 +247,56 @@ modality, save-to-cache, report downloads, language toggle, network mode, cloud 
 **Tkinter UI** (hidden window, no mainloop) and the **Streamlit UI** (`streamlit.testing.v1.AppTest`,
 no browser). Exits non-zero (and prints `inference.py`'s per-modality model status) if anything fails.
 
+**Smoke test** — the fast one to reach for first (~30s, no model downloads). Starts the real
+Streamlit app via `AppTest`, drives role switching / language toggle / all three modalities / Run
+Triage / Save to Cache, then checks the theme hasn't drifted apart across the places it's defined
+(`GUI.py`'s `C`, `streamlit_app.py`, `.streamlit/config.toml`) and that every palette colour used
+as text still clears WCAG AA contrast:
+```
+python Tests/smoke_test.py        # -v to watch each check run
+```
+
+**Offline validation** — proves the "works with no internet" claim by actually removing the
+network (every outbound socket blocked, `HF_HUB_OFFLINE=1`) rather than by inspecting code. A
+control check runs first and tries three escape routes, failing the suite if any succeeds, so a
+pass can't be an artefact of accidental connectivity. 13 checks: all three modalities still
+produce results, none claims a hosted source, each offline tier works, cache/reports/both UIs
+function:
+```
+python Validation/validate_offline.py
+```
+
+**Data fabrication audit** — submits the identical image three times per modality and diffs the
+results. A field derived from the image is identical every time; one that changes was generated,
+not measured. Flags any such field inside a result whose source claims real inference:
+```
+python Tests/fabrication_audit.py
+```
+
+**Privacy / PII leak validation** — checks the README's own promise ("stripped of PII and assigned
+a hex privacy hash before anything is displayed, cached, or transmitted") at every sink: the
+GSM/IoT broadcast, the SQLite cache, generated reports, and credential handling. See
+[App/Documentations/PRIVACY_POLICY.md](App/Documentations/PRIVACY_POLICY.md):
+```
+python Tests/privacy_leak_test.py
+```
+
 **Unit tests** (`App/Tests/`) cover `auth_manager.py` and `dicom_anonymizer.py` directly, without
 downloading any model weights:
 ```
 python Tests/test_auth.py
 python Tests/test_anonymizer.py
 ```
-(also run from inside `App/`)
+
+**Evidence report** — runs all seven suites, records their actual exit codes and output, and
+writes a dated document with the SHA-256 of every attested source file, so it can't silently
+outlive the code it describes:
+```
+python Evidence/generate_evidence.py        # --quick skips the two slow model suites
+```
+Output: [App/Evidence/EVIDENCE_REPORT.md](App/Evidence/EVIDENCE_REPORT.md)
+
+(all of the above run from inside `App/`)
 
 ## Deploy the web edition to Streamlit Community Cloud
 
