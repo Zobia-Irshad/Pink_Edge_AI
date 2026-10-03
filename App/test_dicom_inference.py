@@ -1,5 +1,5 @@
 from App.Tools.dicom_adapter import dicom_to_pil
-from inference import predict_maternal
+from App.inference import predict_maternal
 
 
 DICOM_FILE = "test_ultrasound.dcm"
