@@ -1,0 +1,49 @@
+{
+  "architecture": "mobilenet_v3_small (ImageNet-pretrained backbone, frozen) + linear head (trained)",
+  "img_size": 160,
+  "classes": [
+    "Good Health",
+    "Med Health",
+    "Bad Health"
+  ],
+  "train_counts": {
+    "Good Health": 504,
+    "Med Health": 504,
+    "Bad Health": 504
+  },
+  "held_out_counts": {
+    "Good Health": 149,
+    "Med Health": 149,
+    "Bad Health": 149
+  },
+  "held_out_test_accuracy_pct": 74.04921700223714,
+  "held_out_recall_pct_per_class": {
+    "Good Health": 100.0,
+    "Med Health": 75.8,
+    "Bad Health": 46.3
+  },
+  "held_out_confusion_true_by_predicted": [
+    [
+      149,
+      0,
+      0
+    ],
+    [
+      2,
+      113,
+      34
+    ],
+    [
+      8,
+      72,
+      69
+    ]
+  ],
+  "chance_accuracy_pct": 33.3,
+  "epochs": 10,
+  "batch_size": 16,
+  "lr": 0.0003,
+  "unfreeze_last_blocks": 3,
+  "trained_at": "2026-10-03 18:47:42",
+  "labels_caveat": "'Good Health' comes from a different dataset (FETAL_PLANES_ZENODO) than 'Med'/'Bad Health' (HASH Maternal Health.coco), and the Med/Bad boundary is applied from pathology names in filenames rather than read from the data - the COCO source has one label, 'abnormal', and no severity field. Run Tests/dataset_integrity_test.py to see how much of the accuracy above is available without reading any anatomy."
+}
