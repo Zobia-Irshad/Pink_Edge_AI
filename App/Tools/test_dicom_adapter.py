@@ -3,8 +3,6 @@ from dicom_adapter import dicom_to_pil
 image, ds = dicom_to_pil(
     r"C:\Users\pc\Downloads\test_ultrasound.dcm"
 )
-)
-
 print("DICOM converted successfully")
 print("Patient ID:", getattr(ds, "PatientID", "Not available"))
 print("Modality:", getattr(ds, "Modality", "Unknown"))
