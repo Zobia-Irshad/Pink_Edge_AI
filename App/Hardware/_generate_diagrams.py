@@ -3,6 +3,10 @@
 Generates the PNG diagrams in Hardware/diagrams/ from code — reproducible, editable, no binary
 source-of-truth. Uses the exact color tokens from ../GUI.py's `C` dict for visual consistency with
 the rest of the app. Run with:  python Hardware/_generate_diagrams.py
+
+Author Name:  Imaad Ullah Khan
+Author Email: yameenimaad@gmail.com
+AI Helper:    Claude
 """
 import os
 
@@ -217,7 +221,7 @@ def wiring_rk3588():
         "wiring_rk3588.png", "RK3588 SBC (Orange Pi 5 / Rock 5B)",
         ["6 TOPS NPU", "Runs GUI.py / inference.py", "UART1 for ESP32 link"],
         ["UART1_TX -> RX2", "TX2 -> UART1_RX"],
-        "See Hardware/WIRING.md Option A for the full pin table. GND must be common across all three boards before any signal wiring.",
+        "See HARDWARE_PLAN.md, Wiring section Option A for the full pin table. GND must be common across all three boards before any signal wiring.",
     )
 
 
@@ -226,7 +230,7 @@ def wiring_raspberry_pi():
         "wiring_raspberry_pi.png", "Raspberry Pi 4/5",
         ["CPU-only (+ optional Coral/Hailo accelerator)", "Runs GUI.py / inference.py", "GPIO14/15 UART for ESP32 link"],
         ["GPIO14 (TXD) -> RX2", "TX2 -> GPIO15 (RXD)"],
-        "See Hardware/WIRING.md Option C. Coral USB Accelerator: any USB3 port. Hailo-8 HAT: 40-pin header — check for GPIO conflicts with UART.",
+        "See HARDWARE_PLAN.md, Wiring section Option C. Coral USB Accelerator: any USB3 port. Hailo-8 HAT: 40-pin header — check for GPIO conflicts with UART.",
     )
 
 
@@ -333,7 +337,7 @@ def hardware_comparison():
             x += w
         y += row_h
 
-    footer(d, W, H, "Full comparison with rationale: Hardware/ALTERNATIVES.md")
+    footer(d, W, H, "Full comparison with rationale: HARDWARE_PLAN.md, Alternatives section")
     img.save(os.path.join(OUT, "hardware_comparison.png"))
 
 

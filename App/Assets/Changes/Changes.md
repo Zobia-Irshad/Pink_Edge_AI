@@ -508,61 +508,125 @@ place of Maternal Health (window title and HTTP 200 both confirmed, same as ever
 
 ---
 
-## Batch 3: real downloaded icons in the desktop GUI (+ an attempted, blocked root folder rename)
+## Compliance & evidence pass — offline validation, fabrication audit, privacy, theme
 
-### Icons
+Author Name:  Imaad Ullah Khan
+Author Email: yameenimaad@gmail.com
+AI Helper:    Claude
 
-Requested directly: stop relying on emoji glyphs and use real icon files in "the main GUI"
-(`radiology_console.py`, the Tkinter desktop console — the literal `GUI.py` descendant; the
-Streamlit web edition renders emoji fine already, via the browser, so it wasn't in scope here).
+Picks up after the merge/rebrand and file-consolidation passes above. Four instruments were added
+so the project's central claims are *checkable* rather than asserted, and two real defects they
+found were fixed.
 
-Downloaded [Twemoji](https://github.com/twitter/twemoji) PNGs (CC-BY 4.0, attribution in
-`Assets/Icons/README.md`) matching every emoji glyph already used in the desktop console — 🩻 🩺 🏥
-☁️ ⚙️ ℹ️ ✅ ⚠️ 🚫 📋 📝 📄 — to `App/Assets/Icons/`, plus a locally-generated (PIL, not downloaded)
-multi-resolution `app_icon.ico` built from the 🩻 icon for the Windows title-bar/taskbar icon (the
-window previously used Tk's default feather icon).
+### Theme unified across all four places it was defined
 
-Wired into `radiology_console.py` via a new `_load_icon(name, size)` helper (loads + resizes +
-caches a `PhotoImage`, since Tk silently drops an image with no persistent reference) and a
-`_set_verdict_icon()` helper for the one place an icon changes dynamically per triage result (the
-big verdict icon — success/warning/invalid/awaiting): the app window/taskbar icon, the topbar
-brand mark, all 3 notebook tab icons, the sidebar's "Console Menu"/"About" header icons, the
-"Sync to Cloud" button, the "Text Report"/"PDF Report" buttons, and the Hospital Hub/Cloud Sync tab
-header bars. Every call site keeps its original emoji text as a fallback if the icon file is
-missing, so a partial/deleted `Assets/Icons/` folder degrades gracefully rather than breaking
-anything. Confirmed visually via a live screenshot, not just "it compiles" — real colorful icons
-render correctly in the title bar, topbar, tabs, buttons, and verdict panel.
+The palette lived in four places that had drifted apart: `GUI.py`'s `C` (indigo `#1a237e` + pink
+accent), `streamlit_app.py`'s own separate `C` (teal `#0d9488` + sky), ~100 hardcoded hex values in
+that file's CSS (a hotpink `#ff69b4`/`#ff1493` brand gradient, plus two different greens, three reds
+and three ambers for the same semantic roles), and `.streamlit/config.toml` (teal, with a
+`backgroundColor` that disagreed with the CSS). An app named **Pink** Edge AI, whose flagship
+modality is breast screening, had no pink at all in its web palette.
 
-Not converted to icons: inline emoji inside longer sentences (the risk banner, hospital-hub alert
-list, cache-sync tree checkmark/hourglass column) — those are single glyphs inside a bigger string,
-not a standalone label/button, so swapping them to images would need a bigger per-string widget
-refactor for comparatively little visual payback; left as text for this pass.
+Now one palette, defined once in `GUI.py` and imported by `streamlit_app.py` as `C = core.C`, so the
+two editions cannot silently diverge again. Brand is rose (`#be185d`/`#9d174d`), secondary is sky,
+neutrals are one slate scale, and the semantic colours are shared exactly — they carry clinical
+meaning, so a danger verdict must look the same in both editions. Tint tokens
+(`primary_bg`/`success_bg`/`warning_bg`/`danger_bg`) replaced hardcoded card backgrounds, and the
+dark console panels became named tokens (`console_bg`/`console_text`) rather than looking like
+leftovers of the old dark theme — they are a deliberate terminal-style readout, so they stayed dark.
 
-### Root folder rename — attempted, blocked, not done
+This also fixed a real accessibility defect, not just an inconsistency: the old success/warning/
+danger colours **failed WCAG AA as text on white** (`#10b981` was 2.3:1, `#f59e0b` 1.9:1, `#ef4444`
+3.3:1), as did the Radiologist role badge (`#a855f7`, 3.5:1). All are now darker shades of the same
+hues, and the smoke test asserts a 4.5:1 floor so it cannot regress.
 
-Also requested: rename the project's root folder from `Pink Edge AI` to `Medical Radiology AI`
-(confirmed with the user first, since it's disruptive to any open editor/terminal). Checked first for
-anything that would break from a pure folder rename (`.devcontainer/`, `.vscode/`) — nothing
-hardcodes the outer folder name, so the rename itself should have been safe content-wise. Attempted
-via `Rename-Item` from the parent directory (not from inside the target, to avoid a self-referential
-cwd lock) after confirming no stray app processes were running — both attempts failed with "The
-process cannot access the file because it is being used by another process." The lock is VS Code's
-own file watcher on this exact open workspace folder — the very editor this session runs inside as
-an extension, so forcibly closing it to clear the lock isn't something this session can safely do to
-itself. **Not done this pass** — closing/reloading the folder in VS Code first (or renaming it from
-outside VS Code entirely, then reopening VS Code at the new path) would clear the lock; flagged back
-to the user rather than worked around riskily.
+### Tests/smoke_test.py — the fast check (9 checks, ~30s, no model downloads)
 
----
+Starts the real Streamlit app through `AppTest` and drives role switching, the language toggle, all
+three modalities, Run Triage, and Save to Cache (asserting the cache actually gained a row); then
+checks theme consistency across the three definition sites, that the retired teal/hotpink values
+have not returned, that branding is Pink Edge AI with no `Medical Radiology`/`radiology_console`
+references, and the contrast floor. Sidebar controls are looked up **by label, never by index** —
+positional lookup silently broke once already in this project when a role switcher was inserted
+ahead of the language buttons. Verified the checks can fail: reverting `config.toml` to the old teal
+trips two of them with precise messages.
 
-## Addendum: the Medical Radiology AI rebrand above was reverted
+### Validation/validate_offline.py — the offline claim, actually tested (13 checks)
 
-The rebuild documented in the section above (**Changes: Pink Edge AI -> Medical Radiology AI** --
-`radiology_console.py`/`radiology_web.py`, the light-blue retheme, the Bone modality) was later
-reverted back to Pink Edge AI branding in a subsequent pass, merged against a separately-maintained
-working copy that had continued evolving under the original Pink Edge AI identity (real Roboflow
-Mammography activation, a TB local-classifier retry fix, a Maternal severity-mapping bug fix,
-rewritten unit tests, a full validation suite). The Bone modality was dropped per explicit
-instruction (not wanted for this project); `GUI.py`/`streamlit_app.py` (not
-`radiology_console.py`/`radiology_web.py`) are the live code going forward. See the root `README.md`
-and this repo's own git log for the merge commit's full rationale.
+The project's headline claim is that triage works with zero internet. This proves it by *removing*
+the network rather than inspecting code: every socket entry point is replaced before `inference.py`
+is imported (subclassing `socket.socket` so libraries that inherit from it still work, and allowing
+loopback so local tooling is not collateral damage), and Hugging Face is pinned to offline mode.
+
+A **control check runs first** and attempts three escape routes — `create_connection`, `getaddrinfo`,
+and a real HTTPS GET — failing the suite if any succeeds, so a pass can never be an artefact of
+accidentally having had connectivity. It then establishes that all three modalities still produce
+well-formed results, that **none of them claims a hosted/Roboflow source** while nothing is
+reachable, that each offline tier works independently, and that the cache, reports and both UIs all
+function. 13/13.
+
+### Tests/fabrication_audit.py — which displayed numbers are measured, and which are invented
+
+A clinician reading a triage screen cannot tell which fields a model produced and which the program
+generated. This answers that empirically: the **same image is submitted three times** and the result
+dicts are diffed. A field derived from the image is identical every time; a field that changes was
+not a function of the input. No source-code knowledge needed, and it cannot be fooled by a comment
+claiming something is real. It then classifies the finding by what the UI *told the reader* —
+fabrication inside a result labelled SIMULATED is honest; fabrication inside one claiming real
+inference is flagged.
+
+What it found, on real Test Data samples:
+
+| Modality | Source shown to the reader | Result |
+|---|---|---|
+| Tuberculosis | `local_model.pt` (locally-trained MobileNetV3) | **clean** — every clinical field identical across runs |
+| Mammography | Roboflow workflow, "real inference" | `confidence` varies **94.3 / 96.6 / 98.1** on one image |
+| Maternal Health | Roboflow `hash-maternal-health/1`, "real inference" | `extra` varies **Gestational Age: 20W / 25W / 24W**, `confidence` varies |
+
+The gestational age is the notable one: **no model in the Maternal chain estimates gestational age
+at all** (`inference.py:563,656` — `ga = random.randint(18, 38)`), yet it is presented in a result
+whose source string says real inference. Same pattern for the no-detection confidence branches
+(`inference.py:346,565,772,846`). These were **reported, not silently changed** — what a demo should
+display when a model cannot produce a field is a product decision, not a cleanup.
+
+### Tests/privacy_leak_test.py — PII handling at every sink (10 checks)
+
+Checks the README's specific promise ("stripped of PII and assigned a hex privacy hash before
+anything is displayed, cached, or transmitted") against what the code does, at each place data can
+leave a record: the GSM/IoT broadcast, the SQLite cache, generated reports, and credential handling.
+
+**It found a real privacy defect and it was fixed.** The web edition correctly broadcast
+`ID:<hash>|LOC:ANON|…`, but the **desktop edition had never used the anonymizer at all** — zero
+references to `dicom_anonymizer` in `GUI.py` — and broadcast `ID:{self.pat_id}|LOC:29.344|…`: the raw
+identifier plus a literal coordinate, directly contradicting the documented claim. `GUI.py` now
+derives a privacy hash via `_privacy_hash_for()` (mirroring the web edition's input shape, so the
+same patient hashes identically in both) and uses it for the GSM payload, the IoT queue and the
+hospital-hub alert feed. 10/10 after the fix.
+
+### Evidence/generate_evidence.py → Evidence/EVIDENCE_REPORT.md
+
+Runs all seven suites, records their actual exit codes and output, and writes a dated evidence
+document with the **SHA-256 of every attested source file**, so the report cannot silently outlive
+the code it describes. It distinguishes `FINDINGS` from `FAIL` for the fabrication audit — a
+diagnostic that successfully finds something is not a broken suite, and recording it as one would
+make the evidence less truthful. The report also states scope limits plainly: synthetic identifiers,
+no clinical validation, simulated cloud/GSM/telemetry.
+
+### Documentations/PRIVACY_POLICY.md
+
+Written to be checkable rather than reassuring — every claim maps to something the privacy suite
+verifies. It is explicit about what is *not* protected: the cache is unencrypted at rest, the
+privacy hash is **unsalted** (an 8-digit ID has only ~90M possibilities, so it is brute-forceable
+and inadequate for real identifiers), the RBAC PINs are hardcoded and are a UI demonstration rather
+than a security control, and configuring a Roboflow key means images do leave the device.
+
+### Attribution
+
+Author headers (`Author Name` / `Author Email` / `AI Helper: Claude`) added to all 24 Python files
+across `App/`, `Apk/` and `RK3588 SBC/`, inserted into each module docstring — or as a comment block
+for the two files that had none (`Tools/receiver.py`, which also gained a real docstring, and
+`train_tb_classifier.py`, where `from __future__` must stay first).
+
+Verified: `validate.py` 19/19 · `validate_offline.py` 13/13 · `smoke_test.py` 9/9 ·
+`privacy_leak_test.py` 10/10 · `test_auth.py` 16/16 · `test_anonymizer.py` 21/21 ·
+`fabrication_audit.py` reports its findings as designed.
