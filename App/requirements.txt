@@ -1,9 +1,6 @@
-# Pink Edge AI — runtime Python dependencies (Desktop + Streamlit editions share this file).
+# Pink Edge AI — Python dependencies (Desktop + Streamlit editions share this file).
 # Tkinter is stdlib and not listed here. Install with: pip install -r requirements.txt
 # (Start.bat / Start_Web.bat do this automatically on first run.)
-#
-# Training and the standalone DICOM receiver need extra packages that the app itself does not —
-# those live in requirements-dev.txt so a normal install stays lean.
 
 numpy>=1.24.0
 Pillow>=10.0.0
@@ -36,3 +33,20 @@ roboflow>=1.1.0
 # NOTE: `dicom-anonymizer` was previously listed here and has been removed. The bundled
 # dicom_anonymizer.py is a local stdlib-only module (hashlib + json); that PyPI package is a
 # different, unrelated project and was never imported.
+
+# ============================================================
+# Optional — only needed for the training script and the standalone DICOM receiver, not for
+# running either edition of the app itself. Kept here (one file) rather than a separate
+# requirements-dev.txt so there's one less file to track; a normal `pip install -r requirements.txt`
+# pulls these in too, which is harmless even if you never run the scripts below.
+# ============================================================
+
+# train_tb_classifier.py — reads the TBX11K label CSV with pandas.
+# (ultralytics already pulls pandas in transitively, but the script imports it directly, so it is
+# declared here rather than relied on as a transitive dependency.)
+pandas>=2.0.0
+
+# Tools/receiver.py — minimal DICOM C-STORE listener (a local PACS bridge) that accepts scans
+# pushed from hospital imaging equipment. Standalone; the app never imports it.
+pynetdicom>=2.0.0
+pydicom>=2.4.0

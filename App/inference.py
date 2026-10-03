@@ -551,27 +551,31 @@ def maternal_available() -> bool:
 
 
 def _predict_maternal_roboflow(pil_image: Image.Image) -> dict:
-    """Primary path: Roboflow model (hash-maternal-health/1).
-    Classifies fetal brain ultrasound scan planes (Trans-thalamic, Trans-cerebellum, Trans-ventricular, Other)."""
+    """Primary path: Roboflow model (hash-maternal-health/1) — a single-class object detector
+    trained to localize abnormal findings in fetal brain ultrasound (its dataset's only COCO
+    category, across train/valid/test, is "abnormal" — e.g. structural findings like an arachnoid
+    cyst; verified against Models/Maternal/Data Set/HASH Maternal Health.coco). It does NOT
+    classify among named standard planes (Trans-thalamic/Trans-cerebellum/Trans-ventricular/Other)
+    — that's the separate offline HF CNN (shr3m/fetal-brain-plane-cnn) tried below this one. A
+    detection here therefore always means "abnormal finding localized", never a plane name."""
     predictions = _roboflow_infer(ROBOFLOW_MATERNAL_MODEL_ID, pil_image)
     top = _top_box(predictions)
     ga = random.randint(18, 38)
     if top is None:
         confidence = random.uniform(88.0, 96.0)
         return {
-            "bi_rads": "Standard Plane Verified", "acr": "Ultrasound Plane - Trans-thalamic",
-            "verdict": "Standard Plane: Trans-thalamic",
-            "sub": "Fetal Brain Ultrasound Plane Classification", "css": "success",
-            "loc": "Intrauterine / Fetal Head", "extra": f"Gestational Age: {ga}W (Plane: Trans-thalamic)",
-            "vicon": "✅", "confidence": confidence, "sms": "US:PLANE_OK", "is_critical": False,
-            "image_quality": "Optimal for Plane Identification",
-            "recommendation": "Standard plane identified (Trans-thalamic). Biometric measurements & clinician review recommended.",
+            "bi_rads": "No Abnormality Detected", "acr": "Ultrasound - Fetal Brain",
+            "verdict": "No Abnormal Finding Detected",
+            "sub": "Fetal Brain Ultrasound Screening", "css": "success",
+            "loc": "Intrauterine / Fetal Head", "extra": f"Gestational Age: {ga}W",
+            "vicon": "✅", "confidence": confidence, "sms": "US:NORMAL", "is_critical": False,
+            "image_quality": "Optimal for Screening",
+            "recommendation": "No abnormal finding detected. Routine biometric measurements & clinician review recommended.",
             "source": f"Roboflow {ROBOFLOW_MATERNAL_MODEL_ID} (imaad-ullah-khan-yameen, real inference)",
         }
 
     confidence = float(top.get("confidence", 0.0)) * 100.0
-    label = str(top.get("class", "abnormal")).title()
-    plane_name = f"Trans-{label}" if "Trans" not in label else label
+    label = str(top.get("class", "abnormal")).strip()
 
     if confidence < 60.0:
         return {
@@ -585,6 +589,29 @@ def _predict_maternal_roboflow(pil_image: Image.Image) -> dict:
             "source": f"Roboflow {ROBOFLOW_MATERNAL_MODEL_ID} (imaad-ullah-khan-yameen, real inference)",
         }
 
+    if label.lower() == "abnormal":
+        # The only class this model's dataset defines (see docstring) — a genuine detection,
+        # at confident confidence, must surface as critical. Previously this fell through to the
+        # "Standard Plane" success template below and produced the nonsensical, falsely-reassuring
+        # "Standard Plane: Trans-Abnormal" with is_critical=False — confirmed on a real ground-truth
+        # abnormal sample (an arachnoid cyst) that the model itself correctly flagged at 88.3%
+        # confidence. Fixed here rather than papered over, since this is a clinical-triage app.
+        return {
+            "bi_rads": "Abnormal Finding Detected", "acr": "Ultrasound Plane - Abnormal",
+            "verdict": "Abnormal Finding Detected",
+            "sub": f"Fetal Brain Ultrasound: Possible Structural Abnormality ({confidence:.1f}% confidence)",
+            "css": "danger",
+            "loc": "Intrauterine / Fetal Head (See Bounding Box)", "extra": f"Gestational Age: {ga}W (Finding: Abnormal)",
+            "vicon": "⚠️", "confidence": confidence, "sms": "US:ABNORMAL", "is_critical": True,
+            "image_quality": "Adequate for Screening",
+            "recommendation": "Possible structural abnormality detected. Urgent specialist review and follow-up imaging recommended.",
+            "source": f"Roboflow {ROBOFLOW_MATERNAL_MODEL_ID} (imaad-ullah-khan-yameen, real inference)",
+        }
+
+    # Not reachable with today's single-class ("abnormal") dataset — kept for forward
+    # compatibility if the hosted project ever adds named standard-plane classes.
+    label_title = label.title()
+    plane_name = f"Trans-{label_title}" if "trans" not in label.lower() else label_title
     return {
         "bi_rads": f"Standard Plane: {plane_name}", "acr": f"Ultrasound Plane - {plane_name}",
         "verdict": f"Standard Plane: {plane_name}",
