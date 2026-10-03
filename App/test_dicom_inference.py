@@ -2,7 +2,7 @@ from App.Tools.dicom_adapter import dicom_to_pil
 from App.inference import predict_maternal
 
 
-DICOM_FILE = "test_ultrasound.dcm"
+DICOM_FILE = r"App\test_ultrasound.dcm"
 
 print("Reading DICOM...")
 
