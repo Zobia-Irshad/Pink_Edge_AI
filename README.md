@@ -3,8 +3,10 @@
 Two sibling UIs over the same shared logic, ported from the original hackathon Streamlit demo (see
 `App/Archive/Misc/`): a Tkinter **desktop** app (`GUI.py`) and a responsive **Streamlit web** app
 (`streamlit_app.py`). Both share the same SQLite report cache and the same model backend
-(`inference.py`). Everything except this README and the two launchers below lives in **`App/`** —
-see `## Project layout`.
+(`inference.py`). Everything the desktop/web editions need lives in **`App/`**; two standalone,
+optional pieces live at the repo root next to it instead — a local Android build (`Apk/`) and
+RK3588 edge-node deployment code (`RK3588 SBC/`) — since neither is part of running the desktop/web
+app itself. See `## Project layout`.
 
 ## What this is
 
@@ -120,7 +122,7 @@ cached under `App/Models/`, and the report cache (`App/pink_edge_cache.db`, SQLi
 shared by both editions.
 
 Training or the standalone DICOM receiver need a few extra packages not required to just run the
-app — see `App/requirements-dev.txt`.
+app — see the "Optional" section near the bottom of `App/requirements.txt`.
 
 ## Enabling the Roboflow-hosted models (real, purpose-trained)
 
@@ -138,6 +140,8 @@ All three modalities check for a Roboflow API key and use it if present:
 
 ```
 README.md, Start.bat, Start_Web.bat    — this file + the two one-click launchers (stay at repo root)
+Apk/                       — optional: local Android build (Kivy + Buildozer), see Apk/README.md
+RK3588 SBC/                — optional: RK3588 edge-node deployment code, see its own README.md
 
 App/
   GUI.py                    — Tkinter desktop app: UI + local SQLite cache + reports + fallbacks
@@ -148,10 +152,12 @@ App/
   inference.py                — model loading + prediction dispatch for all three modalities
   offline_cv.py                — the offline pixel-diff heuristic (no model, no internet, ever);
                                     run directly (`python offline_cv.py`) to see its measured accuracy
-  train_tb_classifier.py       — trains the locally-trained MobileNetV3 classifier (TB and
-                                    Mammography both use it) against Models/<Modality>/Data Set/
-  requirements.txt             — Python dependencies to run the app (shared by both editions)
-  requirements-dev.txt         — extra dependencies for train_tb_classifier.py and Tools/receiver.py
+  train_tb_classifier.py       — trains the locally-trained MobileNetV3 classifier for TB
+  train_local_model.py         — the general, modality-parameterized version of the same training
+                                    approach (TB + Mammography both ship local_model.pt trained this
+                                    way); run `python train_local_model.py [modality ...]`
+  requirements.txt             — Python dependencies (core app + an "Optional" section at the
+                                    bottom for train_tb_classifier.py and Tools/receiver.py)
   packages.txt                 — apt packages needed by .devcontainer (headless OpenCV libs)
   pink_edge_cache.db           — local report cache (SQLite; created on first "Save to Cache")
   roboflow_key.txt             — your Roboflow key, if you added one (gitignored)
@@ -163,7 +169,7 @@ App/
 
   Tools/
     receiver.py                 — standalone DICOM C-STORE listener (local PACS bridge); not
-                                     imported by the app, needs requirements-dev.txt
+                                     imported by the app, needs the "Optional" deps in requirements.txt
 
   Archive/                     — superseded code, kept for reference only — see Archive/README.md
     pink_edge.py                 — a third, unused Streamlit UI fork; has a known latent RBAC bug
@@ -180,7 +186,7 @@ App/
     Maternal/FINAL-test-evaluation.pt    — shr3m/fetal-brain-plane-cnn
     Mammography/local_model.pt           — locally-trained MobileNetV3 classifier (98.7% held-out)
     */Data Set/                          — local labeled datasets offline_cv.py/train_tb_classifier.py use
-    */positive/, */negative/, */validate/  — manually-added images, same convention as Data Set/
+    */positive/, */negative/, */validate/  — manually-added images; see Models/README.md for the convention
     */templates/                         — offline_cv.py's generated reference images (gitignored, auto-rebuilt)
 
   Validation/
@@ -193,9 +199,10 @@ App/
 
   Documentations/           — reference docs
     MODEL_SOURCES.md         — exactly which model backs which modality, and why
-    (+ the original project's own docs: API/BACKEND/FRONTEND/MODEL/PROJECT_ARCHITECTURE, USER_GUIDE
-       — these describe the original hackathon submission, not this desktop/web rebuild; kept for
-       historical reference)
+    USER_GUIDE.md            — end-user walkthrough of the app
+    TECHNICAL_REFERENCE.md   — the original hackathon submission's own API/Backend/Frontend/Model/
+                                 Architecture docs, combined into one file — describes that original
+                                 submission, not this desktop/web rebuild; kept for historical reference
 
   Hardware/                 — hardware plan for a real edge-node build (RK3588/Pi/ESP32/Mobile) —
                                 see Hardware/README.md
@@ -266,6 +273,19 @@ boot (installing torch + downloading model weights) and keep an eye out for memo
 on that tier. If it struggles, the fixes in order of effort are: pin lighter dependency versions, or
 deploy on a paid tier / your own server (`streamlit run streamlit_app.py --server.port 80
 --server.address 0.0.0.0`, run from `App/`) instead.
+
+## Mobile & edge deployment (optional, standalone)
+
+Two pieces at the repo root, neither needed to run the desktop/web app above:
+
+- **`Apk/`** — a local Android build (Kivy + Buildozer, not a port of `GUI.py`/`streamlit_app.py` —
+  see `Apk/README.md` for why torch/opencv don't cross-compile for Android and what runs instead).
+- **`RK3588 SBC/`** — deployment code for running this app as a real edge node on an RK3588 board
+  (kiosk autostart, the UART bridge to the ESP32/SIM800L GSM companion from `App/Hardware/HARDWARE_PLAN.md`'s Wiring section,
+  and NPU-accelerated inference via `rknn-toolkit-lite2`) — see `RK3588 SBC/README.md`.
+
+Neither has been built/run against real hardware in this environment (no Android SDK/NDK, no RK3588
+board) — both READMEs say so plainly; treat them as a verified-on-real-hardware starting point.
 
 ## Relationship to the original project
 

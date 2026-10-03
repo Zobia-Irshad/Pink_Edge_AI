@@ -2,12 +2,12 @@
 
 Code for turning an RK3588 single-board computer (Orange Pi 5/5B/5 Plus, Rock 5B, Radxa CM3, etc. —
 any RK3588/RK3588S board running Debian/Ubuntu aarch64) into the real Tier-1 edge node described in
-`../App/Hardware/ARCHITECTURE.md`. This folder holds the pieces that are specific to *this* board
+`../App/Hardware/HARDWARE_PLAN.md`'s Architecture section. This folder holds the pieces that are specific to *this* board
 and don't belong in the general cross-platform app code under `../App/`:
 
 - Running `../App/GUI.py` unmodified as an autostarting kiosk app on the board's touchscreen.
 - The UART bridge that hands alert payloads to the ESP32/SIM800L companion described in
-  `../App/Hardware/WIRING.md` (Option A).
+  `../App/Hardware/HARDWARE_PLAN.md`'s Wiring section (Option A).
 - Converting a trained YOLOv8 mammography checkpoint to `.rknn` and running it through the RK3588's
   NPU via `rknn-toolkit-lite2`, instead of CPU-only PyTorch/ONNX — the "follow-up, not blocking a
   first pilot" item `ARCHITECTURE.md` flags.
@@ -50,7 +50,7 @@ to your deployment, not something this script can assume).
 
 `install_rk3588.sh` installs `pinkedge.service` to `/etc/systemd/user/` and enables it, so
 `App/GUI.py` starts automatically on every boot, full-screen, on whatever display is attached
-(HDMI/DSI touchscreen per `../App/Hardware/WIRING.md`). Check status with:
+(HDMI/DSI touchscreen per `../App/Hardware/HARDWARE_PLAN.md`'s Wiring section). Check status with:
 
 ```bash
 systemctl --user status pinkedge.service

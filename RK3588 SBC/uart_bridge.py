@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Compute-subsystem side of the UART link to the ESP32/SIM800L companion described in
-../App/Hardware/WIRING.md (Option A) and ../App/Hardware/ARCHITECTURE.md's "Tier 1" section.
+../App/Hardware/HARDWARE_PLAN.md's Wiring section (Option A) and ../App/Hardware/HARDWARE_PLAN.md's Architecture section's "Tier 1" section.
 
 Job: watch a small local queue file for new alert lines (one per triage that GUI.py appends to —
 see the integration snippet in README.md) and forward each one to the ESP32 over UART, exactly as
