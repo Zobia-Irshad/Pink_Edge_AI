@@ -1,0 +1,14 @@
+# Pink Edge AI — extra dependencies for the training script and the standalone tools.
+# Not needed to run either edition of the app; install only if you use the scripts below.
+#
+#   pip install -r requirements.txt -r requirements-dev.txt
+
+# train_tb_classifier.py — reads the TBX11K label CSV with pandas.
+# (ultralytics already pulls pandas in transitively, but the script imports it directly, so it is
+# declared here rather than relied on as a transitive dependency.)
+pandas>=2.0.0
+
+# Tools/receiver.py — minimal DICOM C-STORE listener (a local PACS bridge) that accepts scans
+# pushed from hospital imaging equipment. Standalone; the app never imports it.
+pynetdicom>=2.0.0
+pydicom>=2.4.0

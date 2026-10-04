@@ -1,0 +1,28 @@
+{
+  "dicom_path": "C:\\Users\\pc\\Downloads\\Pink_Edge_AI-main\\received_scans\\1.2.826.0.1.3680043.8.498.36978300989135663597145956691181645592.dcm",
+  "patient_id": "TEST001",
+  "study_instance_uid": "1.2.826.0.1.3680043.8.498.73357208442738565611718685900397758009",
+  "series_instance_uid": "1.2.826.0.1.3680043.8.498.28958660147174096950221910015568264618",
+  "sop_instance_uid": "1.2.826.0.1.3680043.8.498.36978300989135663597145956691181645592",
+  "modality": "US",
+  "image_size": [
+    256,
+    256
+  ],
+  "inference": {
+    "bi_rads": "Standard Plane: Other",
+    "acr": "Ultrasound Plane - Other",
+    "verdict": "Standard Plane: Other",
+    "sub": "Fetal Brain Ultrasound Plane Classification (Other)",
+    "css": "success",
+    "loc": "Intrauterine / Fetal Head",
+    "extra": "Gestational Age: 27W (Plane: Other)",
+    "vicon": "✅",
+    "confidence": 98.9772617816925,
+    "sms": "US:PLANE_OK",
+    "is_critical": false,
+    "image_quality": "Adequate for Plane Identification",
+    "recommendation": "Standard plane identified (Other). Specialist verification & biometric measurement recommended.",
+    "source": "shr3m/fetal-brain-plane-cnn (Hugging Face, real inference)"
+  }
+}

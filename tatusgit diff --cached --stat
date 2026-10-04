@@ -1,0 +1,334 @@
+.gitignore
+App/Documentations/API_DOCUMENTATION.md
+App/Documentations/BACKEND_DOCUMENTATION (2).md
+App/Documentations/FRONTEND_DOCUMENTATION (1).md
+App/Documentations/Idea_Preview.mp4
+App/Documentations/MODEL_DOCUMENTATION.md
+App/Documentations/MODEL_SOURCES.md
+App/Documentations/PRIVACY_POLICY.md
+App/Documentations/PROJECT_ARCHITECTURE.md
+App/Documentations/README.md
+App/Documentations/TECHNICAL_REFERENCE.md
+App/Documentations/USER_GUIDE.md
+App/Evidence/EVIDENCE_REPORT.md
+App/Evidence/evidence_raw_output.json
+App/Evidence/generate_evidence.py
+App/GUI.py
+App/Hardware/ALTERNATIVES.md
+App/Hardware/ARCHITECTURE.md
+App/Hardware/BOM.txt
+App/Hardware/DESIGN.md
+App/Hardware/HARDWARE_PLAN.md
+App/Hardware/HARDWARE_REQUIREMENTS.md
+App/Hardware/IMAGE_PROMPTS.md
+App/Hardware/README.md
+App/Hardware/RK5388 SBC/Image 1.png
+App/Hardware/RK5388 SBC/Image 2.png
+App/Hardware/STRUCTURE.md
+App/Hardware/WIRING.md
+App/Hardware/_generate_diagrams.py
+App/Hardware/diagrams/hardware_comparison.png
+App/Hardware/diagrams/system_architecture.png
+App/Hardware/diagrams/wiring_esp32_gsm.png
+App/Hardware/diagrams/wiring_raspberry_pi.png
+App/Hardware/diagrams/wiring_rk3588.png
+App/Models/Mammography/local_model.pt
+App/Models/Mammography/local_model_metadata.json
+App/Models/Mammography/negative/files.txt
+App/Models/Mammography/negative/normal (107)_jpg.rf.BJoaa9eANjLkfbe5uAAG.jpg
+App/Models/Mammography/negative/normal (117)_jpg.rf.qvizSMGiqQ9rQr6Qu5qR.jpg
+App/Models/Mammography/negative/normal (118)_jpg.rf.ter5YoC6ZLX47djvdQmw.jpg
+App/Models/Mammography/negative/normal (126)_jpg.rf.y44QG5wl3RmK58KqBtKK.jpg
+App/Models/Mammography/negative/normal (133)_jpg.rf.fosioJJDr85wvB5qGa3D.jpg
+App/Models/Mammography/negative/normal (138)_jpg.rf.g8fkWSBGbMUXtUXwOyq6.jpg
+App/Models/Mammography/negative/normal (141)_jpg.rf.DfsTCQQscrJrQU4pYw3e.jpg
+App/Models/Mammography/negative/normal (174)_jpg.rf.ZtdMlzAwON5IYX97k1cn.jpg
+App/Models/Mammography/negative/normal (176)_jpg.rf.r6CNHL7UvMSY4TdYHVGQ.jpg
+App/Models/Mammography/negative/normal (178)_jpg.rf.0cfvSkLDKq3Fj37WPwiR.jpg
+App/Models/Mammography/negative/normal (191)_jpg.rf.HykWGSIT6vXygwP2cUnq.jpg
+App/Models/Mammography/negative/normal (193)_jpg.rf.5Fz0duSG0bgey5phAto6.jpg
+App/Models/Mammography/negative/normal (200)_jpg.rf.6r6uA5b6QurDO4FGA0tW.jpg
+App/Models/Mammography/negative/normal (208)_jpg.rf.2Sf0I8AhzD9J1U8Df57E.jpg
+App/Models/Mammography/negative/normal (220)_jpg.rf.HVwQdo1SChyOjJU4OH7H.jpg
+App/Models/Mammography/negative/normal (222)_jpg.rf.o25UEeoJg4O1St7ZXH9X.jpg
+App/Models/Mammography/negative/normal (225)_jpg.rf.1scJEo6ZNLrvCzL8FXlU.jpg
+App/Models/Mammography/negative/normal (240)_jpg.rf.vL8ZlpoBDM6UUxiAP8kv.jpg
+App/Models/Mammography/negative/normal (242)_jpg.rf.nAoOWidq5XkA3MYeaClb.jpg
+App/Models/Mammography/negative/normal (258)_jpg.rf.YT9RBCyv3CzKUb3Rshub.jpg
+App/Models/Mammography/negative/normal (259)_jpg.rf.EbkImM3VyQ0V7ZnVMKgx.jpg
+App/Models/Mammography/negative/normal (26)_jpg.rf.SC9KausVeVlq5QncQLy0.jpg
+App/Models/Mammography/negative/normal (262)_jpg.rf.XlPqtmAbbM1zEFGsvrVd.jpg
+App/Models/Mammography/negative/normal (263)_jpg.rf.Y7Vh9hzlyQSWchbIR3np.jpg
+App/Models/Mammography/negative/normal (268)_jpg.rf.LMYljbtGOCHoX5od9gCe.jpg
+App/Models/Mammography/negative/normal (269)_jpg.rf.KtWsKTsxRsnlRE061xgK.jpg
+App/Models/Mammography/negative/normal (278)_jpg.rf.Vobr4pY735UQ8CSBVy77.jpg
+App/Models/Mammography/negative/normal (284)_jpg.rf.to3mZeEPQpNbxF6pZASM.jpg
+App/Models/Mammography/negative/normal (29)_jpg.rf.w5w5B5SMF0lHZXZXfpOY.jpg
+App/Models/Mammography/negative/normal (307)_jpg.rf.xC3g53yLBlyjkJ2PFFPa.jpg
+App/Models/Mammography/negative/normal (310)_jpg.rf.qr9IK4uFXdwdaKJiRPKM.jpg
+App/Models/Mammography/negative/normal (314)_jpg.rf.WFsRErhsMQZgMnJ0gKOi.jpg
+App/Models/Mammography/negative/normal (318)_jpg.rf.n7Y5yofv8xYyeyxkpakP.jpg
+App/Models/Mammography/negative/normal (320)_jpg.rf.frq6yIVzoRtMMaGlZ5rT.jpg
+App/Models/Mammography/negative/normal (321)_jpg.rf.WSG62I2VdmXQep7y67ut.jpg
+App/Models/Mammography/negative/normal (326)_jpg.rf.cEUK7I2Es40fXWqAXzZU.jpg
+App/Models/Mammography/negative/normal (327)_jpg.rf.7VAm6AYLhPFH6zDQ6YcI.jpg
+App/Models/Mammography/negative/normal (33)_jpg.rf.IwP5zo8jC5qaIdgLT5U9.jpg
+App/Models/Mammography/negative/normal (336)_jpg.rf.VzISOoJzEGANXEzdel3H.jpg
+App/Models/Mammography/negative/normal (339)_jpg.rf.4SBVqfunTsG2YFiTJGEs.jpg
+App/Models/Mammography/negative/normal (342)_jpg.rf.br1QaEfl83Iqg5AsgVbu.jpg
+App/Models/Mammography/negative/normal (343)_jpg.rf.18yXJDJ8nknYT9dRYmeU.jpg
+App/Models/Mammography/negative/normal (348)_jpg.rf.dUukpJsq2xiaBGBKgS2y.jpg
+App/Models/Mammography/negative/normal (355)_jpg.rf.xRA9S5Kntv9WyyXNsbiY.jpg
+App/Models/Mammography/negative/normal (358)_jpg.rf.FtzE1636aeZysyjaXl7t.jpg
+App/Models/Mammography/negative/normal (359)_jpg.rf.0RMnkO6aeDDgzLE1muIG.jpg
+App/Models/Mammography/negative/normal (365)_jpg.rf.ES8tazuZifkbrkShuhNA.jpg
+App/Models/Mammography/negative/normal (370)_jpg.rf.sUvalmaCpoEu005ISsBt.jpg
+App/Models/Mammography/negative/normal (378)_jpg.rf.qBSb5scyp04TDj2Shawz.jpg
+App/Models/Mammography/negative/normal (39)_jpg.rf.5HdmFUGz2Weho0NqiGka.jpg
+App/Models/Mammography/negative/normal (391)_jpg.rf.gQ3wfEhPD01KQM62MUMj.jpg
+App/Models/Mammography/negative/normal (394)_jpg.rf.tD3QdHSDeDkrfMd5qBQn.jpg
+App/Models/Mammography/negative/normal (395)_jpg.rf.RwLAi9LDioXBrGFkw3l6.jpg
+App/Models/Mammography/negative/normal (397)_jpg.rf.02SRbKkcn1oG03zJQDNr.jpg
+App/Models/Mammography/negative/normal (399)_jpg.rf.wWRDrDtkvzzhkfTTLe05.jpg
+App/Models/Mammography/negative/normal (4)_jpg.rf.EdIngVAsjOQhaUSyNNU9.jpg
+App/Models/Mammography/negative/normal (402)_jpg.rf.WwnYpyzzhoGW5K373ywq.jpg
+App/Models/Mammography/negative/normal (405)_jpg.rf.eK7BtvzOGyBUQ26CgfUe.jpg
+App/Models/Mammography/negative/normal (409)_jpg.rf.CyalodNNdSEtjypao4DL.jpg
+App/Models/Mammography/negative/normal (410)_jpg.rf.t7vbBnAl1Dv1Milg2meo.jpg
+App/Models/Mammography/negative/normal (412)_jpg.rf.pP0GEeButGq29WAWbAbT.jpg
+App/Models/Mammography/negative/normal (417)_jpg.rf.myHLTiMZURbN1ZkwbVqF.jpg
+App/Models/Mammography/negative/normal (48)_jpg.rf.UWOQcvSnfIHlWc6uLOI7.jpg
+App/Models/Mammography/negative/normal (50)_jpg.rf.xA2hHPWdgUm2qZZ1MnuE.jpg
+App/Models/Mammography/negative/normal (57)_jpg.rf.XmKiwT8xPJwJEB5ARna0.jpg
+App/Models/Mammography/negative/normal (58)_jpg.rf.rUjeYtmWOloZQd7YKxVU.jpg
+App/Models/Mammography/negative/normal (65)_jpg.rf.klMOwjUC5Tt6n1XbSqlP.jpg
+App/Models/Mammography/negative/normal (68)_jpg.rf.j3laSfiiA8a4C8YhJ8Ou.jpg
+App/Models/Mammography/negative/normal (69)_jpg.rf.RcA26vIK3UMXJZT9cTgM.jpg
+App/Models/Mammography/negative/normal (71)_jpg.rf.9Fjx5T3N5zKwy91LlgM0.jpg
+App/Models/Mammography/negative/normal (75)_jpg.rf.m074Xd1yQoruXcHTG0TW.jpg
+App/Models/Mammography/negative/normal (81)_jpg.rf.efAkEniY1B5BQMotSIrR.jpg
+App/Models/Mammography/negative/normal (87)_jpg.rf.D8pQuKu4tfNe2Qo5qnUF.jpg
+App/Models/Mammography/negative/normal (9)_jpg.rf.l1zez9jbBZJPtg6XW1Vn.jpg
+App/Models/Mammography/negative/normal (99)_jpg.rf.BRxpiiMoPqcfEFXht4hV.jpg
+App/Models/Mammography/positive/files.txt
+App/Models/Mammography/positive/mdb001lm_jpg.rf.Cut4ThkRfBz7KJv85CSF.jpg
+App/Models/Mammography/positive/mdb001lm_jpg.rf.c2GUJIVz75RJoJBmnMC5.jpg
+App/Models/Mammography/positive/mdb002rl_jpg.rf.4DG3KDYwaXvECyBROYXs.jpg
+App/Models/Mammography/positive/mdb005ll_jpg.rf.92w5wOQaVa754GckOIBQ.jpg
+App/Models/Mammography/positive/mdb005ll_jpg.rf.9GbJeFJ1hVOCj5XQw5nD.jpg
+App/Models/Mammography/positive/mdb005ll_jpg.rf.RPE5dZLvyclXh9dpIlv1.jpg
+App/Models/Mammography/positive/mdb012rl_jpg.rf.pW1Q3NdVldYgqdP665Tj.jpg
+App/Models/Mammography/positive/mdb013ll_jpg.rf.JrlgOA4YlHi6Zwsq9Cni.jpg
+App/Models/Mammography/positive/mdb013ll_jpg.rf.nwhWIBbISNjFWRlRpWBc.jpg
+App/Models/Mammography/positive/mdb015lm_jpg.rf.k11TdLQTA3PtyzL8hNiM.jpg
+App/Models/Mammography/positive/mdb017ls_jpg.rf.CHCpLqe45j0oE2Rt9qCu.jpg
+App/Models/Mammography/positive/mdb019ll_jpg.rf.3RevW2GJQiLPtmwjjq5l.jpg
+App/Models/Mammography/positive/mdb021ll_jpg.rf.AWWIvxSLRezqMkCQwxx4.jpg
+App/Models/Mammography/positive/mdb021ll_jpg.rf.KDFsxNJz0TFTWq0gDl9z.jpg
+App/Models/Mammography/positive/mdb021ll_jpg.rf.myAc77R7ttaGxt5qkDzm.jpg
+App/Models/Mammography/positive/mdb025ll_jpg.rf.UEr38BWnsT5nVGjiN1MM.jpg
+App/Models/Mammography/positive/mdb025ll_jpg.rf.lkypEYKQVJ6ca9WEBV4f.jpg
+App/Models/Mammography/positive/mdb028rl_jpg.rf.yl1HtUmOp7TxNklGxLDL.jpg
+App/Models/Mammography/positive/mdb030rm_jpg.rf.BxGlRxGm9084MExDvmGt.jpg
+App/Models/Mammography/positive/mdb030rm_jpg.rf.CTvUH4doDfSHd4BCbKrj.jpg
+App/Models/Mammography/positive/mdb032rl_jpg.rf.uQh6c6UX5Hpv3KCygUEa.jpg
+App/Models/Mammography/positive/mdb059ls_jpg.rf.IwRtiEUUb2lbJHT6jzI0.jpg
+App/Models/Mammography/positive/mdb063lm_jpg.rf.J5K9NHALVQL5RQc5CS29.jpg
+App/Models/Mammography/positive/mdb069ll_jpg.rf.Y67pDPXWRRBRPAIQyjP2.jpg
+App/Models/Mammography/positive/mdb069ll_jpg.rf.k8UpynrePxMeJqyjZpCM.jpg
+App/Models/Mammography/positive/mdb072rm_jpg.rf.mVpsi1Qm0lfzFMfaCGhm.jpg
+App/Models/Mammography/positive/mdb072rm_jpg.rf.oSg2mY1niEQ9XZLdqXuG.jpg
+App/Models/Mammography/positive/mdb075lm_jpg.rf.gpAi9aYglBr6zyg5cB0y.jpg
+App/Models/Mammography/positive/mdb080rm_jpg.rf.L0zEASII0mzl7WgD3xux.jpg
+App/Models/Mammography/positive/mdb080rm_jpg.rf.dCr2PG2aDUsrjE6Bxy2B.jpg
+App/Models/Mammography/positive/mdb083ll_jpg.rf.0jwjJc8MpI4vhfnqmrJb.jpg
+App/Models/Mammography/positive/mdb083ll_jpg.rf.bgoNSU1YDgGgFYB1p4tT.jpg
+App/Models/Mammography/positive/mdb083ll_jpg.rf.mnqaSYsDWAJplJeMG7gA.jpg
+App/Models/Mammography/positive/mdb091lm_jpg.rf.2ostOvuZ1baJhEgpKTsI.jpg
+App/Models/Mammography/positive/mdb091lm_jpg.rf.CDIYkw5mCNYHKRRx7K3O.jpg
+App/Models/Mammography/positive/mdb091lm_jpg.rf.fYC3cW3xSSg6Y5xHNp79.jpg
+App/Models/Mammography/positive/mdb092rm_jpg.rf.mDPqPVwbTiAFVocgzQRB.jpg
+App/Models/Mammography/positive/mdb092rm_jpg.rf.nf07T3tjL9iIRpRyxThj.jpg
+App/Models/Mammography/positive/mdb095ll_jpg.rf.aZzvPmXNsjnDCoDJ0csH.jpg
+App/Models/Mammography/positive/mdb097ll_jpg.rf.P0hNEIFBleB15SCsggcl.jpg
+App/Models/Mammography/positive/mdb104rm_jpg.rf.5cfq9GDiOYdg8AxZgVKF.jpg
+App/Models/Mammography/positive/mdb104rm_jpg.rf.eUu8L246NxQ7RHPr1JlB.jpg
+App/Models/Mammography/positive/mdb105ll_jpg.rf.1amct62HeftJM66JxC66.jpg
+App/Models/Mammography/positive/mdb105ll_jpg.rf.5UNlovOpytOBakiZLhS5.jpg
+App/Models/Mammography/positive/mdb107ll_jpg.rf.EjujZI6FDKgyFC1UwtZC.jpg
+App/Models/Mammography/positive/mdb107ll_jpg.rf.PgyPbGmzYIv51DVyANNs.jpg
+App/Models/Mammography/positive/mdb110rl_jpg.rf.0cTNf53kJZolyR0rhtSV.jpg
+App/Models/Mammography/positive/mdb110rl_jpg.rf.MmI8kyT1OycRTFpb97q8.jpg
+App/Models/Mammography/positive/mdb110rl_jpg.rf.g9QErhCH5YHuPQ1A0tjU.jpg
+App/Models/Mammography/positive/mdb111ll_jpg.rf.NYKcWlUhSJ5kCGp8W1BY.jpg
+App/Models/Mammography/positive/mdb115ll_jpg.rf.39bFnJ4EGGluBCZcogo3.jpg
+App/Models/Mammography/positive/mdb117ll_jpg.rf.zGs8OCEH2kseS8Np5hk1.jpg
+App/Models/Mammography/positive/mdb120rl_jpg.rf.WgyRKGWOQtRHm8jhU9Rl.jpg
+App/Models/Mammography/positive/mdb121ll_jpg.rf.0EhxP3v2HRckHCYc55k3.jpg
+App/Models/Mammography/positive/mdb121ll_jpg.rf.bVvf9IEPjTJVxJWIXuc5.jpg
+App/Models/Mammography/positive/mdb124rm_jpg.rf.2DeSrRGWJ8gnP579ncMv.jpg
+App/Models/Mammography/positive/mdb124rm_jpg.rf.80t6lZXeVKJtxBcFWi2c.jpg
+App/Models/Mammography/positive/mdb124rm_jpg.rf.TpjhMCkEUi6jFKWh74P7.jpg
+App/Models/Mammography/positive/mdb126rl_jpg.rf.RBxqgL84vdZ6aDkyNpPy.jpg
+App/Models/Mammography/positive/mdb126rl_jpg.rf.SaxDWyWCSGlkUPTvM4xC.jpg
+App/Models/Mammography/positive/mdb127lm_jpg.rf.9ItBhRTtLQNjDrO0HTIK.jpg
+App/Models/Mammography/positive/mdb130rl_jpg.rf.9PqtV0Pf58keFDnQDYqs.jpg
+App/Models/Mammography/positive/mdb130rl_jpg.rf.ig9DUkCxJh3uS1818yVL.jpg
+App/Models/Mammography/positive/mdb132rx_jpg.rf.jmaEkkgCsWbLE6dvZZk7.jpg
+App/Models/Mammography/positive/mdb134rx_jpg.rf.SoaVxvwZYet8iEVxqbBG.jpg
+App/Models/Mammography/positive/mdb141lx_jpg.rf.89lmRB1tZqoVDxuS4VQ5.jpg
+App/Models/Mammography/positive/mdb141lx_jpg.rf.8nwDQjxOBWv2xnOImNv7.jpg
+App/Models/Mammography/positive/mdb141lx_jpg.rf.IQvf5P0CZvidX3n8y3U5.jpg
+App/Models/Mammography/positive/mdb142rx_jpg.rf.YuBhCcFaYmKEx7ST5iJS.jpg
+App/Models/Mammography/positive/mdb144rx_jpg.rf.AFbDJbGiXAYxHSdqaKnA.jpg
+App/Models/Mammography/positive/mdb144rx_jpg.rf.jyb5DU026Lrh2bgTDxcT.jpg
+App/Models/Mammography/positive/mdb145lx_jpg.rf.D6cd2ChRNCtdgTQKcqdD.jpg
+App/Models/Mammography/positive/mdb145lx_jpg.rf.UhA1OYyeFsgXLpSfBzT4.jpg
+App/Models/Mammography/positive/mdb148rx_jpg.rf.A09P3YPE1SOKyTHI8eag.jpg
+App/Models/Mammography/positive/mdb148rx_jpg.rf.AUq8345dE2PELVotJmxh.jpg
+App/Models/Mammography/positive/mdb148rx_jpg.rf.plwW6VRrhoG3h2jj6BnR.jpg
+App/Models/Mammography/positive/mdb148rx_jpg.rf.uoowixCBJ3AdFCEpzDMu.jpg
+App/Models/Mammography/positive/mdb150rx_jpg.rf.r5LbuG7t9bVwVNt4t1nf.jpg
+App/Models/Mammography/positive/mdb153lx_jpg.rf.P5zo4vrHHQHnrzNUsK5c.jpg
+App/Models/Mammography/positive/mdb153lx_jpg.rf.k2IpXVaMZecpAiQsNlLL.jpg
+App/Models/Mammography/positive/mdb153lx_jpg.rf.ldp2t0wYQCFCLNq4Lcfs.jpg
+App/Models/Mammography/positive/mdb160rl_jpg.rf.IGntjx7YKEBVg58Nvn0y.jpg
+App/Models/Mammography/positive/mdb163ll_jpg.rf.yTdYN1CuVcVJQ1rn7tqa.jpg
+App/Models/Mammography/positive/mdb165ls_jpg.rf.2oDn5FtPPOrVYOdijOK0.jpg
+App/Models/Mammography/positive/mdb165ls_jpg.rf.5jLDkX7gqwRFpGEpB9Cp.jpg
+App/Models/Mammography/positive/mdb167ll_jpg.rf.clqyo0OQfr2pFxjBo9KC.jpg
+App/Models/Mammography/positive/mdb170rm_jpg.rf.0fif6AV51AwKetWw84Zd.jpg
+App/Models/Mammography/positive/mdb171ll_jpg.rf.VQyCJIt3XLuOkQanBXHm.jpg
+App/Models/Mammography/positive/mdb175lm_jpg.rf.RGyBqZtgwjktmrEm65AT.jpg
+App/Models/Mammography/positive/mdb175lm_jpg.rf.psTquWolcxalvb2R5KX2.jpg
+App/Models/Mammography/positive/mdb175lm_jpg.rf.vyzzIRcggEHSdsCOqtZ0.jpg
+App/Models/Mammography/positive/mdb178rs_jpg.rf.QHf0s0CDpSNLvVWr3fy0.jpg
+App/Models/Mammography/positive/mdb179ls_jpg.rf.eUooYZJdWdXrtuluWp5S.jpg
+App/Models/Mammography/positive/mdb186rs_jpg.rf.USivXZ8D8aJY8dMaaWjx.jpg
+App/Models/Mammography/positive/mdb186rs_jpg.rf.oGuTd59VFVtUYyuAREt5.jpg
+App/Models/Mammography/positive/mdb186rs_jpg.rf.ynN1G01sseD47nzmcSO5.jpg
+App/Models/Mammography/positive/mdb188rm_jpg.rf.iHE2yVnGem805cZxB9Cx.jpg
+App/Models/Mammography/positive/mdb195ll_jpg.rf.zXZO0dZ9TO8Opv9BDmLk.jpg
+App/Models/Mammography/positive/mdb198rm_jpg.rf.nRfHOoa8oDJsPVtHpBsy.jpg
+App/Models/Mammography/positive/mdb198rm_jpg.rf.ycT7AR68QnEQXaPSsU7n.jpg
+App/Models/Mammography/positive/mdb199lm_jpg.rf.ll7JBOWFGJO6B5Wlyook.jpg
+App/Models/Mammography/positive/mdb199lm_jpg.rf.nRf5ARci6rHOB8nTU5D0.jpg
+App/Models/Mammography/positive/mdb204rl_jpg.rf.1373o3819XBytrUK1dQg.jpg
+App/Models/Mammography/positive/mdb206rl_jpg.rf.IgTWHE3gIQAXbEXHLA6L.jpg
+App/Models/Mammography/positive/mdb207lm_jpg.rf.INHtH1FN7cYcJhxD6zxf.jpg
+App/Models/Mammography/positive/mdb207lm_jpg.rf.ekwydEjjrVGpAnIRT59S.jpg
+App/Models/Mammography/positive/mdb209ll_jpg.rf.SoNXQYFhsjJmswNdExoo.jpg
+App/Models/Mammography/positive/mdb211lm_jpg.rf.2tC14kJBNhu8qrdnRrce.jpg
+App/Models/Mammography/positive/mdb211lm_jpg.rf.Ev6PPd2ySVCAW0XD69Yb.jpg
+App/Models/Mammography/positive/mdb212rm_jpg.rf.dXKQnFCoQlIrAVx71Uxq.jpg
+App/Models/Mammography/positive/mdb213ls_jpg.rf.VkAjAqtGp5Qy5pKrLTzI.jpg
+App/Models/Mammography/positive/mdb216rl_jpg.rf.3ZovF3iskgCTG1UyDPBD.jpg
+App/Models/Mammography/positive/mdb216rl_jpg.rf.qvFL6cVtbraSEPz1V9J9.jpg
+App/Models/Mammography/positive/mdb218rl_jpg.rf.D0oQFNi62ew5QdlXoEsV.jpg
+App/Models/Mammography/positive/mdb218rl_jpg.rf.TW5FX3OPXpc1esJrd0r2.jpg
+App/Models/Mammography/positive/mdb219ll_jpg.rf.1ET8DtA50hXVyG6nKECC.jpg
+App/Models/Mammography/positive/mdb219ll_jpg.rf.1yoAgSMedQEV4yUobWRu.jpg
+App/Models/Mammography/positive/mdb219ll_jpg.rf.OUjG6Tfu7McngixIOdGG.jpg
+App/Models/Mammography/positive/mdb219ll_jpg.rf.TXK2WQv6MKNPkvLFcg1X.jpg
+App/Models/Mammography/positive/mdb222rm_jpg.rf.fNKHBF8XTEJRviMK97qA.jpg
+App/Models/Mammography/positive/mdb226rm_jpg.rf.D91ZQkImQ7RmnZfRupqX.jpg
+App/Models/Mammography/positive/mdb226rm_jpg.rf.EahtbjCVDnym7mFKIXeY.jpg
+App/Models/Mammography/positive/mdb226rm_jpg.rf.ZJQH67YX7TmNuNx50C84.jpg
+App/Models/Mammography/positive/mdb226rm_jpg.rf.ljSBXGFY0bZERV41xcaW.jpg
+App/Models/Mammography/positive/mdb226rm_jpg.rf.nl2u2n8waAIegjckGIPQ.jpg
+App/Models/Mammography/positive/mdb226rm_jpg.rf.oO0K6FpP42TV8aKaQybn.jpg
+App/Models/Mammography/positive/mdb227lm_jpg.rf.VuLR1SGULtUKVfsTLbxt.jpg
+App/Models/Mammography/positive/mdb230rl_jpg.rf.Lto6nuqyDEYMPET9BbdA.jpg
+App/Models/Mammography/positive/mdb230rl_jpg.rf.wmvtW17UDCISmOfde0na.jpg
+App/Models/Mammography/positive/mdb235ll_jpg.rf.XMozz6QvEiUxneQdM9QK.jpg
+App/Models/Mammography/positive/mdb239ll_jpg.rf.UG1fNLslSQVkFWePvMPl.jpg
+App/Models/Mammography/positive/mdb239ll_jpg.rf.umkFaoCEd4mZZPpfX3qT.jpg
+App/Models/Mammography/positive/mdb240rl_jpg.rf.i6lJ5fqXqPY6eDl7Uuhu.jpg
+App/Models/Mammography/positive/mdb240rl_jpg.rf.pNC4CQSByKTP8k1kS2hH.jpg
+App/Models/Mammography/positive/mdb241ls_jpg.rf.NAaGE7BMSeq5uwTOtEHP.jpg
+App/Models/Mammography/positive/mdb241ls_jpg.rf.PiciJJZvRUYHoUbDWl0H.jpg
+App/Models/Mammography/positive/mdb244rm_jpg.rf.swapB00B8veAjXhGGqGc.jpg
+App/Models/Mammography/positive/mdb245ls_jpg.rf.ofUQIdU9TWKicGCkJrKc.jpg
+App/Models/Mammography/positive/mdb248rl_jpg.rf.xjw2gVxZZoLb7s3nXFAA.jpg
+App/Models/Mammography/positive/mdb249lm_jpg.rf.8CN6eFU8s5ueXtHPIAbs.jpg
+App/Models/Mammography/positive/mdb249lm_jpg.rf.9phk4YyayO54GEopvveI.jpg
+App/Models/Mammography/positive/mdb264rm_jpg.rf.gqhEkXkwt9KgwR8nOPlL.jpg
+App/Models/Mammography/positive/mdb265lm_jpg.rf.BSUcwVoaOkHL8u3437NO.jpg
+App/Models/Mammography/positive/mdb265lm_jpg.rf.FYwhfqWlj4xyXrR7ruGh.jpg
+App/Models/Mammography/positive/mdb265lm_jpg.rf.w3TJPQ1Dl0FlrUOqXyTj.jpg
+App/Models/Mammography/positive/mdb270rm_jpg.rf.7IEm72dAutCYhynTb3YT.jpg
+App/Models/Mammography/positive/mdb270rm_jpg.rf.gx9qPVWsgxlS09WRysKX.jpg
+App/Models/Mammography/positive/mdb271ll_jpg.rf.0G5M5N2cQF3uyzQZSr2o.jpg
+App/Models/Mammography/positive/mdb271ll_jpg.rf.M5w82UhKrci0JRdao1zR.jpg
+App/Models/Mammography/positive/mdb271ll_jpg.rf.t9BiRLUUa5bUPdsaGK2q.jpg
+App/Models/Mammography/positive/mdb274rx_jpg.rf.SqXqgepOdsU5nxdpsCAv.jpg
+App/Models/Mammography/positive/mdb274rx_jpg.rf.nHFCYcs3cklOXWN90b7c.jpg
+App/Models/Mammography/positive/mdb290rs_jpg.rf.IANYBp1jndLy90cJPDS0.jpg
+App/Models/Mammography/positive/mdb290rs_jpg.rf.a0i7ryD6LEASlMDFkPXv.jpg
+App/Models/Mammography/positive/mdb290rs_jpg.rf.m7AX9jJTZas2rqDRU8zH.jpg
+App/Models/Mammography/templates/metadata.json
+App/Models/Mammography/templates/negative.png
+App/Models/Mammography/templates/positive.png
+App/Models/Mammography/validate/README.md
+App/Models/Mammography/validate/mdb188rm_jpg.rf.L7II4dopoRticHb8HxQh.jpg
+App/Models/Mammography/validate/normal (317)_jpg.rf.iU2swQhuVCojY1PVRcfz.jpg
+App/Models/Mammography/validate/normal (390)_jpg.rf.TPeUpO9qu3CqqLY1YWGd.jpg
+App/Models/Maternal/FETAL_PLANES_DB_data.csv
+App/Models/Maternal/FETAL_PLANES_DB_data.xlsx
+App/Models/Maternal/FINAL-test-evaluation.pt
+App/Models/Maternal/Readme.md
+App/Models/Maternal/negative/README.md
+App/Models/Maternal/positive/README.md
+App/Models/Maternal/positive/arachnoid-cyst-36b_aug_3_png_jpg.rf.ggwlMVzHZ3h63yuhRuJz.jpg
+App/Models/Maternal/positive/moderate-ventriculomegaly-36b_aug_1_png_jpg.rf.5YA5ERoKOUKmTYGRfYaT.jpg
+App/Models/Maternal/positive/polencephaly24a_aug_0_png_jpg.rf.ebHNmc8EKSJUvG4zqxU4.jpg
+App/Models/Maternal/validate/README.md
+App/Models/Maternal/validate/arachnoid-cyst-27a_aug_5_png_jpg.rf.usJAf6NyrVpGXnmpBvLx.jpg
+App/Models/Maternal/validate/moderate-ventriculomegaly-27_aug_1_png_jpg.rf.87mJ7fp4dUcYoMXX9TZu.jpg
+App/Models/Maternal/validate/moderate-ventriculomegaly-27c_aug_2_png_jpg.rf.VlEjxJHf6GeVkz8wyYgH.jpg
+App/Models/Readme.md
+App/Models/TB/local_model.pt
+App/Models/TB/local_model_metadata.json
+App/Models/TB/negative/README.md
+App/Models/TB/negative/h0504_png_jpg.rf.ouyQ4YU8ovMdRJokCAsP.jpg
+App/Models/TB/negative/h0993_png_jpg.rf.MrygKQit4Hm3qdgHruDq.jpg
+App/Models/TB/negative/h1064_png_jpg.rf.LhgQ0HWn5uPiW4DG2SSU.jpg
+App/Models/TB/positive/README.md
+App/Models/TB/positive/tb0065_png_jpg.rf.KLCK4DMNvBEvqmGHs8FB.jpg
+App/Models/TB/positive/tb0742_png_jpg.rf.qguPuh36skwUZT3082a6.jpg
+App/Models/TB/positive/tb0829_png_jpg.rf.THruhf5LP9MOp9gCq5m8.jpg
+App/Models/TB/readme.md
+App/Models/TB/templates/metadata.json
+App/Models/TB/templates/negative.png
+App/Models/TB/templates/positive.png
+App/Models/TB/validate/README.md
+App/Models/TB/validate/tb0150_png_jpg.rf.W2Jk54tjITWIV0XKSO6v.jpg
+App/Models/TB/validate/tb0892_png_jpg.rf.H7lkwPgPKS9MV6fbsb28.jpg
+App/Models/TB/validate/tb1047_png_jpg.rf.q1U1bngXt9yXkEpr439g.jpg
+App/Tests/test_anonymizer.py
+App/Tests/test_auth.py
+App/Tests/test_dicom_adapter.py
+App/Tools/dicom_adapter.py
+App/Tools/dicom_pipeline.py
+App/Tools/receiver.py
+App/Tools/receiver_backup.py
+App/Validation/validate.py
+App/Validation/validate_offline.py
+App/auth_manager.py
+App/clinical_workflow.py
+App/dicom_anonymizer.py
+App/inference.py
+App/offline_cv.py
+App/packages.txt
+App/requirements.txt
+App/streamlit_app.py
+README.md
+RK3588 SBC/README.md
+RK3588 SBC/convert_to_rknn.py
+RK3588 SBC/install_rk3588.sh
+RK3588 SBC/pinkedge.service
+RK3588 SBC/requirements_rk3588.txt
+RK3588 SBC/rknn_infer.py
+RK3588 SBC/uart_bridge.py
+Start.bat
+Start_Web.bat
