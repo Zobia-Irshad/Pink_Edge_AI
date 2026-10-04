@@ -8,11 +8,18 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          fetch-depth: 0
-          lfs: true
-      - name: Push to Hugging Face
+          python-version: "3.10"
+
+      - name: Install Hugging Face Hub SDK
+        run: pip install huggingface_hub
+
+      - name: Sync to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push --force https://ows-ali:$HF_TOKEN@huggingface.co/spaces/ows-ali/pink-edge-ai main
+        run: python .github/sync_to_hf.py
