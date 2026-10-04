@@ -1,0 +1,18 @@
+[Unit]
+Description=Pink Edge AI - Tkinter kiosk (RK3588 edge node)
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+# install_rk3588.sh rewrites the two paths below to match wherever it copied App/ on this board.
+WorkingDirectory=%h/pinkedge/App
+ExecStart=/usr/bin/python3 %h/pinkedge/App/GUI.py
+Restart=on-failure
+RestartSec=5
+# Keeps the board usable for triage even mid-boot glitch, without spamming restarts forever.
+StartLimitIntervalSec=300
+StartLimitBurst=5
+Environment=DISPLAY=:0
+
+[Install]
+WantedBy=graphical-session.target
