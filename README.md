@@ -1,3 +1,14 @@
+---
+title: Pink Edge AI
+emoji: 🩺
+colorFrom: pink
+colorTo: red
+sdk: streamlit
+sdk_version: 1.30.0
+app_file: streamlit_app.py
+pinned: false
+---
+
 # Pink Edge AI — Offline Desktop + Responsive Web Editions
 
 Three sibling UIs over the same shared logic, ported from the original hackathon Streamlit demo
