@@ -392,3 +392,7 @@ the original's all-simulated scenario pickers. A separate, partially-rethemed fo
 (`App/Archive/pink_edge.py`) also exists but is not wired to any launcher — see `App/Archive/README.md`
 for why it's archived rather than live. An Android build was discussed but deferred in favor of
 these desktop/web builds.
+
+## AI Coding Agent Guidance
+
+For AI coding assistants (Antigravity, Cursor, Claude, Copilot) working on this repository, comprehensive architectural context, multi-tier inference fallback hierarchies, RBAC constraints, and engineering guidelines are documented in [AGENTS.md](AGENTS.md).
