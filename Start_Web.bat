@@ -5,6 +5,13 @@ REM download model weights + Python deps; after that it's a local-only web serve
 REM All the actual code/data lives in App\ -- this launcher just cd's in and runs it.
 
 cd /d "%~dp0App"
+if errorlevel 1 (
+    echo Could not find the App folder beside Start_Web.bat.
+    pause
+    exit /b 1
+)
+
+set "PYTHONPATH=%~dp0;%PYTHONPATH%"
 
 where python >nul 2>nul
 if errorlevel 1 (

@@ -5,6 +5,13 @@ REM Python deps if missing -- needs internet once. After that, GUI.py runs fully
 REM All the actual code/data lives in App\ -- this launcher just cd's in and runs it.
 
 cd /d "%~dp0App"
+if errorlevel 1 (
+    echo Could not find the App folder beside Start.bat.
+    pause
+    exit /b 1
+)
+
+set "PYTHONPATH=%~dp0;%PYTHONPATH%"
 
 where python >nul 2>nul
 if errorlevel 1 (
@@ -23,7 +30,7 @@ if errorlevel 1 (
 )
 
 echo Launching Pink Edge AI...
-python GUI.py
+python -m App.GUI
 
 if errorlevel 1 (
     echo.
