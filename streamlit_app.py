@@ -742,25 +742,26 @@ def render_sidebar():
 
         st.markdown(f"""
         <div style="background:{active_prof['color']}15;border:1px solid {active_prof['color']}50;border-radius:6px;padding:6px 8px;margin-bottom:8px;">
-            <div style="font-size:0.68rem;color:var(--text-muted);font-weight:600;">ACTIVE USER PROFILE</div>
-            <div style="font-size:0.82rem;font-weight:700;color:{active_prof['color']};">{active_prof['badge']}</div>
+            <div style="font-size:0.68rem;color:var(--text-muted);font-weight:600;">{t('ACTIVE USER PROFILE')}</div>
+            <div style="font-size:0.82rem;font-weight:700;color:{active_prof['color']};">{t(active_prof['badge'])}</div>
         </div>
         """, unsafe_allow_html=True)
 
         ac1, ac2 = st.columns(2)
-        if ac1.button("👤 LHW", width="stretch"):
+        # The selected profile stays highlighted (primary button); the other is secondary.
+        if ac1.button(f"👤 {t('LHW')}", width="stretch", key="role_lhw",
+                      type="primary" if current_role == ROLE_LHW else "secondary"):
             st.session_state.user_role = ROLE_LHW
             st.rerun()
-        if ac2.button("👨‍⚕️ Doctor", width="stretch"):
+        if ac2.button(f"👨‍⚕️ {t('Doctor')}", width="stretch", key="role_doc",
+                      type="primary" if current_role == ROLE_RADIOLOGIST else "secondary"):
             st.session_state.user_role = ROLE_RADIOLOGIST
             st.rerun()
 
-        pin_in = st.text_input("PIN Auth", type="password", placeholder="PIN (1111 / 9999)", label_visibility="collapsed", key="st_pin_in")
-        if pin_in:
-            auth_role = auth_mgr.authenticate_pin(pin_in)
-            if auth_role:
-                st.session_state.user_role = auth_role
-                st.rerun()
+        # PIN is filled in automatically for the selected role and cannot be edited.
+        st.text_input("PIN Auth", value=ROLE_CONFIGS[current_role]["pin"], type="password", disabled=True,
+                      label_visibility="collapsed", key=f"st_pin_auto_{current_role}",
+                      help=t("PIN (auto-filled for the selected role)"))
 
         lc1, lc2 = st.columns(2)
         if lc1.button("🇬🇧 EN", width="stretch"):
@@ -773,14 +774,16 @@ def render_sidebar():
         st.markdown(f"#### {t('Network Mode')}")
         st.session_state.network_mode = st.radio(
             "Network Mode", ["Fully Offline", "GSM Failover"], label_visibility="collapsed",
+            format_func=lambda v: t("Fully Offline") if v == "Fully Offline" else t("GSM Failover (slow internet connection)"),
             index=0 if st.session_state.network_mode == "Fully Offline" else 1)
         if "GSM" in st.session_state.network_mode:
-            st.markdown('<span class="badge badge-cloud">☁️ Alibaba Cloud IoT Active</span>', unsafe_allow_html=True)
+            st.markdown(f'<span class="badge badge-cloud">{t("☁️ Alibaba Cloud IoT Active")}</span>', unsafe_allow_html=True)
         else:
-            st.markdown('<span class="badge badge-offline">🔒 100% Offline</span>', unsafe_allow_html=True)
+            st.markdown(f'<span class="badge badge-offline">{t("🔒 100% Offline")}</span>', unsafe_allow_html=True)
 
-        st.markdown(f"#### {t('Select AI Model')}")
-        selected_model = st.selectbox("Select AI Model", core.MODELS, label_visibility="collapsed")
+        st.markdown(f"#### {t('Select Xray type')}")
+        selected_model = st.selectbox("Select Xray type", core.MODELS, label_visibility="collapsed",
+                                      format_func=t)
         if st.session_state.last_model != selected_model:
             st.session_state.inference_done = False
             st.session_state.log_entries = []
@@ -830,10 +833,10 @@ def render_sidebar():
             pass
         if model_status:
             st.markdown("---")
-            st.caption("Model backing (this run):")
+            st.caption(t("Model backing (this run):"))
             for modality, info in model_status.items():
                 icon = "🟢" if info["real"] else "⚪"
-                st.caption(f"{icon} {modality.split('(')[0].strip()}")
+                st.caption(f"{icon} {t(modality.split('(')[0].strip())}")
 
         return selected_model, uploaded
 
@@ -939,34 +942,33 @@ def sync_cloud_action():
 # ============================================================
 def render_dashboard(selected_model):
     # Top Logo Header matching screenshot
-    st.markdown("""
+    st.markdown(f"""
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;background:#ffffff;padding:16px 20px;border-radius:14px;border:1px solid #e2e8f0;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
         <div style="background:#be185d;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:1.4rem;box-shadow:0 4px 10px rgba(225,29,72,0.25);">
             💓
         </div>
         <div>
-            <div style="font-size:1.35rem;font-weight:800;color:#075985;line-height:1.2;">Pink Edge AI</div>
-            <div style="font-size:0.82rem;color:#64748b;font-weight:500;margin-top:2px;">Offline triage — BHU mode</div>
+            <div style="font-size:1.35rem;font-weight:800;color:#075985;line-height:1.2;">{t("Pink Edge AI")}</div>
+            <div style="font-size:0.82rem;color:#64748b;font-weight:500;margin-top:2px;">{t('Offline triage — Basic Health Unit (BHU) mode')}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Modality Pill Selector Buttons matching screenshot
-    mod_cols = st.columns(3)
+    # Module headings. These are plain, non-clickable headings; the exam type is chosen in the
+    # sidebar ("Select Xray type"). The active one is highlighted.
     m_opts = [
         ("Mammography", "Mammography (YOLOv8-OBB)"),
         ("TB chest X-ray", "Tuberculosis (Chest X-Ray)"),
         ("Maternal ultrasound", "Maternal Health (Ultrasound)"),
     ]
-    for idx, (label, model_key) in enumerate(m_opts):
-        with mod_cols[idx]:
-            is_active = (selected_model == model_key)
-            btn_type = "primary" if is_active else "secondary"
-            if st.button(label, key=f"mod_pill_{idx}", type=btn_type, use_container_width=True):
-                st.session_state.last_model = model_key
-                st.session_state.inference_done = False
-                st.session_state.current_result = None
-                st.rerun()
+    cells = ""
+    for label, model_key in m_opts:
+        on = (selected_model == model_key)
+        style = ("background:#be185d;color:#ffffff;border:1px solid #be185d;" if on
+                 else "background:#ffffff;color:#475569;border:1px solid #e2e8f0;")
+        cells += (f'<div style="{style}flex:1;text-align:center;padding:10px 8px;border-radius:10px;'
+                  f'font-size:1rem;font-weight:700;">{t(label)}</div>')
+    st.markdown(f'<div style="display:flex;gap:10px;margin-bottom:6px;">{cells}</div>', unsafe_allow_html=True)
 
     st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
 
@@ -993,7 +995,7 @@ def render_dashboard(selected_model):
             # was overflowing the tile and wrapping mid-word.
             model_label = model_tile_short.get(selected_model, selected_model.split("(")[0].strip())
             m1, m2, m3 = st.columns(3)
-            m1.markdown(f'<div class="metric-tile"><div class="label">Model</div><div class="value" title="{selected_model}">{model_label}</div></div>', unsafe_allow_html=True)
+            m1.markdown(f'<div class="metric-tile"><div class="label">{t("Model")}</div><div class="value" title="{selected_model}">{model_label}</div></div>', unsafe_allow_html=True)
             m2.markdown(f'<div class="metric-tile"><div class="label">{t("Confidence")}</div><div class="value" style="color:{C["primary_light"]};">{r["confidence"]:.1f}%</div></div>', unsafe_allow_html=True)
             m3.markdown(f'<div class="metric-tile"><div class="label">{t("Latency")}</div><div class="value">{st.session_state.inference_latency}s</div></div>', unsafe_allow_html=True)
         else:
@@ -1037,23 +1039,23 @@ def render_dashboard(selected_model):
         st.markdown(f"""
         <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,0.03);margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <span style="font-size:1.1rem;font-weight:800;color:#0f172a;">Triage result</span>
-                <span style="background:#fce7f3;color:#be185d;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;border:1px solid #fbcfe8;">{model_source_tag}</span>
+                <span style="font-size:1.1rem;font-weight:800;color:#0f172a;">{t("Triage result")}</span>
+                <span style="background:#fce7f3;color:#be185d;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;border:1px solid #fbcfe8;">{t(model_source_tag)}</span>
             </div>
 
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">Confidence</span>
+                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">{t("Confidence")}</span>
                 <span style="color:#0f172a;font-size:1.05rem;font-weight:800;">{conf_str}</span>
             </div>
 
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">Severity</span>
-                <span style="background:{sev_bg};color:#ffffff;padding:3px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">{severity_str}</span>
+                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">{t("Severity")}</span>
+                <span style="background:{sev_bg};color:#ffffff;padding:3px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">{t(severity_str)}</span>
             </div>
 
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
-                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">Escalation</span>
-                <span style="color:{escalation_color};font-size:0.95rem;font-weight:700;">{escalation_str}</span>
+                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">{t("Escalation")}</span>
+                <span style="color:{escalation_color};font-size:0.95rem;font-weight:700;">{t(escalation_str)}</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1066,13 +1068,13 @@ def render_dashboard(selected_model):
         st.markdown(f"""
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;">
             <div style="{low_style}border-radius:12px;padding:14px 6px;text-align:center;">
-                <div style="color:#15803d;font-size:0.85rem;font-weight:700;line-height:1.2;">Low<br>risk</div>
+                <div style="color:#15803d;font-size:0.85rem;font-weight:700;line-height:1.2;">{t("Low risk")}</div>
             </div>
             <div style="{mod_style}border-radius:12px;padding:14px 6px;text-align:center;">
-                <div style="color:#b45309;font-size:0.85rem;font-weight:700;line-height:1.2;">Moderate<br>risk</div>
+                <div style="color:#b45309;font-size:0.85rem;font-weight:700;line-height:1.2;">{t("Moderate risk")}</div>
             </div>
             <div style="{high_style}border-radius:12px;padding:14px 6px;text-align:center;">
-                <div style="color:#b91c1c;font-size:0.85rem;font-weight:700;line-height:1.2;">High<br>risk</div>
+                <div style="color:#b91c1c;font-size:0.85rem;font-weight:700;line-height:1.2;">{t("High risk")}</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1084,50 +1086,50 @@ def render_dashboard(selected_model):
         st.markdown(f"""<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:0.75rem;color:var(--success);font-weight:600;">
         🔒 HIPAA/GDPR Compliant — Hex Privacy Hashed</div>
         <div class="card">
-        Patient ID: <b style="color:#0369a1;font-family:monospace;">{priv_hash}</b><br>Age: <b>{st.session_state.pat_age} Y</b><br>
-        Modality: <b>{mod_map[selected_model]}</b><br>Date: <b>{datetime.now().strftime('%Y-%m-%d')}</b><br>
-        Privacy: <b style="color:var(--success);">ANONYMIZED (PII STRIPPED)</b></div>""", unsafe_allow_html=True)
+        {t("Patient ID")}: <b style="color:#0369a1;font-family:monospace;">{priv_hash}</b><br>{t("Age")}: <b>{st.session_state.pat_age} {t("Y")}</b><br>
+        {t("Modality")}: <b>{mod_map[selected_model]}</b><br>{t("Date")}: <b>{datetime.now().strftime('%Y-%m-%d')}</b><br>
+        {t("Privacy")}: <b style="color:var(--success);">{t("ANONYMIZED (PII STRIPPED)")}</b></div>""", unsafe_allow_html=True)
 
         if st.session_state.inference_done and st.session_state.current_result:
             r = st.session_state.current_result
             css = r.get("css", "danger" if r["is_critical"] else "success")
 
             # AI Preliminary Result & Clinician Confirmation Badges
-            st.markdown("""<div style="display:flex;gap:8px;margin-bottom:8px;">
-            <span style="background:#e0f2fe;border:1px solid #7dd3fc;color:#0369a1;padding:3px 10px;border-radius:4px;font-size:0.75rem;font-weight:700;">🤖 AI PRELIMINARY TRIAGE</span>
-            <span style="background:#fef3c7;border:1px solid #fde047;color:#92400e;padding:3px 10px;border-radius:4px;font-size:0.75rem;font-weight:700;">📋 CLINICIAN REVIEW: PENDING</span>
+            st.markdown(f"""<div style="display:flex;gap:8px;margin-bottom:8px;">
+            <span style="background:#e0f2fe;border:1px solid #7dd3fc;color:#0369a1;padding:3px 10px;border-radius:4px;font-size:0.75rem;font-weight:700;">{t("🤖 AI PRELIMINARY TRIAGE")}</span>
+            <span style="background:#fef3c7;border:1px solid #fde047;color:#92400e;padding:3px 10px;border-radius:4px;font-size:0.75rem;font-weight:700;">{t("📋 CLINICIAN REVIEW: PENDING")}</span>
             </div>""", unsafe_allow_html=True)
 
             if r.get("confidence", 100.0) < 65.0:
-                st.warning("⚠️ Low AI Confidence (<65%): Unable to reach definitive triage threshold. Specialist evaluation recommended.")
+                st.warning(t("⚠️ Low AI Confidence (<65%): Unable to reach definitive triage threshold. Specialist evaluation recommended."))
 
             st.markdown(f"""<div class="verdict-box {css}"><div class="v-icon">{r['vicon']}</div>
-            <div class="v-title">{r['verdict']}</div><div class="v-sub">{r['sub']}</div></div>""", unsafe_allow_html=True)
+            <div class="v-title">{t(r['verdict'])}</div><div class="v-sub">{t(r['sub'])}</div></div>""", unsafe_allow_html=True)
 
-            st.markdown(f"""<div class="card"><span class="source-tag">Source: {r.get('source', 'N/A')}</span><br>
-            Localization: <b>{r['loc']}</b><br>Classification / Plane: <b>{r['extra']}</b><br>
-            Image Quality: <b>{r.get('image_quality', 'Adequate for Analysis')}</b></div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class="card"><span class="source-tag">{t("Source")}: {r.get('source', 'N/A')}</span><br>
+            {t("Localization")}: <b>{t(r['loc'])}</b><br>{t("Classification / Plane")}: <b>{t(r['extra'])}</b><br>
+            {t("Image Quality")}: <b>{t(r.get('image_quality', 'Adequate for Analysis'))}</b></div>""", unsafe_allow_html=True)
 
             from auth_manager import AuthManager, ROLE_LHW
             auth_m = AuthManager(st.session_state.get("user_role", ROLE_LHW))
             if auth_m.has_permission("override_assessment"):
                 st.subheader(t("Confirm Assessment"))
                 if "Tuberculosis" in selected_model:
-                    opts1, opts2, l1, l2 = core.TB_SEVERITY_LEVELS, core.TB_LUNG_ZONES, "TB Severity", "Lung Zone"
+                    opts1, opts2, l1, l2 = core.TB_SEVERITY_LEVELS, core.TB_LUNG_ZONES, t("TB Severity"), t("Lung Zone")
                 else:
-                    opts1, opts2, l1, l2 = core.BI_RADS_OPTIONS, core.ACR_DENSITY_OPTIONS, "BI-RADS Assessment", "ACR Breast Density"
+                    opts1, opts2, l1, l2 = core.BI_RADS_OPTIONS, core.ACR_DENSITY_OPTIONS, t("BI-RADS Assessment"), t("ACR Breast Density")
                 idx1 = opts1.index(r["bi_rads"]) if r["bi_rads"] in opts1 else 0
                 idx2 = opts2.index(r["acr"]) if r["acr"] in opts2 else 0
                 st.session_state.bi_rads_selected = st.selectbox(l1, opts1, index=idx1)
                 st.session_state.acr_density_selected = st.selectbox(l2, opts2, index=idx2)
             else:
-                st.info("🔒 Assessment Override Controls locked for LHW profile. (Senior Radiologist PIN 9999 required).")
+                st.info(t("🔒 Assessment Override Controls locked for LHW profile. (Select the Doctor profile to unlock)."))
 
             rec_text = r.get("recommendation", "Patient should be referred for specialist consultation")
             if r["is_critical"]:
-                st.warning(f"⚠️ {t('Action Plan')}: {rec_text}")
+                st.warning(f"⚠️ {t('Action Plan')}: {t(rec_text)}")
             else:
-                st.success(f"✅ {t('Action Plan')}: {rec_text}")
+                st.success(f"✅ {t('Action Plan')}: {t(rec_text)}")
 
             report_data = {
                 "patient_id": st.session_state.pat_id, "patient_age": st.session_state.pat_age,
@@ -1158,24 +1160,24 @@ def render_dashboard(selected_model):
 # ============================================================
 def render_hospital_hub():
     st.markdown(f"""<div class="page-header" style="background:linear-gradient(135deg,{C['primary']} 0%,{C['success']} 100%);">
-    <h1>🏥 Allied Hospital Faisalabad</h1><p>Urban Receiving Terminal • 2G GSM Critical Alert Monitor</p></div>""",
+    <h1>🏥 {t("Allied Hospital Faisalabad")}</h1><p>{t("Urban Receiving Terminal • 2G GSM Critical Alert Monitor")}</p></div>""",
                 unsafe_allow_html=True)
 
     c1, c2 = st.columns([2, 1])
     with c2:
         st.subheader(t("Network Status"))
         net = st.session_state.net_stats
-        st.markdown(f"""<div class="card">GSM Module: <b>{net['module']}</b><br>Signal: <b>{net['signal']}</b><br>
-        BHU Nodes: <b>{net['bhus']}</b><br>Pending: <b>{len(st.session_state.sms_alerts)}</b></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card">{t("GSM Module")}: <b>{net['module']}</b><br>{t("Signal")}: <b>{net['signal']}</b><br>
+        {t("Basic Health Unit (BHU) Nodes")}: <b>{net['bhus']}</b><br>{t("Pending")}: <b>{len(st.session_state.sms_alerts)}</b></div>""", unsafe_allow_html=True)
         m1, m2 = st.columns(2)
         m1.markdown(f'<div class="metric-tile"><div class="label">{t("Total Alerts")}</div><div class="value">{len(st.session_state.sms_alerts)}</div></div>', unsafe_allow_html=True)
         crit = sum(1 for a in st.session_state.sms_alerts if a["is_critical"])
-        m2.markdown(f'<div class="metric-tile"><div class="label">Critical</div><div class="value" style="color:{C["danger"]};">{crit}</div></div>', unsafe_allow_html=True)
+        m2.markdown(f'<div class="metric-tile"><div class="label">{t("Critical")}</div><div class="value" style="color:{C["danger"]};">{crit}</div></div>', unsafe_allow_html=True)
 
     with c1:
         st.subheader(t("Alert Stream"))
         if not st.session_state.sms_alerts:
-            st.markdown('<div class="card" style="text-align:center;padding:30px;">✅ All Clear — no alerts pending</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="card" style="text-align:center;padding:30px;">{t("✅ All Clear — no alerts pending")}</div>', unsafe_allow_html=True)
         for a in st.session_state.sms_alerts:
             alert_id = a["id"]  # define alert_id from the current alert dict
             # Ensure per-alert state keys exist
@@ -1185,9 +1187,9 @@ def render_hospital_hub():
                 st.session_state.show_override_reason[alert_id] = False
 
             css = "critical" if a["is_critical"] else "ok"
-            st.markdown(f"""<div class="alert-card {css}"><b>Alert #{a['id']}</b> ({a['time']})<br>
-            <span style="font-family:Consolas,monospace;font-size:0.8rem;">Payload: {a['payload']}<br>
-            Type: {a['type']} &nbsp; Status: {a['status']}</span></div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class="alert-card {css}"><b>{t("Alert")} #{a['id']}</b> ({a['time']})<br>
+            <span style="font-family:Consolas,monospace;font-size:0.8rem;">{t("Payload")}: {a['payload']}<br>
+            {t("Type")}: {t(a['type'])} &nbsp; {t("Status")}: {t(a['status'])}</span></div>""", unsafe_allow_html=True)
 
             # AI RECOMMENDATION BOX — real data from inference (populated in
             # run_triage_action). If an alert is missing these fields, it was
@@ -1202,7 +1204,7 @@ def render_hospital_hub():
             risk_class = f"risk-{risk_level}" if has_real_data else ""
 
             if has_real_data:
-                verdict_display = combine_icon_and_text(vicon, verdict)
+                verdict_display = combine_icon_and_text(vicon, t(verdict))
                 conf_display = f"{confidence:.1f}%"
             else:
                 verdict_display = "⚠️ No AI data recorded for this alert"
@@ -1210,10 +1212,10 @@ def render_hospital_hub():
 
             st.markdown(f"""
             <div class="ai-recommendation {risk_class}">
-                <div class="rec-header">🤖 AI Recommendation</div>
+                <div class="rec-header">{t("🤖 AI Recommendation")}</div>
                 <div class="rec-verdict">{verdict_display}</div>
-                <div class="rec-confidence">Confidence: <b>{conf_display}</b></div>
-                <div style="font-size: 0.9rem; margin-top: 8px; opacity: 0.95;">Localization: {localization}</div>
+                <div class="rec-confidence">{t("Confidence")}: <b>{conf_display}</b></div>
+                <div style="font-size: 0.9rem; margin-top: 8px; opacity: 0.95;">{t("Localization")}: {t(localization)}</div>
             </div>
             """, unsafe_allow_html=True)
             if not has_real_data:
@@ -1226,24 +1228,24 @@ def render_hospital_hub():
             col_agree, col_override, col_approve = st.columns(3)
 
             with col_agree:
-                if st.button("✅ Agree", key=f"agree_{alert_id}", use_container_width=True, disabled=already_approved):
+                if st.button(t("✅ Agree"), key=f"agree_{alert_id}", use_container_width=True, disabled=already_approved):
                     st.session_state.lhv_decisions[alert_id]["decision"] = "agree"
                     st.session_state.show_override_reason[alert_id] = False
-                    st.toast("👩\u200d⚕️ LHV Decision: Agreed with AI recommendation")
+                    st.toast(t("👩\u200d⚕️ LHV Decision: Agreed with AI recommendation"))
 
             with col_override:
-                if st.button("🔄 Override", key=f"override_{alert_id}", use_container_width=True, disabled=already_approved):
+                if st.button(t("🔄 Override"), key=f"override_{alert_id}", use_container_width=True, disabled=already_approved):
                     st.session_state.lhv_decisions[alert_id]["decision"] = "override"
                     st.session_state.show_override_reason[alert_id] = True
                     st.rerun()
 
             with col_approve:
-                if st.button("📤 Approve", key=f"approve_{alert_id}", use_container_width=True, disabled=already_approved):
+                if st.button(t("📤 Approve"), key=f"approve_{alert_id}", use_container_width=True, disabled=already_approved):
                     a["status"] = "Approved"
                     st.session_state.log_entries.append(
                         f"[{time.strftime('%H:%M:%S')}] [REFERRAL] Alert #{a['id']} approved and forwarded to hospital."
                     )
-                    st.toast("📤 Approved — referral forwarded to hospital.")
+                    st.toast(t("📤 Approved — referral forwarded to hospital."))
                     st.rerun()
 
             if already_approved:
@@ -1280,7 +1282,7 @@ def render_hospital_hub():
                 ]
 
                 selected_reason = st.radio(
-                    "Select reason for override:",
+                    t("Select reason for override:"),
                     reason_options,
                     key=f"reason_{alert_id}",
                     label_visibility="collapsed"
@@ -1291,14 +1293,14 @@ def render_hospital_hub():
                 # If "Other" is selected, allow custom text input
                 if "Other" in selected_reason:
                     custom_reason = st.text_input(
-                        "Please specify the reason:",
+                        t("Please specify the reason:"),
                         key=f"custom_reason_{alert_id}",
                         placeholder="Enter additional details..."
                     )
                     st.session_state.lhv_decisions[alert_id]["reason"] = f"Other: {custom_reason}"
 
                 # Confirmation button
-                if st.button(f"✓ Confirm Override", key=f"confirm_override_{alert_id}", use_container_width=True):
+                if st.button(t("✓ Confirm Override"), key=f"confirm_override_{alert_id}", use_container_width=True):
                     st.toast(f"✅ Override confirmed. Reason: {st.session_state.lhv_decisions[alert_id]['reason']}")
                     st.session_state.show_override_reason[alert_id] = False
 
@@ -1310,7 +1312,7 @@ def render_hospital_hub():
 # ============================================================
 def render_cloud_sync():
     st.markdown(f"""<div class="page-header" style="background:linear-gradient(135deg,{C['primary']} 0%,{C['warning']} 100%);">
-    <h1>☁️ Cloud Sync & Cache</h1><p>Alibaba Cloud Integration (simulated) • Hybrid-Edge Architecture</p></div>""",
+    <h1>☁️ {t("Cloud Sync & Cache")}</h1><p>{t("Alibaba Cloud Integration (simulated) • Hybrid-Edge Architecture")}</p></div>""",
                 unsafe_allow_html=True)
 
     total, unsynced = core.counts()
@@ -1326,8 +1328,8 @@ def render_cloud_sync():
         st.info(t("No reports cached"))
     else:
         st.dataframe(
-            [{"ID": r[0], "Patient": r[1], "Modality": r[3], "BI-RADS/Severity": r[5], "Verdict": r[7],
-              "Timestamp": r[11], "Synced": "✅" if r[12] else "⏳"} for r in rows],
+            [{t("ID"): r[0], t("Patient"): r[1], t("Modality"): r[3], t("BI-RADS/Severity"): r[5], t("Verdict"): t(r[7]),
+              t("Timestamp"): r[11], t("Synced"): "✅" if r[12] else "⏳"} for r in rows],
             width="stretch", hide_index=True,
         )
 
