@@ -36,7 +36,17 @@ st.set_page_config(page_title="Pink Edge AI", page_icon="🩸", layout="wide", i
 # NOTE: the CSS below is a plain string, not an f-string (it's full of literal CSS braces), so it
 # repeats these values as literals rather than interpolating them. Keep the two in sync when
 # changing a colour — `python Tests/smoke_test.py` checks for exactly that drift.
-C = core.C
+C = dict(core.C)
+# Dark clinical theme for the web edition. Status/data colours are neutral;
+# success/warning/danger stay vivid because they carry real medical meaning.
+C.update({
+    "bg": "#0B0F19", "surface": "#111827", "surface_alt": "#1F2937", "surface_hover": "#1F2937",
+    "border": "#374151", "border_light": "#1F2937",
+    "text": "#F9FAFB", "text_muted": "#9CA3AF", "text_light": "#9CA3AF",
+    "primary": "#2563EB", "primary_light": "#F9FAFB",
+    "accent": "#3B82F6", "accent_light": "#93C5FD",
+    "success": "#22C55E", "warning": "#F59E0B", "danger": "#EF4444",
+})
 
 # ============================================================
 # VOICE MESSAGE LIBRARY
@@ -165,21 +175,46 @@ st.markdown = _dedented_markdown
 
 CSS = """
 <style>
-/* Main App Background & High Contrast Default Text */
+/* ============================================================
+   Pink Edge AI — dark clinical theme
+   App bg #0B0F19 | sidebar/cards #111827 | accent #2563EB / #3B82F6
+   text #F9FAFB | secondary text #9CA3AF | imaging canvas #000000
+   Bright red/green/amber are reserved for real medical alerts.
+   ============================================================ */
+:root {
+    --pe-bg: #0B0F19;
+    --pe-surface: #111827;
+    --pe-surface-alt: #1F2937;
+    --pe-border: #1F2937;
+    --pe-border-strong: #374151;
+    --pe-accent: #2563EB;
+    --pe-accent-hi: #3B82F6;
+    --pe-text: #F9FAFB;
+    --pe-muted: #9CA3AF;
+    --pe-canvas: #000000;
+}
+
+/* Main App Background & Default Text */
 .stApp {
-    background-color: #f8fafc !important;
-    color: #0f172a !important;
+    background-color: #0B0F19 !important;
+    color: #F9FAFB !important;
     font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
     margin-bottom: 20px;
 }
+[data-testid="stHeader"] {
+    background-color: #0B0F19 !important;
+}
 
-/* Sidebar Styling */
+/* Sidebar — deep charcoal/slate */
 section[data-testid="stSidebar"] {
-    background-color: #ffffff !important;
-    border-right: 1px solid #cbd5e1 !important;
+    background-color: #111827 !important;
+    border-right: 1px solid #1F2937 !important;
 }
 section[data-testid="stSidebar"] * {
-    color: #0f172a !important;
+    color: #F9FAFB !important;
+}
+section[data-testid="stSidebar"] hr {
+    border-color: #1F2937 !important;
 }
 
 /* Container Padding */
@@ -196,18 +231,35 @@ section[data-testid="stSidebar"] * {
     margin-top: 0.25rem !important;
     margin-bottom: 1.25rem !important;
 }
-
 .stTabs [data-baseweb="tab-list"] {
     gap: 0.15rem !important;
     overflow-x: auto !important;
     white-space: nowrap !important;
     padding-bottom: 2px !important;
+    background-color: #111827 !important;
+    border-bottom: 1px solid #1F2937 !important;
 }
-
 .stTabs [data-baseweb="tab"] {
     min-height: 42px !important;
     padding: 0.5rem 1rem !important;
     white-space: nowrap !important;
+    color: #9CA3AF !important;
+    font-weight: 700 !important;
+    background: transparent !important;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    color: #F9FAFB !important;
+}
+.stTabs [aria-selected="true"] {
+    color: #F9FAFB !important;
+}
+/* clean blue indicator line under the active tab */
+.stTabs [data-baseweb="tab-highlight"] {
+    background-color: #3B82F6 !important;
+    height: 3px !important;
+}
+.stTabs [data-baseweb="tab-border"] {
+    background-color: #1F2937 !important;
 }
 
 /* Give every page header a clear separation from navigation. */
@@ -215,35 +267,40 @@ section[data-testid="stSidebar"] * {
     margin-top: 0.75rem !important;
 }
 
-/* Headings & Text Overrides — Guaranteed Readability */
-h1, h2, h3, h4, h5, h6, label, p, span, div, li, td, th {
-    color: #0f172a !important;
+/* Headings & Text */
+h1, h2, h3, h4, h5, h6, label, p, li, td, th {
+    color: #F9FAFB !important;
 }
-.stMarkdown p, .stMarkdown label, .stMarkdown span {
-    color: #0f172a !important;
+.stMarkdown p, .stMarkdown label {
+    color: #F9FAFB !important;
+}
+small, .stCaption, [data-testid="stCaptionContainer"] {
+    color: #9CA3AF !important;
 }
 
-/* Header Banner */
+/* Header Banner — solid slate card with a blue indicator line */
 .page-header {
-    background: linear-gradient(135deg, #be185d 0%, #0369a1 100%);
+    background: #111827 !important;
+    border: 1px solid #1F2937 !important;
+    border-left: 4px solid #2563EB !important;
     border-radius: 12px;
     padding: 22px 28px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: none;
 }
 .page-header h1 {
-    color: #ffffff !important;
+    color: #F9FAFB !important;
     margin: 0 !important;
     font-size: 1.5rem !important;
     font-weight: 800 !important;
 }
 .page-header p {
-    color: #f0fdf4 !important;
+    color: #9CA3AF !important;
     font-size: 0.88rem !important;
     margin: 6px 0 0 0 !important;
 }
 
-/* Badges */
+/* Status badges — muted grays (colour is saved for real alerts) */
 .badge {
     display: inline-flex;
     padding: 5px 12px;
@@ -251,48 +308,47 @@ h1, h2, h3, h4, h5, h6, label, p, span, div, li, td, th {
     font-size: 0.75rem;
     font-weight: 700;
 }
-.badge-offline {
-    background: #f0fdf4 !important;
-    color: #15803d !important;
-    border: 1px solid #86efac !important;
-}
-.badge-cloud {
-    background: #fffbeb !important;
-    color: #b45309 !important;
-    border: 1px solid #fde68a !important;
+.badge-offline,
+.badge-cloud,
+section[data-testid="stSidebar"] .badge-offline,
+section[data-testid="stSidebar"] .badge-cloud {
+    background: rgba(31, 41, 55, 0.6) !important;
+    color: #D1D5DB !important;
+    border: 1px solid #374151 !important;
 }
 
 /* Cards & Metric Tiles */
 .card {
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
+    background: #111827 !important;
+    border: 1px solid #1F2937 !important;
     border-radius: 12px !important;
     padding: 18px !important;
     margin: 8px 0 !important;
-    color: #0f172a !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+    color: #F9FAFB !important;
+    box-shadow: none !important;
 }
 .card b, .card span {
-    color: #0f172a !important;
+    color: #F9FAFB !important;
 }
 
 .metric-tile {
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
+    background: #111827 !important;
+    border: 1px solid #1F2937 !important;
     border-radius: 10px !important;
     padding: 14px !important;
     text-align: center !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+    box-shadow: none !important;
 }
 .metric-tile .label {
-    color: #475569 !important;
+    color: #9CA3AF !important;
     font-size: 0.74rem !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.6px !important;
 }
+/* no !important: an inline colour is only used for genuine alert counts */
 .metric-tile .value {
-    color: #be185d !important;
+    color: #F9FAFB;
     font-size: 1.4rem !important;
     font-weight: 800 !important;
     margin-top: 4px !important;
@@ -301,7 +357,7 @@ h1, h2, h3, h4, h5, h6, label, p, span, div, li, td, th {
     text-overflow: ellipsis !important;
 }
 
-/* Verdict Boxes */
+/* Verdict Boxes — real medical findings keep red / amber / green */
 .verdict-box {
     border-radius: 12px !important;
     padding: 20px !important;
@@ -309,47 +365,36 @@ h1, h2, h3, h4, h5, h6, label, p, span, div, li, td, th {
     margin: 12px 0 !important;
 }
 .verdict-box.success {
-    background: #f0fdf4 !important;
-    border: 2px solid #86efac !important;
+    background: rgba(34, 197, 94, 0.10) !important;
+    border: 2px solid rgba(34, 197, 94, 0.55) !important;
 }
-.verdict-box.success .v-title {
-    color: #15803d !important;
-}
+.verdict-box.success .v-title { color: #4ADE80 !important; }
 .verdict-box.danger {
-    background: #fef2f2 !important;
-    border: 2px solid #fca5a5 !important;
+    background: rgba(239, 68, 68, 0.10) !important;
+    border: 2px solid rgba(239, 68, 68, 0.60) !important;
 }
-.verdict-box.danger .v-title {
-    color: #b91c1c !important;
-}
+.verdict-box.danger .v-title { color: #F87171 !important; }
 .verdict-box.warning {
-    background: #fffbeb !important;
-    border: 2px solid #fde68a !important;
+    background: rgba(245, 158, 11, 0.10) !important;
+    border: 2px solid rgba(245, 158, 11, 0.55) !important;
 }
-.verdict-box.warning .v-title {
-    color: #b45309 !important;
-}
-.verdict-box .v-icon {
-    font-size: 1.8rem !important;
-}
-.verdict-box .v-title {
-    font-size: 1.3rem !important;
-    font-weight: 800 !important;
-}
+.verdict-box.warning .v-title { color: #FBBF24 !important; }
+.verdict-box .v-icon { font-size: 1.8rem !important; }
+.verdict-box .v-title { font-size: 1.3rem !important; font-weight: 800 !important; }
 .verdict-box .v-sub {
     font-size: 0.88rem !important;
     margin-top: 4px !important;
-    color: #334155 !important;
+    color: #D1D5DB !important;
     font-weight: 600 !important;
 }
 
 /* Telemetry Log */
 .console-log {
-    background: #f1f5f9 !important;
-    border: 1px solid #cbd5e1 !important;
+    background: #0B0F19 !important;
+    border: 1px solid #1F2937 !important;
     border-radius: 10px !important;
     padding: 14px !important;
-    color: #0f172a !important;
+    color: #D1D5DB !important;
     font-family: 'Consolas', 'Courier New', monospace !important;
     font-size: 0.78rem !important;
     line-height: 1.7 !important;
@@ -365,110 +410,202 @@ h1, h2, h3, h4, h5, h6, label, p, span, div, li, td, th {
     border-left: 4px solid !important;
 }
 .alert-card.critical {
-    background: #fef2f2 !important;
-    border-color: #b91c1c !important;
-    color: #991b1b !important;
+    background: rgba(239, 68, 68, 0.10) !important;
+    border-color: #EF4444 !important;
+    color: #FCA5A5 !important;
 }
 .alert-card.ok {
-    background: #f0fdf4 !important;
-    border-color: #15803d !important;
-    color: #166534 !important;
+    background: rgba(34, 197, 94, 0.08) !important;
+    border-color: #22C55E !important;
+    color: #86EFAC !important;
 }
 
 .source-tag {
     font-size: 0.75rem !important;
-    color: #475569 !important;
+    color: #9CA3AF !important;
     font-family: monospace !important;
     font-weight: 700 !important;
 }
 
-/* Streamlit Native Components — Crisp Light Styling */
+/* Streamlit native inputs */
 div[data-baseweb="select"] > div {
-    background-color: #ffffff !important;
-    color: #0f172a !important;
-    border-color: #cbd5e1 !important;
+    background-color: #0B0F19 !important;
+    color: #F9FAFB !important;
+    border-color: #374151 !important;
 }
 div[data-baseweb="select"] span {
-    color: #0f172a !important;
+    color: #F9FAFB !important;
 }
-div[data-baseweb="input"] input {
-    color: #0f172a !important;
-    background-color: #ffffff !important;
+div[data-baseweb="popover"] ul, div[data-baseweb="menu"] {
+    background-color: #111827 !important;
 }
-.stButton > button {
-    background-color: #ffffff !important;
-    color: #0f172a !important;
-    border: 1px solid #cbd5e1 !important;
+div[data-baseweb="popover"] li {
+    color: #F9FAFB !important;
+}
+div[data-baseweb="popover"] li:hover {
+    background-color: rgba(37, 99, 235, 0.18) !important;
+}
+div[data-baseweb="input"], div[data-baseweb="textarea"], div[data-baseweb="base-input"] {
+    background-color: #0B0F19 !important;
+    border-color: #374151 !important;
+}
+div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea {
+    color: #F9FAFB !important;
+    -webkit-text-fill-color: #F9FAFB !important;
+    background-color: #0B0F19 !important;
+}
+div[data-baseweb="input"]:focus-within, div[data-baseweb="select"] > div:focus-within {
+    border-color: #3B82F6 !important;
+}
+[data-testid="stFileUploaderDropzone"] {
+    background-color: #0B0F19 !important;
+    border: 1px dashed #374151 !important;
+}
+[data-testid="stFileUploaderDropzone"] small,
+[data-testid="stFileUploaderDropzone"] span {
+    color: #9CA3AF !important;
+}
+[data-testid="stExpander"] {
+    background-color: #111827 !important;
+    border: 1px solid #1F2937 !important;
+    border-radius: 10px !important;
+}
+
+/* Secondary action buttons — transparent dark fill, subtle grey border */
+.stButton > button,
+.stDownloadButton > button,
+button[data-testid="stBaseButton-secondary"] {
+    background-color: rgba(17, 24, 39, 0.55) !important;
+    color: #F9FAFB !important;
+    border: 1px solid #374151 !important;
     font-weight: 600 !important;
 }
-.stButton > button:hover {
-    background-color: #f1f5f9 !important;
-    border-color: #be185d !important;
-    color: #be185d !important;
+.stButton > button:hover,
+.stDownloadButton > button:hover,
+button[data-testid="stBaseButton-secondary"]:hover {
+    background-color: #1F2937 !important;
+    border-color: #3B82F6 !important;
+    color: #F9FAFB !important;
 }
-.stTabs [data-baseweb="tab-list"] {
-    background-color: #ffffff !important;
-    border-bottom: 2px solid #cbd5e1 !important;
+.stButton > button:disabled,
+.stDownloadButton > button:disabled {
+    opacity: 0.45 !important;
 }
-.stTabs [data-baseweb="tab"] {
-    color: #475569 !important;
+
+/* Main action buttons — solid blue, white text */
+.stButton > button[kind="primary"],
+.stDownloadButton > button[kind="primary"],
+button[data-testid="stBaseButton-primary"] {
+    background-color: #2563EB !important;
+    color: #FFFFFF !important;
+    border: 1px solid #2563EB !important;
     font-weight: 700 !important;
 }
-.stTabs [aria-selected="true"] {
-    color: #be185d !important;
+.stButton > button[kind="primary"]:hover,
+.stDownloadButton > button[kind="primary"]:hover,
+button[data-testid="stBaseButton-primary"]:hover {
+    background-color: #3B82F6 !important;
+    border-color: #3B82F6 !important;
+    color: #FFFFFF !important;
 }
+.stButton > button[kind="primary"] p,
+.stButton > button[kind="primary"] span,
+button[data-testid="stBaseButton-primary"] p {
+    color: #FFFFFF !important;
+}
+
+/* Active selection state (LHW / Doctor) — subtle blue fill + indicator line,
+   not the solid "main action" style */
+.st-key-role_lhw button[data-testid="stBaseButton-primary"],
+.st-key-role_doc button[data-testid="stBaseButton-primary"] {
+    background-color: rgba(37, 99, 235, 0.16) !important;
+    border: 1px solid rgba(59, 130, 246, 0.45) !important;
+    box-shadow: inset 0 -3px 0 #3B82F6 !important;
+    color: #F9FAFB !important;
+}
+.st-key-role_lhw button[data-testid="stBaseButton-primary"]:hover,
+.st-key-role_doc button[data-testid="stBaseButton-primary"]:hover {
+    background-color: rgba(37, 99, 235, 0.24) !important;
+}
+.st-key-role_lhw button p, .st-key-role_doc button p {
+    color: #F9FAFB !important;
+}
+
+/* Tables */
 .stDataFrame, [data-testid="stTable"] {
-    background-color: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
+    background-color: #111827 !important;
+    border: 1px solid #1F2937 !important;
     border-radius: 8px !important;
+}
+
+/* Imaging canvas — always pure black so diagnostic grayscale is unaltered */
+[data-testid="stImage"] {
+    background: #000000 !important;
+    border: 1px solid #1F2937;
+    border-radius: 10px;
+    padding: 6px;
+}
+[data-testid="stImage"] img {
+    background: #000000 !important;
+    border-radius: 6px;
+}
+[data-testid="stImageCaption"] {
+    color: #9CA3AF !important;
 }
 
 /* ============= AI CONFIDENCE + LHV OVERRIDE STYLING ============= */
 .ai-recommendation {
-  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); /* default/fallback pink gradient */
+  background: #111827;
+  border: 1px solid #1F2937;
+  border-left: 4px solid #3B82F6;
   border-radius: 14px; padding: 20px; margin: 12px 0;
-  box-shadow: 0 4px 6px rgba(157, 23, 77, 0.2);
-  color: #ffffff;
+  box-shadow: none;
+  color: #F9FAFB;
 }
-/* Risk-based color overrides — applied via an extra class based on the
-   real triage result's risk_level, so a BI-RADS 5 case never renders as
-   a green/pink "routine" box again. */
+/* Risk-based colours = real medical alert colours */
 .ai-recommendation.risk-critical {
-  background: linear-gradient(135deg, #b91c1c 0%, #b91c1c 100%) !important;
-  box-shadow: 0 4px 6px rgba(185, 28, 28, 0.3) !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+  border: 1px solid rgba(239, 68, 68, 0.55) !important;
+  border-left: 4px solid #EF4444 !important;
+  box-shadow: none !important;
 }
 .ai-recommendation.risk-moderate {
-  background: linear-gradient(135deg, #b45309 0%, #b45309 100%) !important;
-  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3) !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+  border: 1px solid rgba(245, 158, 11, 0.55) !important;
+  border-left: 4px solid #F59E0B !important;
+  box-shadow: none !important;
 }
 .ai-recommendation.risk-low {
-  background: linear-gradient(135deg, #15803d 0%, #15803d 100%) !important;
-  box-shadow: 0 4px 6px rgba(21, 128, 61, 0.3) !important;
+  background: rgba(34, 197, 94, 0.10) !important;
+  border: 1px solid rgba(34, 197, 94, 0.5) !important;
+  border-left: 4px solid #22C55E !important;
+  box-shadow: none !important;
 }
 .ai-recommendation .rec-header {
   font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
-  opacity: 0.95; margin-bottom: 8px;
+  color: #9CA3AF; margin-bottom: 8px;
 }
 .ai-recommendation .rec-verdict {
-  font-size: 1.4rem; font-weight: 800; margin: 8px 0;
+  font-size: 1.4rem; font-weight: 800; margin: 8px 0; color: #F9FAFB;
 }
 .ai-recommendation .rec-confidence {
-  font-size: 0.95rem; margin-top: 12px; opacity: 0.95;
+  font-size: 0.95rem; margin-top: 12px; color: #D1D5DB;
 }
 
 .lhv-decision {
-  background: linear-gradient(135deg, #075985 0%, #0369a1 100%); /* Blue gradient */
+  background: #111827;
+  border: 1px solid #1F2937;
+  border-left: 4px solid #2563EB;
   border-radius: 14px; padding: 20px; margin: 12px 0;
-  box-shadow: 0 4px 6px rgba(7, 89, 133, 0.2);
-  color: #ffffff;
+  color: #F9FAFB;
 }
 .lhv-decision .lhv-header {
   font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
-  opacity: 0.95; margin-bottom: 16px;
+  color: #9CA3AF; margin-bottom: 16px;
 }
 
 .btn-agree {
-  background: linear-gradient(135deg, #15803d 0%, #15803d 100%) !important; /* Green */
+  background: #2563EB !important;
   color: #ffffff !important;
   border: none !important;
   border-radius: 8px;
@@ -477,33 +614,26 @@ div[data-baseweb="input"] input {
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(21, 128, 61, 0.3);
 }
-.btn-agree:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(21, 128, 61, 0.4);
-}
+.btn-agree:hover { background: #3B82F6 !important; }
 
 .btn-override {
-  background: linear-gradient(135deg, #b91c1c 0%, #b91c1c 100%) !important; /* Red */
-  color: #ffffff !important;
-  border: none !important;
+  background: transparent !important;
+  color: #F9FAFB !important;
+  border: 1px solid #374151 !important;
   border-radius: 8px;
   padding: 12px 24px;
   font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(185, 28, 28, 0.3);
 }
-.btn-override:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(185, 28, 28, 0.4);
-}
+.btn-override:hover { background: #1F2937 !important; border-color: #3B82F6 !important; }
 
 .override-reason-box {
-  background: #f0f9ff; /* Light blue background */
-  border: 2px solid #0369a1;
+  background: #111827;
+  border: 1px solid #374151;
+  border-left: 4px solid #2563EB;
   border-radius: 12px;
   padding: 16px;
   margin-top: 16px;
@@ -511,7 +641,7 @@ div[data-baseweb="input"] input {
 .override-reason-box .reason-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #075985;
+  color: #F9FAFB;
   margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -519,59 +649,57 @@ div[data-baseweb="input"] input {
 .override-reason-box .reason-option {
   display: flex;
   align-items: center;
-  padding: 10px 0;
+  padding: 8px 12px;
   cursor: pointer;
   border-radius: 6px;
-  padding: 8px 12px;
   transition: background 0.2s ease;
 }
-.override-reason-box .reason-option:hover {
-  background: rgba(3, 105, 161, 0.1);
-}
+.override-reason-box .reason-option:hover { background: rgba(37, 99, 235, 0.14); }
 .override-reason-box .reason-option input[type="radio"] {
   margin-right: 12px;
   cursor: pointer;
-  accent-color: #0369a1;
+  accent-color: #3B82F6;
   width: 18px;
   height: 18px;
 }
 .override-reason-box .reason-option label {
   cursor: pointer;
-  color: #0f172a;
+  color: #F9FAFB;
   font-weight: 500;
   margin: 0;
 }
 
 .decision-status {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 8px;
   padding: 12px 16px;
   margin-top: 12px;
   font-weight: 600;
   text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid #374151;
 }
 
 /* ============= VOICE FEEDBACK SYSTEM ============= */
 .voice-feedback-panel {
-  background: #ffffff;
+  background: #111827;
+  border: 1px solid #1F2937;
   border-radius: 14px;
   padding: 0;
   margin: 16px 0;
-  box-shadow: 0 4px 8px rgba(157, 23, 77, 0.2);
-  color: #0f172a;
+  color: #F9FAFB;
   overflow: hidden;
 }
 .voice-feedback-panel .vfp-header {
-  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%);
+  background: #0B0F19;
   font-size: 0.95rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #ffffff;
+  color: #F9FAFB;
   padding: 16px;
   margin: 0;
-  border-bottom: 2px solid rgba(157, 23, 77, 0.2);
+  border-bottom: 1px solid #1F2937;
+  border-left: 4px solid #2563EB;
 }
 .voice-feedback-panel .vfp-message {
   font-size: 1.05rem;
@@ -579,10 +707,10 @@ div[data-baseweb="input"] input {
   margin: 16px;
   line-height: 1.5;
   padding: 12px;
-  background: #f1f5f9;
+  background: #0B0F19;
   border-radius: 8px;
-  border-left: 4px solid #be185d;
-  color: #0f172a;
+  border-left: 4px solid #3B82F6;
+  color: #F9FAFB;
 }
 .voice-btn-group {
   display: flex;
@@ -591,7 +719,7 @@ div[data-baseweb="input"] input {
   flex-wrap: wrap;
 }
 .voice-btn {
-  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%) !important;
+  background: #2563EB !important;
   border: none !important;
   color: #ffffff !important;
   padding: 10px 16px !important;
@@ -600,65 +728,62 @@ div[data-baseweb="input"] input {
   font-size: 0.9rem !important;
   cursor: pointer !important;
   transition: all 0.3s ease !important;
-  box-shadow: 0 4px 6px rgba(157, 23, 77, 0.3) !important;
 }
-.voice-btn:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 12px rgba(157, 23, 77, 0.4) !important;
-}
+.voice-btn:hover { background: #3B82F6 !important; }
 .voice-status {
-  background: #f0f9ff;
+  background: #0B0F19;
   border-radius: 6px;
   padding: 8px 12px;
   margin: 0 16px 16px 16px;
   font-size: 0.85rem;
   text-align: center;
-  border: 1px solid #bfdbfe;
-  color: #075985;
+  border: 1px solid #374151;
+  color: #9CA3AF;
 }
 .audio-player-wrapper {
-  background: #f1f5f9;
+  background: #0B0F19;
   border-radius: 8px;
   padding: 12px 16px;
   margin: 0 16px 16px 16px;
 }
 
 .helpya-card {
-  background: #ffffff;
+  background: #111827;
+  border: 1px solid #1F2937;
   border-radius: 14px;
   padding: 0;
   margin: 16px 0;
-  box-shadow: 0 4px 8px rgba(244, 63, 94, 0.2);
-  color: #0f172a;
+  color: #F9FAFB;
   overflow: hidden;
 }
 .helpya-card .helpya-header {
-  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%);
+  background: #0B0F19;
   font-size: 1.15rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #ffffff;
+  color: #F9FAFB;
   padding: 16px;
   margin: 0;
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 2px solid rgba(157, 23, 77, 0.2);
+  border-bottom: 1px solid #1F2937;
+  border-left: 4px solid #2563EB;
 }
 .helpya-stat {
   display: inline-block;
-  background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+  background: #0B0F19;
   border-radius: 12px;
   padding: 16px;
   margin: 12px;
   font-weight: 600;
-  border: 2px solid #fbcfe8;
-  color: #be185d;
+  border: 1px solid #374151;
+  color: #F9FAFB;
 }
 .helpya-stat .stat-label {
   font-size: 0.8rem;
-  opacity: 0.9;
+  color: #9CA3AF;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -666,6 +791,30 @@ div[data-baseweb="input"] input {
   font-size: 1.6rem;
   font-weight: 800;
   margin-top: 6px;
+}
+
+/* Section banners used on the Voice / Feedback / Summary pages */
+.pe-section {
+  background: #111827;
+  border: 1px solid #1F2937;
+  border-left: 4px solid #2563EB;
+  color: #F9FAFB !important;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 16px 0 12px 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+.pe-note {
+  background: #0B0F19;
+  border: 1px solid #1F2937;
+  border-left: 4px solid #3B82F6;
+  color: #D1D5DB !important;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 8px 0;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 /* Responsive: narrow viewports */
@@ -732,18 +881,18 @@ def render_sidebar():
     from auth_manager import AuthManager, ROLE_LHW, ROLE_RADIOLOGIST, ROLE_CONFIGS
     with st.sidebar:
         st.markdown(
-            '<div style="background:linear-gradient(135deg, #be185d 0%, #9d174d 100%);border-radius:10px;'
-            'padding:14px;margin-bottom:14px;color:#fff;"><b>🩸 Pink Edge AI</b>'
-            '<div style="font-size:0.72rem;opacity:0.85;">Clinical Intelligence Platform</div></div>',
+            '<div style="background:#0B0F19;border:1px solid #1F2937;border-left:4px solid #2563EB;border-radius:10px;'
+            'padding:14px;margin-bottom:14px;color:#F9FAFB;"><b>🩸 Pink Edge AI</b>'
+            '<div style="font-size:0.72rem;color:#9CA3AF;">Clinical Intelligence Platform</div></div>',
             unsafe_allow_html=True)
         current_role = st.session_state.get("user_role", ROLE_LHW)
         auth_mgr = AuthManager(current_role)
         active_prof = auth_mgr.get_active_profile()
 
         st.markdown(f"""
-        <div style="background:{active_prof['color']}15;border:1px solid {active_prof['color']}50;border-radius:6px;padding:6px 8px;margin-bottom:8px;">
-            <div style="font-size:0.68rem;color:var(--text-muted);font-weight:600;">{t('ACTIVE USER PROFILE')}</div>
-            <div style="font-size:0.82rem;font-weight:700;color:{active_prof['color']};">{t(active_prof['badge'])}</div>
+        <div style="background:rgba(37,99,235,0.12);border:1px solid rgba(59,130,246,0.35);border-radius:6px;padding:6px 8px;margin-bottom:8px;">
+            <div style="font-size:0.68rem;color:#9CA3AF;font-weight:600;">{t('ACTIVE USER PROFILE')}</div>
+            <div style="font-size:0.82rem;font-weight:700;color:#F9FAFB;">{t(active_prof['badge'])}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -795,7 +944,7 @@ def render_sidebar():
         uploaded = st.file_uploader("Upload Patient Scan", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
 
         st.markdown("---")
-        if st.button(f"▶️ {t('Run Triage')}", width="stretch"):
+        if st.button(f"▶️ {t('Run Triage')}", width="stretch", type="primary"):
             run_triage_action(selected_model, uploaded)
 
         if st.session_state.inference_done:
@@ -943,13 +1092,13 @@ def sync_cloud_action():
 def render_dashboard(selected_model):
     # Top Logo Header matching screenshot
     st.markdown(f"""
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;background:#ffffff;padding:16px 20px;border-radius:14px;border:1px solid #e2e8f0;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
-        <div style="background:#be185d;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:1.4rem;box-shadow:0 4px 10px rgba(225,29,72,0.25);">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;background:#111827;padding:16px 20px;border-radius:14px;border:1px solid #1F2937;">
+        <div style="background:#2563EB;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:1.4rem;">
             💓
         </div>
         <div>
-            <div style="font-size:1.35rem;font-weight:800;color:#075985;line-height:1.2;">{t("Pink Edge AI")}</div>
-            <div style="font-size:0.82rem;color:#64748b;font-weight:500;margin-top:2px;">{t('Offline triage — Basic Health Unit (BHU) mode')}</div>
+            <div style="font-size:1.35rem;font-weight:800;color:#F9FAFB;line-height:1.2;">{t("Pink Edge AI")}</div>
+            <div style="font-size:0.82rem;color:#9CA3AF;font-weight:500;margin-top:2px;">{t('Offline triage — Basic Health Unit (BHU) mode')}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -964,8 +1113,8 @@ def render_dashboard(selected_model):
     cells = ""
     for label, model_key in m_opts:
         on = (selected_model == model_key)
-        style = ("background:#be185d;color:#ffffff;border:1px solid #be185d;" if on
-                 else "background:#ffffff;color:#475569;border:1px solid #e2e8f0;")
+        style = ("background:rgba(37,99,235,0.16);color:#F9FAFB;border:1px solid rgba(59,130,246,0.45);box-shadow:inset 0 -3px 0 #3B82F6;" if on
+                 else "background:#111827;color:#9CA3AF;border:1px solid #1F2937;")
         cells += (f'<div style="{style}flex:1;text-align:center;padding:10px 8px;border-radius:10px;'
                   f'font-size:1rem;font-weight:700;">{t(label)}</div>')
     st.markdown(f'<div style="display:flex;gap:10px;margin-bottom:6px;">{cells}</div>', unsafe_allow_html=True)
@@ -996,7 +1145,7 @@ def render_dashboard(selected_model):
             model_label = model_tile_short.get(selected_model, selected_model.split("(")[0].strip())
             m1, m2, m3 = st.columns(3)
             m1.markdown(f'<div class="metric-tile"><div class="label">{t("Model")}</div><div class="value" title="{selected_model}">{model_label}</div></div>', unsafe_allow_html=True)
-            m2.markdown(f'<div class="metric-tile"><div class="label">{t("Confidence")}</div><div class="value" style="color:{C["primary_light"]};">{r["confidence"]:.1f}%</div></div>', unsafe_allow_html=True)
+            m2.markdown(f'<div class="metric-tile"><div class="label">{t("Confidence")}</div><div class="value" style="color:#F9FAFB;">{r["confidence"]:.1f}%</div></div>', unsafe_allow_html=True)
             m3.markdown(f'<div class="metric-tile"><div class="label">{t("Latency")}</div><div class="value">{st.session_state.inference_latency}s</div></div>', unsafe_allow_html=True)
         else:
             st.info(f"📋 {t('Awaiting Analysis')} — {t('Run triage to begin')}")
@@ -1014,67 +1163,67 @@ def render_dashboard(selected_model):
 
         if not r:
             severity_str = "Moderate"
-            sev_bg = "#b45309"
+            sev_bg = "#D97706"
             escalation_str = "Not required"
-            escalation_color = "#15803d"
+            escalation_color = "#22C55E"
             risk_cat = "moderate"
         elif r.get("is_critical", False):
             if "5" in r.get("bi_rads", "") or "4C" in r.get("bi_rads", "") or "POS" in r.get("verdict", ""):
                 severity_str = "High"
-                sev_bg = "#b91c1c"
+                sev_bg = "#DC2626"
                 risk_cat = "high"
             else:
                 severity_str = "Moderate"
-                sev_bg = "#b45309"
+                sev_bg = "#D97706"
                 risk_cat = "moderate"
             escalation_str = "Required"
-            escalation_color = "#b91c1c"
+            escalation_color = "#EF4444"
         else:
             severity_str = "Low"
-            sev_bg = "#15803d"
+            sev_bg = "#16A34A"
             escalation_str = "Not required"
-            escalation_color = "#15803d"
+            escalation_color = "#22C55E"
             risk_cat = "low"
 
         st.markdown(f"""
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,0.03);margin-bottom:16px;">
+        <div style="background:#111827;border:1px solid #1F2937;border-radius:16px;padding:22px;margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <span style="font-size:1.1rem;font-weight:800;color:#0f172a;">{t("Triage result")}</span>
-                <span style="background:#fce7f3;color:#be185d;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;border:1px solid #fbcfe8;">{t(model_source_tag)}</span>
+                <span style="font-size:1.1rem;font-weight:800;color:#F9FAFB;">{t("Triage result")}</span>
+                <span style="background:rgba(31,41,55,0.6);color:#D1D5DB;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;border:1px solid #374151;">{t(model_source_tag)}</span>
             </div>
 
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">{t("Confidence")}</span>
-                <span style="color:#0f172a;font-size:1.05rem;font-weight:800;">{conf_str}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1F2937;">
+                <span style="color:#9CA3AF;font-size:0.9rem;font-weight:500;">{t("Confidence")}</span>
+                <span style="color:#F9FAFB;font-size:1.05rem;font-weight:800;">{conf_str}</span>
             </div>
 
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">{t("Severity")}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1F2937;">
+                <span style="color:#9CA3AF;font-size:0.9rem;font-weight:500;">{t("Severity")}</span>
                 <span style="background:{sev_bg};color:#ffffff;padding:3px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">{t(severity_str)}</span>
             </div>
 
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
-                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">{t("Escalation")}</span>
+                <span style="color:#9CA3AF;font-size:0.9rem;font-weight:500;">{t("Escalation")}</span>
                 <span style="color:{escalation_color};font-size:0.95rem;font-weight:700;">{t(escalation_str)}</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
         # 3 Risk Level Cards matching screenshot layout
-        low_style = "background:#ecfdf5;border:2px solid #15803d;box-shadow:0 2px 6px rgba(16,185,129,0.15);" if risk_cat == "low" else "background:#f4fbf7;border:1px solid #d1fae5;"
-        mod_style = "background:#fffbeb;border:2px solid #b45309;box-shadow:0 2px 6px rgba(180, 83, 9,0.15);" if risk_cat == "moderate" else "background:#fffdf5;border:1px solid #fef3c7;"
-        high_style = "background:#fef2f2;border:2px solid #b91c1c;box-shadow:0 2px 6px rgba(239,68,68,0.15);" if risk_cat == "high" else "background:#fdf2f8;border:1px solid #fee2e2;"
+        low_style = "background:rgba(34,197,94,0.12);border:2px solid #22C55E;" if risk_cat == "low" else "background:#111827;border:1px solid #1F2937;"
+        mod_style = "background:rgba(245,158,11,0.12);border:2px solid #F59E0B;" if risk_cat == "moderate" else "background:#111827;border:1px solid #1F2937;"
+        high_style = "background:rgba(239,68,68,0.12);border:2px solid #EF4444;" if risk_cat == "high" else "background:#111827;border:1px solid #1F2937;"
 
         st.markdown(f"""
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;">
             <div style="{low_style}border-radius:12px;padding:14px 6px;text-align:center;">
-                <div style="color:#15803d;font-size:0.85rem;font-weight:700;line-height:1.2;">{t("Low risk")}</div>
+                <div style="color:{'#4ADE80' if risk_cat == 'low' else '#9CA3AF'};font-size:0.85rem;font-weight:700;line-height:1.2;">{t("Low risk")}</div>
             </div>
             <div style="{mod_style}border-radius:12px;padding:14px 6px;text-align:center;">
-                <div style="color:#b45309;font-size:0.85rem;font-weight:700;line-height:1.2;">{t("Moderate risk")}</div>
+                <div style="color:{'#FBBF24' if risk_cat == 'moderate' else '#9CA3AF'};font-size:0.85rem;font-weight:700;line-height:1.2;">{t("Moderate risk")}</div>
             </div>
             <div style="{high_style}border-radius:12px;padding:14px 6px;text-align:center;">
-                <div style="color:#b91c1c;font-size:0.85rem;font-weight:700;line-height:1.2;">{t("High risk")}</div>
+                <div style="color:{'#F87171' if risk_cat == 'high' else '#9CA3AF'};font-size:0.85rem;font-weight:700;line-height:1.2;">{t("High risk")}</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1083,12 +1232,12 @@ def render_dashboard(selected_model):
                    "Maternal Health (Ultrasound)": "US (Ultrasound)"}
         st.subheader(t("DICOM Metadata"))
         priv_hash = st.session_state.get("privacy_hash", "HEX-8F3A1C9B")
-        st.markdown(f"""<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:0.75rem;color:var(--success);font-weight:600;">
+        st.markdown(f"""<div style="background:rgba(31,41,55,0.6);border:1px solid #374151;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:0.75rem;color:#D1D5DB;font-weight:600;">
         🔒 HIPAA/GDPR Compliant — Hex Privacy Hashed</div>
         <div class="card">
-        {t("Patient ID")}: <b style="color:#0369a1;font-family:monospace;">{priv_hash}</b><br>{t("Age")}: <b>{st.session_state.pat_age} {t("Y")}</b><br>
+        {t("Patient ID")}: <b style="color:#93C5FD;font-family:monospace;">{priv_hash}</b><br>{t("Age")}: <b>{st.session_state.pat_age} {t("Y")}</b><br>
         {t("Modality")}: <b>{mod_map[selected_model]}</b><br>{t("Date")}: <b>{datetime.now().strftime('%Y-%m-%d')}</b><br>
-        {t("Privacy")}: <b style="color:var(--success);">{t("ANONYMIZED (PII STRIPPED)")}</b></div>""", unsafe_allow_html=True)
+        {t("Privacy")}: <b style="color:#D1D5DB;">{t("ANONYMIZED (PII STRIPPED)")}</b></div>""", unsafe_allow_html=True)
 
         if st.session_state.inference_done and st.session_state.current_result:
             r = st.session_state.current_result
@@ -1096,8 +1245,8 @@ def render_dashboard(selected_model):
 
             # AI Preliminary Result & Clinician Confirmation Badges
             st.markdown(f"""<div style="display:flex;gap:8px;margin-bottom:8px;">
-            <span style="background:#e0f2fe;border:1px solid #7dd3fc;color:#0369a1;padding:3px 10px;border-radius:4px;font-size:0.75rem;font-weight:700;">{t("🤖 AI PRELIMINARY TRIAGE")}</span>
-            <span style="background:#fef3c7;border:1px solid #fde047;color:#92400e;padding:3px 10px;border-radius:4px;font-size:0.75rem;font-weight:700;">{t("📋 CLINICIAN REVIEW: PENDING")}</span>
+            <span style="background:rgba(37,99,235,0.16);border:1px solid rgba(59,130,246,0.45);color:#93C5FD;padding:3px 10px;border-radius:4px;font-size:0.75rem;font-weight:700;">{t("🤖 AI PRELIMINARY TRIAGE")}</span>
+            <span style="background:rgba(31,41,55,0.6);border:1px solid #374151;color:#D1D5DB;padding:3px 10px;border-radius:4px;font-size:0.75rem;font-weight:700;">{t("📋 CLINICIAN REVIEW: PENDING")}</span>
             </div>""", unsafe_allow_html=True)
 
             if r.get("confidence", 100.0) < 65.0:
@@ -1159,7 +1308,7 @@ def render_dashboard(selected_model):
 # HOSPITAL HUB TAB
 # ============================================================
 def render_hospital_hub():
-    st.markdown(f"""<div class="page-header" style="background:linear-gradient(135deg,{C['primary']} 0%,{C['success']} 100%);">
+    st.markdown(f"""<div class="page-header">
     <h1>🏥 {t("Allied Hospital Faisalabad")}</h1><p>{t("Urban Receiving Terminal • 2G GSM Critical Alert Monitor")}</p></div>""",
                 unsafe_allow_html=True)
 
@@ -1228,7 +1377,7 @@ def render_hospital_hub():
             col_agree, col_override, col_approve = st.columns(3)
 
             with col_agree:
-                if st.button(t("✅ Agree"), key=f"agree_{alert_id}", use_container_width=True, disabled=already_approved):
+                if st.button(t("✅ Agree"), key=f"agree_{alert_id}", use_container_width=True, disabled=already_approved, type="primary"):
                     st.session_state.lhv_decisions[alert_id]["decision"] = "agree"
                     st.session_state.show_override_reason[alert_id] = False
                     st.toast(t("👩\u200d⚕️ LHV Decision: Agreed with AI recommendation"))
@@ -1259,7 +1408,7 @@ def render_hospital_hub():
             decision = st.session_state.lhv_decisions[alert_id]["decision"]
             if decision:
                 status_text = "✅ Agreed with AI" if decision == "agree" else "🔴 Overridden"
-                status_color = "#15803d" if decision == "agree" else "#b91c1c"
+                status_color = "#22C55E" if decision == "agree" else "#EF4444"
                 st.markdown(f"""
                 <div style="background: {status_color}20; border-left: 4px solid {status_color}; border-radius: 8px; padding: 12px; margin-top: 8px; margin-bottom: 12px;">
                     <b>👩\u200d⚕️ LHV Decision:</b> {status_text}
@@ -1300,7 +1449,7 @@ def render_hospital_hub():
                     st.session_state.lhv_decisions[alert_id]["reason"] = f"Other: {custom_reason}"
 
                 # Confirmation button
-                if st.button(t("✓ Confirm Override"), key=f"confirm_override_{alert_id}", use_container_width=True):
+                if st.button(t("✓ Confirm Override"), key=f"confirm_override_{alert_id}", use_container_width=True, type="primary"):
                     st.toast(f"✅ Override confirmed. Reason: {st.session_state.lhv_decisions[alert_id]['reason']}")
                     st.session_state.show_override_reason[alert_id] = False
 
@@ -1311,16 +1460,16 @@ def render_hospital_hub():
 # CLOUD SYNC TAB
 # ============================================================
 def render_cloud_sync():
-    st.markdown(f"""<div class="page-header" style="background:linear-gradient(135deg,{C['primary']} 0%,{C['warning']} 100%);">
+    st.markdown(f"""<div class="page-header">
     <h1>☁️ {t("Cloud Sync & Cache")}</h1><p>{t("Alibaba Cloud Integration (simulated) • Hybrid-Edge Architecture")}</p></div>""",
                 unsafe_allow_html=True)
 
     total, unsynced = core.counts()
     m1, m2, m3, m4 = st.columns(4)
     m1.markdown(f'<div class="metric-tile"><div class="label">{t("Cached Reports")}</div><div class="value">{total}</div></div>', unsafe_allow_html=True)
-    m2.markdown(f'<div class="metric-tile"><div class="label">{t("Unsynced")}</div><div class="value" style="color:{C["danger"]};">{unsynced}</div></div>', unsafe_allow_html=True)
-    m3.markdown(f'<div class="metric-tile"><div class="label">{t("Synced")}</div><div class="value" style="color:{C["success"]};">{total - unsynced}</div></div>', unsafe_allow_html=True)
-    m4.markdown(f'<div class="metric-tile"><div class="label">{t("IoT Queue")}</div><div class="value" style="color:{C["warning"]};">{len(st.session_state.iot_messages)}</div></div>', unsafe_allow_html=True)
+    m2.markdown(f'<div class="metric-tile"><div class="label">{t("Unsynced")}</div><div class="value">{unsynced}</div></div>', unsafe_allow_html=True)
+    m3.markdown(f'<div class="metric-tile"><div class="label">{t("Synced")}</div><div class="value">{total - unsynced}</div></div>', unsafe_allow_html=True)
+    m4.markdown(f'<div class="metric-tile"><div class="label">{t("IoT Queue")}</div><div class="value">{len(st.session_state.iot_messages)}</div></div>', unsafe_allow_html=True)
 
     st.subheader(t("Local Cache Status"))
     rows = core.get_cached_reports()
@@ -1347,11 +1496,11 @@ def render_cloud_sync():
     # VOICE MESSAGE MANAGEMENT
     # ============================================================
     st.markdown("---")
-    st.markdown("<div style='background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>🎤 Voice Message Library</div>", unsafe_allow_html=True)
+    st.markdown("<div class='pe-section'>🎤 Voice Message Library</div>", unsafe_allow_html=True)
 
     voice_mgmt_col1, voice_mgmt_col2 = st.columns([2, 1])
     with voice_mgmt_col1:
-        st.markdown("<div style='background: rgba(190, 24, 93, 0.2); color: #9d174d; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #be185d;'>Pre-recorded voice messages for different scenarios:</div>", unsafe_allow_html=True)
+        st.markdown("<div class='pe-note'>Pre-recorded voice messages for different scenarios:</div>", unsafe_allow_html=True)
         selected_message = st.selectbox(
             "Select a message to test:",
             list(VOICE_MESSAGES.keys()),
@@ -1380,7 +1529,7 @@ def render_cloud_sync():
         st.caption("🔇 No audio engine configured yet — showing text only. Wire up play_voice_message() to enable playback.")
 
     # Upload custom voice file
-    st.markdown("<div style='background: rgba(190, 24, 93, 0.2); color: #9d174d; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #be185d;'>Or upload your own audio file:</div>", unsafe_allow_html=True)
+    st.markdown("<div class='pe-note'>Or upload your own audio file:</div>", unsafe_allow_html=True)
     custom_voice_file = st.file_uploader(
         "Upload audio (MP3/WAV/OGG)",
         type=["mp3", "wav", "ogg"],
@@ -1421,7 +1570,7 @@ def render_cloud_sync():
         """, unsafe_allow_html=True)
 
     # Session Feedback Form
-    st.markdown("<div style='background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>📝 Session Feedback & Quality Check</div>", unsafe_allow_html=True)
+    st.markdown("<div class='pe-section'>📝 Session Feedback & Quality Check</div>", unsafe_allow_html=True)
 
     feedback_col1, feedback_col2 = st.columns([1, 1])
 
@@ -1443,7 +1592,7 @@ def render_cloud_sync():
         )
 
     # Detailed Feedback
-    st.markdown("<div style='background: rgba(190, 24, 93, 0.2); color: #9d174d; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #be185d;'>Your Feedback:</div>", unsafe_allow_html=True)
+    st.markdown("<div class='pe-note'>Your Feedback:</div>", unsafe_allow_html=True)
     feedback_text = st.text_area(
         "Share details about this session:",
         placeholder="E.g., Image quality issues, system performance, suggestions...",
@@ -1468,7 +1617,7 @@ def render_cloud_sync():
     submit_col1, submit_col2 = st.columns([2, 1])
 
     with submit_col1:
-        if st.button("📤 Submit Feedback & Rate Session", use_container_width=True):
+        if st.button("📤 Submit Feedback & Rate Session", use_container_width=True, type="primary"):
             if feedback_text.strip():
                 # Update metrics
                 st.session_state.helpya_total_sessions += 1
@@ -1500,7 +1649,7 @@ def render_cloud_sync():
 
     # Today's Summary Panel
     st.markdown("---")
-    st.markdown("<div style='background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>📊 Today's Diagnostic Summary</div>", unsafe_allow_html=True)
+    st.markdown("<div class='pe-section'>📊 Today's Diagnostic Summary</div>", unsafe_allow_html=True)
 
     summary_col1, summary_col2, summary_col3 = st.columns(3)
 
@@ -1548,7 +1697,7 @@ def render_cloud_sync():
 
     # Quick Actions
     st.markdown("---")
-    st.markdown("<div style='background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>⚡ Quick Actions</div>", unsafe_allow_html=True)
+    st.markdown("<div class='pe-section'>⚡ Quick Actions</div>", unsafe_allow_html=True)
 
     action_col1, action_col2, action_col3, action_col4 = st.columns(4)
 
