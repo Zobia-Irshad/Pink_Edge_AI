@@ -31,8 +31,12 @@ from datetime import datetime
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from . import inference as inf
-from .dicom_anonymizer import generate_hex_privacy_hash
+if __package__:
+    from . import inference as inf
+    from .dicom_anonymizer import generate_hex_privacy_hash
+else:
+    import inference as inf
+    from dicom_anonymizer import generate_hex_privacy_hash
 
 
 def _privacy_hash_for(pat_id):
@@ -247,24 +251,32 @@ def sim_maternal():
     return r
 
 
-def run_triage(model_name, pil_image, patient_id="DEMO"):
+def run_triage(model_name, pil_image, patient_id="DEMO", allow_network=True):
     """Run the existing real inference through the clinical workflow."""
 
-    from .clinical_workflow import (
-        run_maternal_workflow,
-        run_tb_workflow,
-        run_mammography_workflow,
-        workflow_to_dict,
-    )
+    if __package__:
+        from .clinical_workflow import (
+            run_maternal_workflow,
+            run_tb_workflow,
+            run_mammography_workflow,
+            workflow_to_dict,
+        )
+    else:
+        from clinical_workflow import (
+            run_maternal_workflow,
+            run_tb_workflow,
+            run_mammography_workflow,
+            workflow_to_dict,
+        )
 
     if "Mammography" in model_name:
-        workflow_result = run_mammography_workflow(patient_id, pil_image)
+        workflow_result = run_mammography_workflow(patient_id, pil_image, allow_network)
 
     elif "Tuberculosis" in model_name:
-        workflow_result = run_tb_workflow(patient_id, pil_image)
+        workflow_result = run_tb_workflow(patient_id, pil_image, allow_network)
 
     else:
-        workflow_result = run_maternal_workflow(patient_id, pil_image)
+        workflow_result = run_maternal_workflow(patient_id, pil_image, allow_network)
 
     data = workflow_to_dict(workflow_result)
 
@@ -896,7 +908,7 @@ class PinkEdgeApp:
         self.root.update_idletasks()
 
         t0 = time.time()
-        result = run_triage(model, self.current_image)
+        result = run_triage(model, self.current_image, allow_network="GSM" in self.network_var.get())
         self.inference_latency = round(time.time() - t0, 2)
         # Keep the actual measured inference latency. Do not fabricate hardware timing.
 

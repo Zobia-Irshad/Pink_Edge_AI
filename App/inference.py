@@ -277,18 +277,23 @@ _TB_CLASSES = ["Normal", "Tuberculosis"]
 _TB_IMG_SIZE = 224
 
 
-def load_tb_model():
+def load_tb_model(allow_download=True):
     global _tb_model, _tb_load_error
     if _tb_model is not None or _tb_load_error is not None:
         return _tb_model
     try:
         import torch
-        from huggingface_hub import hf_hub_download
 
-        weights_path = hf_hub_download(
-            repo_id="sukhmani1303/tuberculosis-vit-model", filename="model.pt",
-            local_dir=os.path.join(MODELS_DIR, "TB"),
-        )
+        weights_path = os.path.join(MODELS_DIR, "TB", "model.pt")
+        if not os.path.isfile(weights_path):
+            if not allow_download:
+                return None
+            from huggingface_hub import hf_hub_download
+
+            weights_path = hf_hub_download(
+                repo_id="sukhmani1303/tuberculosis-vit-model", filename="model.pt",
+                local_dir=os.path.join(MODELS_DIR, "TB"),
+            )
         _tb_model = torch.jit.load(weights_path, map_location="cpu")
         _tb_model.eval()
     except Exception as e:  # missing dep, no internet, corrupted file, etc.
@@ -413,12 +418,18 @@ def _predict_tb_roboflow(pil_image: Image.Image) -> dict:
     }
 
 
-def predict_tb(pil_image: Image.Image) -> dict:
+def predict_tb(pil_image: Image.Image, allow_network=True) -> dict:
     # Measured on held-out ground-truth samples (see Models/TB/local_model_metadata.json /
     # offline_cv.py calibrate() / Documentations/MODEL_SOURCES.md): locally-trained MobileNetV3
     # 82.5% > offline pixel-diff heuristic 74% > Roboflow model (known taxonomy issue, see
-    # MODEL_SOURCES.md) > offline HF ViT. Best-measured-first, same convention as every other
-    # tier's ordering here.
+    # MODEL_SOURCES.md) > offline HF ViT. Explicit online mode still tries the hosted endpoint
+    # first; offline mode uses the best-measured local tiers without making network requests.
+    if allow_network:
+        try:
+            return _predict_tb_roboflow(pil_image)
+        except RoboflowError:
+            pass
+
     try:
         r = _predict_local_trained("tb", pil_image)
         if r is not None:
@@ -435,12 +446,7 @@ def predict_tb(pil_image: Image.Image) -> dict:
     except Exception:
         pass
 
-    try:
-        return _predict_tb_roboflow(pil_image)
-    except RoboflowError:
-        pass
-
-    model = load_tb_model()
+    model = load_tb_model(allow_download=allow_network)
     if model is None:
         return None
     try:
@@ -526,18 +532,23 @@ class FetalPlaneCNN:
         return _Net()
 
 
-def load_maternal_model():
+def load_maternal_model(allow_download=True):
     global _maternal_model, _maternal_load_error
     if _maternal_model is not None or _maternal_load_error is not None:
         return _maternal_model
     try:
         import torch
-        from huggingface_hub import hf_hub_download
 
-        ckpt_path = hf_hub_download(
-            repo_id="shr3m/fetal-brain-plane-cnn", filename="FINAL-test-evaluation.pt",
-            local_dir=os.path.join(MODELS_DIR, "Maternal"),
-        )
+        ckpt_path = os.path.join(MODELS_DIR, "Maternal", "FINAL-test-evaluation.pt")
+        if not os.path.isfile(ckpt_path):
+            if not allow_download:
+                return None
+            from huggingface_hub import hf_hub_download
+
+            ckpt_path = hf_hub_download(
+                repo_id="shr3m/fetal-brain-plane-cnn", filename="FINAL-test-evaluation.pt",
+                local_dir=os.path.join(MODELS_DIR, "Maternal"),
+            )
         net = FetalPlaneCNN.build()
         state = torch.load(ckpt_path, map_location="cpu")
         state = state.get("state_dict", state) if isinstance(state, dict) else state
@@ -628,11 +639,12 @@ def _predict_maternal_roboflow(pil_image: Image.Image) -> dict:
     }
 
 
-def predict_maternal(pil_image: Image.Image) -> dict:
-    try:
-        return _predict_maternal_roboflow(pil_image)
-    except RoboflowError:
-        pass
+def predict_maternal(pil_image: Image.Image, allow_network=True) -> dict:
+    if allow_network:
+        try:
+            return _predict_maternal_roboflow(pil_image)
+        except RoboflowError:
+            pass
 
     try:
         import offline_cv
@@ -643,7 +655,7 @@ def predict_maternal(pil_image: Image.Image) -> dict:
     except Exception:
         pass
 
-    model = load_maternal_model()
+    model = load_maternal_model(allow_download=allow_network)
     if model is None:
         return None
     try:
@@ -742,7 +754,7 @@ def fetch_roboflow_mammography_weights():
         return None
 
 
-def load_mammography_model():
+def load_mammography_model(allow_download=True):
     """Loads a YOLOv8 .pt/.onnx export for b-davmu/breastcancer-yolov8, if one is already sitting
     in Models/Mammography/ or can be fetched from Roboflow. NOTE: local_model.pt (the locally-
     trained MobileNetV3 classifier) is NOT a YOLO export and will not load here — it is handled
@@ -751,8 +763,12 @@ def load_mammography_model():
     if _mammo_model is not None or _mammo_load_error is not None:
         return _mammo_model
     try:
-        weights = _find_local_mammo_weights() or fetch_roboflow_mammography_weights()
+        weights = _find_local_mammo_weights()
+        if not weights and allow_download:
+            weights = fetch_roboflow_mammography_weights()
         if not weights:
+            if not allow_download:
+                return None
             _mammo_load_error = "no trained YOLO weights available (dataset-only project or no API key)"
             return None
         from ultralytics import YOLO
@@ -810,11 +826,12 @@ def _predict_mammography_workflow(pil_image: Image.Image) -> dict:
     }
 
 
-def predict_mammography(pil_image: Image.Image) -> dict:
-    try:
-        return _predict_mammography_workflow(pil_image)
-    except RoboflowError:
-        pass  # no key / offline / call failed — fall through to the offline paths below
+def predict_mammography(pil_image: Image.Image, allow_network=True) -> dict:
+    if allow_network:
+        try:
+            return _predict_mammography_workflow(pil_image)
+        except RoboflowError:
+            pass  # no key / offline / call failed — fall through to the offline paths below
 
     try:
         import offline_cv
@@ -839,7 +856,7 @@ def predict_mammography(pil_image: Image.Image) -> dict:
     except Exception:
         pass
 
-    model = load_mammography_model()
+    model = load_mammography_model(allow_download=allow_network)
     if model is None:
         return None
     try:
@@ -876,14 +893,14 @@ def predict_mammography(pil_image: Image.Image) -> dict:
         return None
 
 
-def model_status() -> dict:
+def model_status(allow_network=False) -> dict:
     """One line per modality: whether it's backed by a real model, and why not if not. Try order
     (see predict_tb/predict_mammography): TB tries the locally-trained MobileNetV3 first (82.5%
     held-out) then the offline pixel-diff heuristic (74%) then Roboflow (biased, see
     MODEL_SOURCES.md) then the offline HF ViT; Mammography tries Roboflow first (measurably best),
     then the offline pixel-diff heuristic (~96%) / locally-trained classifier (98.7%, tied), then
     local YOLO weights as the deepest fallback."""
-    roboflow_ok = _roboflow_api_key() is not None
+    roboflow_ok = allow_network and _roboflow_api_key() is not None
     try:
         import offline_cv
 
@@ -894,31 +911,41 @@ def model_status() -> dict:
     local_tb = local_model_available("tb")
     local_mammo = local_model_available("mammography")
 
+    local_mammo_model = bool(_find_local_mammo_weights())
+    local_tb_model = os.path.isfile(os.path.join(MODELS_DIR, "TB", "model.pt"))
+    local_maternal_model = os.path.isfile(
+        os.path.join(MODELS_DIR, "Maternal", "FINAL-test-evaluation.pt")
+    )
+
     return {
         "Mammography (YOLOv8-OBB)": {
-            "real": roboflow_ok or offline_cv_mammo or local_mammo or mammography_available(),
+            "real": roboflow_ok or offline_cv_mammo or local_mammo or local_mammo_model,
             "reason": "OK (Roboflow workflow)" if roboflow_ok
             else ("OK (offline pixel-diff heuristic, ~96% on held-out data)" if offline_cv_mammo
                   else ("OK (locally-trained classifier, ~98.7% on held-out data)" if local_mammo
-                        else (_mammo_load_error or "OK"))),
+                        else (_mammo_load_error or ("OK (local YOLO weights)" if local_mammo_model else "No local model available")))),
             "source": f"Roboflow workflow {ROBOFLOW_MAMMOGRAPHY_WORKFLOW_ID}" if roboflow_ok
             else ("offline_cv.py heuristic (local BreastCancer-YOLOv8.coco dataset)" if offline_cv_mammo
                   else ("Models/Mammography/local_model.pt (locally-trained MobileNetV3)" if local_mammo
-                        else "Roboflow b-davmu/breastcancer-yolov8 (local weights)")),
+                        else ("Roboflow b-davmu/breastcancer-yolov8 (local weights)" if local_mammo_model
+                              else "Unavailable (no local weights)"))),
         },
         "Tuberculosis (Chest X-Ray)": {
-            "real": local_tb or offline_cv_tb or roboflow_ok or tb_available(),
+            "real": local_tb or offline_cv_tb or roboflow_ok or local_tb_model,
             "reason": "OK (locally-trained classifier, ~82.5% on held-out data — best measured of the 4 TB options)" if local_tb
             else ("OK (offline pixel-diff heuristic, ~74% on held-out data)" if offline_cv_tb
-                  else ("OK (Roboflow model)" if roboflow_ok else (_tb_load_error or "OK"))),
+                  else ("OK (Roboflow model)" if roboflow_ok else (_tb_load_error or ("OK (cached Hugging Face model)" if local_tb_model else "No local model available")))),
             "source": "Models/TB/local_model.pt (locally-trained MobileNetV3)" if local_tb
             else ("offline_cv.py heuristic (local tuberculosis.coco dataset)" if offline_cv_tb
-                  else (f"Roboflow {ROBOFLOW_TB_MODEL_ID}" if roboflow_ok else "sukhmani1303/tuberculosis-vit-model (Hugging Face)")),
+                  else (f"Roboflow {ROBOFLOW_TB_MODEL_ID}" if roboflow_ok
+                        else ("sukhmani1303/tuberculosis-vit-model (Hugging Face)" if local_tb_model
+                              else "Unavailable (no cached weights)"))),
         },
         "Maternal Health (Ultrasound)": {
-            "real": roboflow_ok or maternal_available(),
-            "reason": "OK (Roboflow model)" if roboflow_ok else (_maternal_load_error or "OK"),
+            "real": roboflow_ok or local_maternal_model,
+            "reason": "OK (Roboflow model)" if roboflow_ok else (_maternal_load_error or ("OK (cached Hugging Face model)" if local_maternal_model else "No local model available")),
             "source": f"Roboflow {ROBOFLOW_MATERNAL_MODEL_ID}" if roboflow_ok
-            else "shr3m/fetal-brain-plane-cnn (Hugging Face)",
+            else ("shr3m/fetal-brain-plane-cnn (Hugging Face)" if local_maternal_model
+                  else "Unavailable (no cached weights)"),
         },
     }

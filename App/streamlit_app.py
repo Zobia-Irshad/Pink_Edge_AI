@@ -825,7 +825,7 @@ def render_sidebar():
         model_status = None
         try:
             import inference as inf
-            model_status = inf.model_status()
+            model_status = inf.model_status(allow_network="GSM" in st.session_state.network_mode)
         except Exception:
             pass
         if model_status:
@@ -860,7 +860,9 @@ def run_triage_action(selected_model, uploaded):
 
     with st.spinner("Running inference..."):
         t0 = time.time()
-        result = core.run_triage(selected_model, img)
+        result = core.run_triage(
+            selected_model, img, allow_network="GSM" in st.session_state.network_mode,
+        )
         elapsed = round(time.time() - t0, 2)
     st.session_state.inference_latency = elapsed if elapsed >= 1.0 else round(random.uniform(7.8, 12.2), 1)
 
