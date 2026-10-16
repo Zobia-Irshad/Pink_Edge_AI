@@ -31,11 +31,9 @@ It only connects DICOM input to the existing inference functions.
 import os
 import sys
 import json
+import tempfile
 
-import numpy as np
-import pydicom
-from PIL import Image
-
+import pynetdicom.sop_class as sop_classes
 
 # ---------------------------------------------------------
 # Project paths
@@ -47,10 +45,64 @@ PROJECT_DIR = os.path.abspath(os.path.join(APP_DIR, ".."))
 
 if APP_DIR not in sys.path:
     sys.path.insert(0, APP_DIR)
+if TOOLS_DIR not in sys.path:
+    sys.path.insert(0, TOOLS_DIR)
 
 
 # Existing Pink Edge inference module
 import inference
+
+if __package__:
+    from .dicom_adapter import dicom_to_pil as _adapter_dicom_to_pil
+else:
+    from dicom_adapter import dicom_to_pil as _adapter_dicom_to_pil
+
+
+SOP_CLASS_MODALITY_NAMES = (
+    ("UltrasoundImageStorage", "US"),
+    ("DigitalMammographyXRayImageStorageForPresentation", "MG"),
+    ("DigitalMammographyXRayImageStorageForProcessing", "MG"),
+    ("ComputedRadiographyImageStorage", "CR"),
+    ("DigitalXRayImageStorageForPresentation", "DX"),
+    ("DigitalXRayImageStorageForProcessing", "DX"),
+)
+
+
+def _expected_modality_for_sop_class(sop_class_uid):
+    for sop_class_name, modality in SOP_CLASS_MODALITY_NAMES:
+        sop_class = getattr(sop_classes, sop_class_name, None)
+        if sop_class is not None and str(sop_class) == sop_class_uid:
+            return modality
+    return None
+
+
+def _validate_sop_class_modality(dataset):
+    dataset_sop_class = getattr(dataset, "SOPClassUID", None)
+    file_meta = getattr(dataset, "file_meta", None)
+    file_meta_sop_class = getattr(file_meta, "MediaStorageSOPClassUID", None)
+
+    dataset_sop_class = str(dataset_sop_class) if dataset_sop_class else None
+    file_meta_sop_class = str(file_meta_sop_class) if file_meta_sop_class else None
+
+    if (
+        dataset_sop_class is not None
+        and file_meta_sop_class is not None
+        and dataset_sop_class != file_meta_sop_class
+    ):
+        return None, {"status": "sop_class_mismatch"}
+
+    sop_class_uid = dataset_sop_class or file_meta_sop_class
+    expected_modality = _expected_modality_for_sop_class(sop_class_uid)
+    if expected_modality is None:
+        return None, {"status": "unsupported_sop_class"}
+
+    modality = str(getattr(dataset, "Modality", "")).upper().strip()
+    if modality == "MAMMOGRAPHY":
+        modality = "MG"
+    if modality != expected_modality:
+        return None, {"status": "modality_mismatch"}
+
+    return expected_modality, None
 
 
 # ---------------------------------------------------------
@@ -58,42 +110,11 @@ import inference
 # ---------------------------------------------------------
 
 def dicom_to_pil(dicom_path):
-    """
-    Read a DICOM file and convert its PixelData to a PIL RGB image.
-    Returns:
-        image, dataset
-    """
-
     if not os.path.isfile(dicom_path):
         raise FileNotFoundError(dicom_path)
 
-    ds = pydicom.dcmread(dicom_path)
-
-    if not hasattr(ds, "PixelData"):
-        raise ValueError("DICOM contains no PixelData.")
-
-    pixels = ds.pixel_array.astype(np.float32)
-
-    # Handle multi-frame DICOM.
-    if pixels.ndim > 2:
-        pixels = pixels[0]
-
-    minimum = float(pixels.min())
-    maximum = float(pixels.max())
-
-    if maximum > minimum:
-        pixels = (
-            (pixels - minimum)
-            / (maximum - minimum)
-            * 255.0
-        )
-    else:
-        pixels = np.zeros_like(pixels)
-
-    pixels = pixels.astype(np.uint8)
-
-    image = Image.fromarray(pixels).convert("RGB")
-
+    image, ds = _adapter_dicom_to_pil(dicom_path)
+    image = image.convert("RGB")
     return image, ds
 
 
@@ -109,31 +130,27 @@ def run_inference(image, modality):
 
     modality = str(modality).upper().strip()
 
-    # Ultrasound
     if modality == "US":
-        return inference.predict_maternal(image)
+        predictor = inference.predict_maternal
+    elif modality in ("MG", "MAMMOGRAPHY"):
+        predictor = inference.predict_mammography
+    elif modality in ("CR", "DX"):
+        predictor = inference.predict_tb
+    else:
+        return {"status": "unsupported_modality"}
 
-    # Mammography
-    if modality in ("MG", "MAMMOGRAPHY"):
-        return inference.predict_mammography(image)
+    try:
+        result = predictor(image, allow_network=False)
+    except Exception as exc:
+        return {"status": "inference_failed", "error_type": type(exc).__name__}
 
-    # Chest X-ray / radiography
-    if modality in ("CR", "DX"):
-        return inference.predict_tb(image)
+    required_fields = ("verdict", "confidence", "source", "is_critical", "css")
+    if result is None:
+        return {"status": "inference_unavailable"}
+    if not isinstance(result, dict) or not all(field in result for field in required_fields):
+        return {"status": "inference_failed", "error_type": "invalid_result"}
 
-    # CT
-    # There is currently no dedicated CT inference function
-    # in the inspected Pink Edge inference.py.
-    if modality == "CT":
-        return {
-            "status": "not_implemented",
-            "message": "DICOM CT received, but no dedicated CT inference function is currently configured."
-        }
-
-    return {
-        "status": "unsupported_modality",
-        "message": f"Unsupported DICOM modality: {modality}"
-    }
+    return {"status": "analysis_completed", "inference": result}
 
 
 # ---------------------------------------------------------
@@ -147,53 +164,34 @@ def process_dicom(dicom_path):
     Returns a JSON-serializable dictionary.
     """
 
-    image, ds = dicom_to_pil(dicom_path)
+    try:
+        image, ds = dicom_to_pil(dicom_path)
+    except Exception as exc:
+        return {"status": "invalid_dicom", "error_type": type(exc).__name__}
 
     modality = str(
         getattr(ds, "Modality", "UNKNOWN")
     ).upper().strip()
 
-    patient_id = str(
-        getattr(ds, "PatientID", "UNKNOWN")
-    )
+    expected_modality, validation_error = _validate_sop_class_modality(ds)
+    if validation_error is not None:
+        return {
+            **validation_error,
+            "image_size": [image.width, image.height],
+        }
+    if modality == "MAMMOGRAPHY":
+        modality = "MG"
 
-    study_uid = str(
-        getattr(ds, "StudyInstanceUID", "")
-    )
-
-    series_uid = str(
-        getattr(ds, "SeriesInstanceUID", "")
-    )
-
-    sop_uid = str(
-        getattr(ds, "SOPInstanceUID", "")
-    )
-
-    print(">>> DICOM PIPELINE")
-    print("Patient ID:", patient_id)
-    print("Modality:", modality)
-    print("Image size:", list(image.size))
-    print("Running Pink Edge inference...")
-
-    inference_result = run_inference(
-        image,
-        modality
-    )
-
+    inference_result = run_inference(image, modality)
     result = {
-        "dicom_path": os.path.abspath(dicom_path),
-        "patient_id": patient_id,
-        "study_instance_uid": study_uid,
-        "series_instance_uid": series_uid,
-        "sop_instance_uid": sop_uid,
+        "status": inference_result["status"],
         "modality": modality,
-        "image_size": [
-            image.width,
-            image.height
-        ],
-        "inference": inference_result
+        "image_size": [image.width, image.height],
     }
-
+    if "inference" in inference_result:
+        result["inference"] = inference_result["inference"]
+    if "error_type" in inference_result:
+        result["error_type"] = inference_result["error_type"]
     return result
 
 
@@ -209,20 +207,20 @@ def save_result(dicom_path, result):
     base, _ = os.path.splitext(dicom_path)
 
     result_path = base + "_result.json"
+    descriptor, temporary_path = tempfile.mkstemp(
+        prefix=".result-",
+        suffix=".tmp",
+        dir=os.path.dirname(os.path.abspath(result_path)),
+    )
 
-    with open(
-        result_path,
-        "w",
-        encoding="utf-8"
-    ) as f:
-        json.dump(
-            result,
-            f,
-            indent=2,
-            ensure_ascii=False
-        )
-
-    return result_path
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as result_file:
+            json.dump(result, result_file, indent=2, ensure_ascii=False)
+        os.replace(temporary_path, result_path)
+        return result_path
+    finally:
+        if os.path.exists(temporary_path):
+            os.unlink(temporary_path)
 
 
 # ---------------------------------------------------------
@@ -255,25 +253,6 @@ if __name__ == "__main__":
         key=os.path.getmtime
     )[-1]
 
-    print("Testing DICOM:")
-    print(dicom_path)
-    print()
-
     result = process_dicom(dicom_path)
-
-    result_path = save_result(
-        dicom_path,
-        result
-    )
-
-    print()
-    print("========== FINAL PIPELINE RESULT ==========")
-    print(json.dumps(
-        result,
-        indent=2,
-        ensure_ascii=False
-    ))
-
-    print()
-    print("Result JSON:")
-    print(result_path)
+    save_result(dicom_path, result)
+    print(f"DICOM analysis status: {result['status']}.")

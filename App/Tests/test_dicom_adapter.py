@@ -1,15 +1,24 @@
-from dicom_adapter import dicom_to_pil
+import os
+import sys
+import unittest
 
-image, ds = dicom_to_pil(
-    r"C:\Users\pc\Downloads\test_ultrasound.dcm"
-)
+APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(APP_DIR, "Tools"))
 
-print("DICOM converted successfully")
-print("Patient ID:", getattr(ds, "PatientID", "Not available"))
-print("Modality:", getattr(ds, "Modality", "Unknown"))
-print("Image size:", image.size)
-print("Image mode:", image.mode)
+from dicom_adapter import dicom_to_pil  # noqa: E402
 
-image.save("dicom_test_output.png")
 
-print("Converted image saved as dicom_test_output.png")
+class TestDicomAdapter(unittest.TestCase):
+    def test_converts_bundled_dicom_fixture(self):
+        dicom_path = os.path.join(APP_DIR, "test_ultrasound_valid.dcm")
+
+        image, dataset = dicom_to_pil(dicom_path)
+
+        self.assertGreater(image.width, 0)
+        self.assertGreater(image.height, 0)
+        self.assertEqual(image.mode, "L")
+        self.assertTrue(hasattr(dataset, "PixelData"))
+
+
+if __name__ == "__main__":
+    unittest.main()
