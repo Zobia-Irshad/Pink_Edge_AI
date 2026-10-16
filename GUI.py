@@ -107,7 +107,7 @@ TR = {
     "Pink Edge AI": "پنک ایج اے آئی", "Clinical Intelligence Platform": "کلینیکل انٹیلیجنس پلیٹ فارم",
     "Dashboard": "ڈیش بورڈ", "Hospital Hub": "ہسپتال مرکز", "Cloud Sync": "کلاؤڈ سنک",
     "Fully Offline": "مکمل آف لائن", "GSM Failover": "جی ایس ایم فیل اوور",
-    "Select Xray type": "ایکس رے کی قسم منتخب کریں", "Upload Patient Scan": "مریض کا اسکین اپ لوڈ کریں",
+    "Select AI Model": "اے آئی ماڈل منتخب کریں", "Upload Patient Scan": "مریض کا اسکین اپ لوڈ کریں",
     "Run Triage": "تشخیص چلائیں", "Save to Cache": "کیش میں محفوظ کریں",
     "Sync to Cloud": "کلاؤڈ میں سنک کریں", "Check OTA": "او ٹی اے چیک کریں",
     "Reset Session": "سیشن ری سیٹ کریں", "Show Detection Overlay": "کھوج اوورلے دکھائیں",
@@ -118,86 +118,6 @@ TR = {
     "Local Cache Status": "لوکل کیش حالت", "Report cached.": "رپورٹ محفوظ ہو گئی۔",
     "Sync complete.": "سنک مکمل۔",
 }
-
-TR.update({
-    # sidebar
-    "ACTIVE USER PROFILE": "فعال صارف پروفائل", "LHW": "لیڈی ہیلتھ ورکر", "Doctor": "ڈاکٹر",
-    "👤 Lady Health Worker (LHW)": "👤 لیڈی ہیلتھ ورکر (ایل ایچ ڈبلیو)", "👨\u200d⚕️ Senior Radiologist": "👨\u200d⚕️ سینئر ریڈیالوجسٹ",
-    "PIN (auto-filled for the selected role)": "پن (منتخب کردار کے لیے خودکار)",
-    "Fully Offline": "مکمل آف لائن",
-    "GSM Failover (slow internet connection)": "جی ایس ایم فیل اوور (سست انٹرنیٹ کنکشن)",
-    "☁️ Alibaba Cloud IoT Active": "☁️ علی بابا کلاؤڈ آئی او ٹی فعال", "🔒 100% Offline": "🔒 100٪ آف لائن",
-    "Model backing (this run):": "ماڈل کی بنیاد (اس رن میں):",
-    "Mammography": "میموگرافی", "Tuberculosis": "ٹی بی", "Maternal Health": "زچگی کی صحت",
-    "Mammography (YOLOv8-OBB)": "میموگرافی (YOLOv8-OBB)", "Tuberculosis (Chest X-Ray)": "ٹی بی (چھاتی کا ایکس رے)",
-    "Maternal Health (Ultrasound)": "زچگی کی صحت (الٹراساؤنڈ)",
-    # dashboard
-    "Offline triage — Basic Health Unit (BHU) mode": "آف لائن ٹریاج — بنیادی مرکزِ صحت (بی ایچ یو) موڈ",
-    "TB chest X-ray": "ٹی بی چھاتی کا ایکس رے", "Maternal ultrasound": "زچگی کا الٹراساؤنڈ",
-    "Medical Image Analysis": "طبی تصویر کا تجزیہ", "Model": "ماڈل", "Confidence": "اعتماد", "Latency": "تاخیر",
-    "Run triage to begin": "شروع کرنے کے لیے تشخیص چلائیں", "DICOM Metadata": "ڈائیکوم میٹا ڈیٹا",
-    "Triage result": "ٹریاج کا نتیجہ", "Real model": "حقیقی ماڈل", "Severity": "شدت", "Escalation": "اگلی سطح پر بھیجنا",
-    "Low": "کم", "Moderate": "درمیانی", "High": "زیادہ", "Required": "ضروری", "Not required": "ضروری نہیں",
-    "Low risk": "کم خطرہ", "Moderate risk": "درمیانہ خطرہ", "High risk": "زیادہ خطرہ",
-    "Patient ID": "مریض کی شناخت", "Age": "عمر", "Y": "سال", "Modality": "امیجنگ کی قسم", "Date": "تاریخ", "Privacy": "رازداری",
-    "ANONYMIZED (PII STRIPPED)": "گمنام (ذاتی معلومات ہٹا دی گئیں)",
-    "🤖 AI PRELIMINARY TRIAGE": "🤖 اے آئی ابتدائی ٹریاج", "📋 CLINICIAN REVIEW: PENDING": "📋 معالج کا جائزہ: زیر التواء",
-    "⚠️ Low AI Confidence (<65%): Unable to reach definitive triage threshold. Specialist evaluation recommended.":
-        "⚠️ اے آئی کا اعتماد کم ہے (<65٪): حتمی ٹریاج حد تک نہیں پہنچ سکا۔ ماہر سے معائنہ تجویز کیا جاتا ہے۔",
-    "Source": "ماخذ", "Localization": "مقام", "Classification / Plane": "درجہ بندی / پلین", "Image Quality": "تصویر کا معیار",
-    "TB Severity": "ٹی بی کی شدت", "Lung Zone": "پھیپھڑے کا حصہ", "BI-RADS Assessment": "BI-RADS تشخیص", "ACR Breast Density": "ACR چھاتی کی کثافت",
-    "🔒 Assessment Override Controls locked for LHW profile. (Select the Doctor profile to unlock).":
-        "🔒 ایل ایچ ڈبلیو پروفائل کے لیے تشخیص تبدیل کرنے کے کنٹرول بند ہیں۔ (کھولنے کے لیے ڈاکٹر پروفائل منتخب کریں)۔",
-    "Action Plan": "لائحہ عمل", "Alert Stream": "الرٹ اسٹریم",
-    # fixed result strings coming from inference.py
-    "No Active TB-Suggestive Lesions Detected": "ٹی بی کے مشتبہ فعال زخم نہیں ملے",
-    "TB-Suggestive Finding Detected": "ٹی بی کے مشتبہ آثار ملے",
-    "Equivocal / Indeterminate Finding": "غیر یقینی / نامعلوم نتیجہ",
-    "AI Triage Result — Clinical Correlation Advised": "اے آئی ٹریاج نتیجہ — طبی تصدیق تجویز کی جاتی ہے",
-    "Lungs clear": "پھیپھڑے صاف", "Indeterminate region": "نامعلوم حصہ",
-    "Low (Routine)": "کم (معمول)", "Medium Priority": "درمیانی ترجیح", "High Priority": "اعلیٰ ترجیح",
-    "Optimal for Chest X-Ray Triage": "چھاتی کے ایکس رے ٹریاج کے لیے بہترین",
-    "Adequate for Chest X-Ray Triage": "چھاتی کے ایکس رے ٹریاج کے لیے مناسب",
-    "Suboptimal / Low Confidence": "کمتر معیار / کم اعتماد",
-    "Adequate for Analysis": "تجزیے کے لیے مناسب", "Adequate for Triage": "ٹریاج کے لیے مناسب",
-    "No abnormal finding detected": "کوئی غیر معمولی نتیجہ نہیں ملا",
-    "No Abnormal Finding Detected": "کوئی غیر معمولی نتیجہ نہیں ملا", "Abnormal Finding Detected": "غیر معمولی نتیجہ ملا",
-    "Unable to Assess Standard Plane": "معیاری پلین کا جائزہ ممکن نہیں",
-    "Fetal Brain Ultrasound Screening": "جنین کے دماغ کی الٹراساؤنڈ اسکریننگ",
-    "Intrauterine / Fetal Head": "رحم کے اندر / جنین کا سر",
-    "Optimal for Screening": "اسکریننگ کے لیے بہترین", "Adequate for Screening": "اسکریننگ کے لیے مناسب",
-    "Suboptimal / Non-Standard Angle": "کمتر معیار / غیر معیاری زاویہ",
-    "Adequate for Plane Identification": "پلین کی شناخت کے لیے مناسب",
-    "No active TB-suggestive findings detected. Routine clinical correlation per guidelines.":
-        "ٹی بی کے مشتبہ فعال آثار نہیں ملے۔ ہدایات کے مطابق معمول کی طبی تصدیق کریں۔",
-    "No active TB-suggestive lesions detected. Routine clinical correlation per guidelines.":
-        "ٹی بی کے مشتبہ فعال زخم نہیں ملے۔ ہدایات کے مطابق معمول کی طبی تصدیق کریں۔",
-    "TB-suggestive finding detected — confirmatory clinical evaluation (Sputum GeneXpert / Microbiological test) recommended.":
-        "ٹی بی کے مشتبہ آثار ملے — تصدیقی طبی معائنہ (تھوک GeneXpert / مائیکرو بائیولوجیکل ٹیسٹ) تجویز کیا جاتا ہے۔",
-    "Low confidence AI finding detected (<65%). Repeat Chest X-Ray and specialist clinical review recommended.":
-        "اے آئی کا اعتماد کم ہے (<65٪)۔ چھاتی کا ایکس رے دوبارہ کریں اور ماہر سے جائزہ لیں۔",
-    "No abnormal finding detected. Routine biometric measurements & clinician review recommended.":
-        "کوئی غیر معمولی نتیجہ نہیں ملا۔ معمول کی بائیومیٹرک پیمائش اور معالج کا جائزہ تجویز کیا جاتا ہے۔",
-    "Possible structural abnormality detected. Urgent specialist review and follow-up imaging recommended.":
-        "ممکنہ ساختی خرابی ملی ہے۔ فوری ماہر جائزہ اور مزید امیجنگ تجویز کی جاتی ہے۔",
-    "Patient should be referred for specialist consultation": "مریض کو ماہر کے پاس ریفر کریں",
-    # hospital hub
-    "Hospital Hub": "ہسپتال مرکز", "Urban Receiving Terminal • 2G GSM Critical Alert Monitor": "شہری وصول کنندہ ٹرمینل • 2G جی ایس ایم نازک الرٹ مانیٹر",
-    "Allied Hospital Faisalabad": "الائیڈ ہسپتال فیصل آباد", "Network Status": "نیٹ ورک حالت", "GSM Module": "جی ایس ایم ماڈیول",
-    "Signal": "سگنل", "Basic Health Unit (BHU) Nodes": "بنیادی مرکزِ صحت (بی ایچ یو) نوڈز", "Pending": "زیر التواء",
-    "Total Alerts": "کل الرٹس", "Critical": "نازک", "✅ All Clear — no alerts pending": "✅ سب ٹھیک — کوئی الرٹ زیر التواء نہیں",
-    "Alert": "الرٹ", "Payload": "پیغام", "Type": "قسم", "Status": "حالت", "🤖 AI Recommendation": "🤖 اے آئی سفارش",
-    "✅ Agree": "✅ متفق", "🔄 Override": "🔄 تبدیل کریں", "📤 Approve": "📤 منظور کریں", "✓ Confirm Override": "✓ تبدیلی کی تصدیق",
-    "Pending Review": "جائزہ زیر التواء", "Approved": "منظور شدہ",
-    "Select reason for override:": "تبدیلی کی وجہ منتخب کریں:", "Please specify the reason:": "براہ کرم وجہ بتائیں:",
-    "👩\u200d⚕️ LHV Decision: Agreed with AI recommendation": "👩\u200d⚕️ ایل ایچ وی کا فیصلہ: اے آئی کی سفارش سے اتفاق",
-    "📤 Approved — referral forwarded to hospital.": "📤 منظور — ریفرل ہسپتال کو بھیج دیا گیا۔",
-    # cloud sync
-    "Cloud Sync & Cache": "کلاؤڈ سنک اور کیش", "Alibaba Cloud Integration (simulated) • Hybrid-Edge Architecture": "علی بابا کلاؤڈ انضمام (نقلی) • ہائبرڈ ایج آرکیٹیکچر",
-    "Cached Reports": "محفوظ رپورٹس", "Unsynced": "غیر سنک", "Synced": "سنک شدہ", "IoT Queue": "آئی او ٹی قطار",
-    "Verdict": "نتیجہ", "Timestamp": "وقت", "Patient": "مریض", "ID": "شناخت", "BI-RADS/Severity": "BI-RADS/شدت",
-    "Telemetry Log": "ٹیلی میٹری لاگ",
-})
 _urdu = {"on": False}
 
 
@@ -653,7 +573,7 @@ class PinkEdgeApp:
             ttk.Radiobutton(parent, text=mode, variable=self.network_var, value=mode,
                              command=self._refresh_actions).pack(anchor="w", padx=14)
 
-        ttk.Label(parent, text="Select Xray type", style="Card.TLabel", font=("Segoe UI", 8, "bold")).pack(anchor="w", **pad)
+        ttk.Label(parent, text="Select AI Model", style="Card.TLabel", font=("Segoe UI", 8, "bold")).pack(anchor="w", **pad)
         cb = ttk.Combobox(parent, textvariable=self.model_var, values=MODELS, state="readonly")
         cb.pack(fill="x", padx=14)
         cb.bind("<<ComboboxSelected>>", lambda e: self._on_model_change())

@@ -22,6 +22,11 @@ internet; the offline pixel-diff heuristic (`offline_cv.py`), the locally-traine
 (`Models/<Modality>/local_model.pt`), and the Hugging Face models need neither, ever, once their
 weights/datasets are on disk.
 
+The desktop and Streamlit UIs default to **Fully Offline**. In that mode they skip hosted Roboflow
+inference and remote model downloads, using only locally available models, weights, and datasets.
+Selecting **GSM Failover** allows network-backed inference/downloads. Offline operation therefore
+requires installing Python dependencies and acquiring any required model weights before disconnecting.
+
 ## The locally-trained classifier (`train_local_model.py`) — a real model, trained on this project's own data
 
 Run `python train_local_model.py` to (re)train it. Architecture: torchvision's MobileNetV3-Small

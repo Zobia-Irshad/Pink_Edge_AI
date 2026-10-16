@@ -6,19 +6,18 @@ saves them locally, then sends the received study
 through the existing Pink Edge DICOM inference pipeline.
 """
 
-import os
-import sys
+import hashlib
 import json
-import logging
+import os
+import re
+import sys
+import threading
+import tempfile
+from contextlib import contextmanager
 
 from pynetdicom import AE, evt
-from pynetdicom.sop_class import (
-    Verification,
-    CTImageStorage,
-    MRImageStorage,
-    UltrasoundImageStorage,
-    DigitalMammographyXRayImageStorageForPresentation,
-)
+from pynetdicom.sop_class import Verification
+import pynetdicom.sop_class as sop_classes
 
 
 # ---------------------------------------------------------
@@ -48,7 +47,128 @@ TOOLS_DIR = os.path.dirname(
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)
 
-from dicom_pipeline import process_dicom
+from dicom_pipeline import process_dicom, save_result
+
+STORAGE_SOP_CLASS_NAMES = (
+    "UltrasoundImageStorage",
+    "DigitalMammographyXRayImageStorageForPresentation",
+    "DigitalMammographyXRayImageStorageForProcessing",
+    "ComputedRadiographyImageStorage",
+    "DigitalXRayImageStorageForPresentation",
+    "DigitalXRayImageStorageForProcessing",
+)
+
+
+class DuplicateSOPInstanceError(Exception):
+    pass
+
+
+_SOP_INSTANCE_LOCKS = {}
+_SOP_INSTANCE_LOCKS_GUARD = threading.Lock()
+
+
+def _safe_log(message):
+    try:
+        print(message)
+    except Exception:
+        pass
+
+
+@contextmanager
+def _sop_instance_lock(sop_instance_uid):
+    with _SOP_INSTANCE_LOCKS_GUARD:
+        entry = _SOP_INSTANCE_LOCKS.get(sop_instance_uid)
+        if entry is None:
+            entry = {"lock": threading.Lock(), "users": 0}
+            _SOP_INSTANCE_LOCKS[sop_instance_uid] = entry
+        entry["users"] += 1
+
+    acquired = False
+    try:
+        entry["lock"].acquire()
+        acquired = True
+        yield
+    finally:
+        try:
+            if acquired:
+                entry["lock"].release()
+        finally:
+            with _SOP_INSTANCE_LOCKS_GUARD:
+                entry["users"] -= 1
+                if (
+                    entry["users"] == 0
+                    and _SOP_INSTANCE_LOCKS.get(sop_instance_uid) is entry
+                ):
+                    del _SOP_INSTANCE_LOCKS[sop_instance_uid]
+
+
+def _validate_sop_instance_uid(sop_instance_uid):
+    if (
+        not isinstance(sop_instance_uid, str)
+        or len(sop_instance_uid) > 64
+        or re.fullmatch(r"[0-9]+(?:\.[0-9]+)*", sop_instance_uid) is None
+    ):
+        raise ValueError("invalid SOP Instance UID")
+
+
+def _sha256_file(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.digest()
+
+
+def _save_received_instance(dataset, sop_instance_uid):
+    _validate_sop_instance_uid(sop_instance_uid)
+
+    destination = os.path.join(OUTPUT_DIR, f"{sop_instance_uid}.dcm")
+    descriptor, temporary_path = tempfile.mkstemp(
+        prefix=".incoming-",
+        suffix=".dcm",
+        dir=OUTPUT_DIR,
+    )
+    durably_stored = False
+    try:
+        os.close(descriptor)
+        dataset.save_as(temporary_path, write_like_original=False)
+        try:
+            os.link(temporary_path, destination)
+            durably_stored = True
+            return destination, True
+        except FileExistsError:
+            if _sha256_file(temporary_path) == _sha256_file(destination):
+                durably_stored = True
+                return destination, False
+            raise DuplicateSOPInstanceError from None
+    finally:
+        exception_in_flight = sys.exc_info()[0] is not None
+        try:
+            os.unlink(temporary_path)
+        except FileNotFoundError:
+            pass
+        except OSError:
+            _safe_log("Temporary DICOM cleanup failed.")
+            if not exception_in_flight and not durably_stored:
+                raise
+
+
+def _has_completed_analysis(dicom_path):
+    result_path = os.path.splitext(dicom_path)[0] + "_result.json"
+    try:
+        with open(result_path, "r", encoding="utf-8") as result_file:
+            result = json.load(result_file)
+    except Exception:
+        return False
+
+    if not isinstance(result, dict) or result.get("status") != "analysis_completed":
+        return False
+
+    inference_result = result.get("inference")
+    required_fields = ("verdict", "confidence", "source", "is_critical", "css")
+    return isinstance(inference_result, dict) and all(
+        field in inference_result for field in required_fields
+    )
 
 
 # ---------------------------------------------------------
@@ -56,117 +176,41 @@ from dicom_pipeline import process_dicom
 # ---------------------------------------------------------
 
 def handle_store(event):
-
-    print()
-    print(">>> C-STORE EVENT RECEIVED")
-
+    durably_stored = False
     try:
-
         ds = event.dataset
         ds.file_meta = event.file_meta
+        sop_instance_uid = str(getattr(ds, "SOPInstanceUID", ""))
+        _validate_sop_instance_uid(sop_instance_uid)
 
-        patient_id = getattr(
-            ds,
-            "PatientID",
-            "UNKNOWN"
-        )
+        with _sop_instance_lock(sop_instance_uid):
+            filepath, is_new = _save_received_instance(ds, sop_instance_uid)
+            durably_stored = True
+            if not is_new and _has_completed_analysis(filepath):
+                _safe_log("Duplicate DICOM instance ignored; completed analysis preserved.")
+                return 0x0000
 
-        modality = getattr(
-            ds,
-            "Modality",
-            "UNKNOWN"
-        )
+            try:
+                result = process_dicom(filepath)
+            except Exception:
+                result = {"status": "inference_failed", "error_type": "processing_error"}
 
-        sop_uid = getattr(
-            ds,
-            "SOPInstanceUID",
-            "UNKNOWN"
-        )
+            try:
+                save_result(filepath, result)
+            except Exception:
+                _safe_log("DICOM stored; analysis result could not be saved.")
+                return 0x0000
 
-        print("Patient ID:", patient_id)
-        print("Modality:", modality)
-        print("SOP Instance UID:", sop_uid)
-
-        # -------------------------------------------------
-        # Save DICOM
-        # -------------------------------------------------
-
-        filepath = os.path.abspath(
-            os.path.join(
-                OUTPUT_DIR,
-                f"{sop_uid}.dcm"
+            _safe_log(
+                f"DICOM stored; analysis status: {result.get('status', 'unknown')}."
             )
-        )
-
-        print("Saving to:", filepath)
-
-        ds.save_as(
-            filepath,
-            write_like_original=False
-        )
-
-        print(">>> DICOM SAVED SUCCESSFULLY")
-
-        # -------------------------------------------------
-        # Run Pink Edge DICOM pipeline
-        # -------------------------------------------------
-
-        print()
-        print(">>> STARTING PINK EDGE DICOM PIPELINE")
-
-        result = process_dicom(filepath)
-
-        print(">>> DICOM PIPELINE COMPLETED")
-
-        # -------------------------------------------------
-        # Save pipeline result
-        # -------------------------------------------------
-
-        result_file = os.path.splitext(
-            filepath
-        )[0] + "_result.json"
-
-        with open(
-            result_file,
-            "w",
-            encoding="utf-8"
-        ) as f:
-
-            json.dump(
-                result,
-                f,
-                indent=2,
-                ensure_ascii=False
-            )
-
-        print("Result saved to:", result_file)
-
-        # -------------------------------------------------
-        # Show important result information
-        # -------------------------------------------------
-
-        print()
-        print("========== PINK EDGE RESULT ==========")
-        print("Modality:", result.get("modality"))
-        print("Patient ID:", result.get("patient_id"))
-        print("Image size:", result.get("image_size"))
-        print("Inference:")
-
-        print(result.get("inference"))
-
-        print("======================================")
-        print()
-
-        return 0x0000
-
-    except Exception as exc:
-
-        print()
-        print(">>> C-STORE / PIPELINE ERROR")
-        print(type(exc).__name__, ":", exc)
-        print()
-
+            return 0x0000
+    except DuplicateSOPInstanceError:
+        _safe_log("Conflicting duplicate DICOM instance rejected; existing scan preserved.")
         return 0xC211
+    except Exception:
+        _safe_log("DICOM receipt handling failed.")
+        return 0x0000 if durably_stored else 0xC211
 
 
 # ---------------------------------------------------------
@@ -181,38 +225,28 @@ ae.add_supported_context(
     Verification
 )
 
-ae.add_supported_context(
-    CTImageStorage
-)
-
-ae.add_supported_context(
-    MRImageStorage
-)
-
-ae.add_supported_context(
-    UltrasoundImageStorage
-)
-
-ae.add_supported_context(
-    DigitalMammographyXRayImageStorageForPresentation
-)
+for sop_class_name in STORAGE_SOP_CLASS_NAMES:
+    sop_class = getattr(sop_classes, sop_class_name, None)
+    if sop_class is not None:
+        ae.add_supported_context(sop_class)
 
 
 # ---------------------------------------------------------
 # Start DICOM listener
 # ---------------------------------------------------------
 
-logging.basicConfig(
-    level=logging.INFO
-)
+def main():
+    print(
+        "DICOM C-STORE receiver ready on port 11112."
+    )
 
-print(
-    "Bridge listening for hospital scans on port 11112..."
-)
+    ae.start_server(
+        ("0.0.0.0", 11112),
+        evt_handlers=[
+            (evt.EVT_C_STORE, handle_store)
+        ]
+    )
 
-ae.start_server(
-    ("0.0.0.0", 11112),
-    evt_handlers=[
-        (evt.EVT_C_STORE, handle_store)
-    ]
-)
+
+if __name__ == "__main__":
+    main()

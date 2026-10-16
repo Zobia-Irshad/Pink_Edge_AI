@@ -36,17 +36,7 @@ st.set_page_config(page_title="Pink Edge AI", page_icon="🩸", layout="wide", i
 # NOTE: the CSS below is a plain string, not an f-string (it's full of literal CSS braces), so it
 # repeats these values as literals rather than interpolating them. Keep the two in sync when
 # changing a colour — `python Tests/smoke_test.py` checks for exactly that drift.
-C = dict(core.C)
-# Dark clinical theme for the web edition. Status/data colours are neutral;
-# success/warning/danger stay vivid because they carry real medical meaning.
-C.update({
-    "bg": "#0B0F19", "surface": "#111827", "surface_alt": "#1F2937", "surface_hover": "#1F2937",
-    "border": "#374151", "border_light": "#1F2937",
-    "text": "#F9FAFB", "text_muted": "#9CA3AF", "text_light": "#9CA3AF",
-    "primary": "#2563EB", "primary_light": "#F9FAFB",
-    "accent": "#3B82F6", "accent_light": "#93C5FD",
-    "success": "#22C55E", "warning": "#F59E0B", "danger": "#EF4444",
-})
+C = core.C
 
 # ============================================================
 # VOICE MESSAGE LIBRARY
@@ -175,46 +165,21 @@ st.markdown = _dedented_markdown
 
 CSS = """
 <style>
-/* ============================================================
-   Pink Edge AI — dark clinical theme
-   App bg #0B0F19 | sidebar/cards #111827 | accent #2563EB / #3B82F6
-   text #F9FAFB | secondary text #9CA3AF | imaging canvas #000000
-   Bright red/green/amber are reserved for real medical alerts.
-   ============================================================ */
-:root {
-    --pe-bg: #0B0F19;
-    --pe-surface: #111827;
-    --pe-surface-alt: #1F2937;
-    --pe-border: #1F2937;
-    --pe-border-strong: #374151;
-    --pe-accent: #2563EB;
-    --pe-accent-hi: #3B82F6;
-    --pe-text: #F9FAFB;
-    --pe-muted: #9CA3AF;
-    --pe-canvas: #000000;
-}
-
-/* Main App Background & Default Text */
+/* Main App Background & High Contrast Default Text */
 .stApp {
-    background-color: #0B0F19 !important;
-    color: #F9FAFB !important;
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
     font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
     margin-bottom: 20px;
 }
-[data-testid="stHeader"] {
-    background-color: #0B0F19 !important;
-}
 
-/* Sidebar — deep charcoal/slate */
+/* Sidebar Styling */
 section[data-testid="stSidebar"] {
-    background-color: #111827 !important;
-    border-right: 1px solid #1F2937 !important;
+    background-color: #ffffff !important;
+    border-right: 1px solid #cbd5e1 !important;
 }
 section[data-testid="stSidebar"] * {
-    color: #F9FAFB !important;
-}
-section[data-testid="stSidebar"] hr {
-    border-color: #1F2937 !important;
+    color: #0f172a !important;
 }
 
 /* Container Padding */
@@ -231,35 +196,18 @@ section[data-testid="stSidebar"] hr {
     margin-top: 0.25rem !important;
     margin-bottom: 1.25rem !important;
 }
+
 .stTabs [data-baseweb="tab-list"] {
     gap: 0.15rem !important;
     overflow-x: auto !important;
     white-space: nowrap !important;
     padding-bottom: 2px !important;
-    background-color: #111827 !important;
-    border-bottom: 1px solid #1F2937 !important;
 }
+
 .stTabs [data-baseweb="tab"] {
     min-height: 42px !important;
     padding: 0.5rem 1rem !important;
     white-space: nowrap !important;
-    color: #9CA3AF !important;
-    font-weight: 700 !important;
-    background: transparent !important;
-}
-.stTabs [data-baseweb="tab"]:hover {
-    color: #F9FAFB !important;
-}
-.stTabs [aria-selected="true"] {
-    color: #F9FAFB !important;
-}
-/* clean blue indicator line under the active tab */
-.stTabs [data-baseweb="tab-highlight"] {
-    background-color: #3B82F6 !important;
-    height: 3px !important;
-}
-.stTabs [data-baseweb="tab-border"] {
-    background-color: #1F2937 !important;
 }
 
 /* Give every page header a clear separation from navigation. */
@@ -267,40 +215,35 @@ section[data-testid="stSidebar"] hr {
     margin-top: 0.75rem !important;
 }
 
-/* Headings & Text */
-h1, h2, h3, h4, h5, h6, label, p, li, td, th {
-    color: #F9FAFB !important;
+/* Headings & Text Overrides — Guaranteed Readability */
+h1, h2, h3, h4, h5, h6, label, p, span, div, li, td, th {
+    color: #0f172a !important;
 }
-.stMarkdown p, .stMarkdown label {
-    color: #F9FAFB !important;
-}
-small, .stCaption, [data-testid="stCaptionContainer"] {
-    color: #9CA3AF !important;
+.stMarkdown p, .stMarkdown label, .stMarkdown span {
+    color: #0f172a !important;
 }
 
-/* Header Banner — solid slate card with a blue indicator line */
+/* Header Banner */
 .page-header {
-    background: #111827 !important;
-    border: 1px solid #1F2937 !important;
-    border-left: 4px solid #2563EB !important;
+    background: linear-gradient(135deg, #be185d 0%, #0369a1 100%);
     border-radius: 12px;
     padding: 22px 28px;
     margin-bottom: 20px;
-    box-shadow: none;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
 }
 .page-header h1 {
-    color: #F9FAFB !important;
+    color: #ffffff !important;
     margin: 0 !important;
     font-size: 1.5rem !important;
     font-weight: 800 !important;
 }
 .page-header p {
-    color: #9CA3AF !important;
+    color: #f0fdf4 !important;
     font-size: 0.88rem !important;
     margin: 6px 0 0 0 !important;
 }
 
-/* Status badges — muted grays (colour is saved for real alerts) */
+/* Badges */
 .badge {
     display: inline-flex;
     padding: 5px 12px;
@@ -308,47 +251,48 @@ small, .stCaption, [data-testid="stCaptionContainer"] {
     font-size: 0.75rem;
     font-weight: 700;
 }
-.badge-offline,
-.badge-cloud,
-section[data-testid="stSidebar"] .badge-offline,
-section[data-testid="stSidebar"] .badge-cloud {
-    background: rgba(31, 41, 55, 0.6) !important;
-    color: #D1D5DB !important;
-    border: 1px solid #374151 !important;
+.badge-offline {
+    background: #f0fdf4 !important;
+    color: #15803d !important;
+    border: 1px solid #86efac !important;
+}
+.badge-cloud {
+    background: #fffbeb !important;
+    color: #b45309 !important;
+    border: 1px solid #fde68a !important;
 }
 
 /* Cards & Metric Tiles */
 .card {
-    background: #111827 !important;
-    border: 1px solid #1F2937 !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
     border-radius: 12px !important;
     padding: 18px !important;
     margin: 8px 0 !important;
-    color: #F9FAFB !important;
-    box-shadow: none !important;
+    color: #0f172a !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
 }
 .card b, .card span {
-    color: #F9FAFB !important;
+    color: #0f172a !important;
 }
 
 .metric-tile {
-    background: #111827 !important;
-    border: 1px solid #1F2937 !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
     border-radius: 10px !important;
     padding: 14px !important;
     text-align: center !important;
-    box-shadow: none !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
 }
 .metric-tile .label {
-    color: #9CA3AF !important;
+    color: #475569 !important;
     font-size: 0.74rem !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.6px !important;
 }
-/* no !important: an inline colour is only used for genuine alert counts */
 .metric-tile .value {
-    color: #F9FAFB;
+    color: #be185d !important;
     font-size: 1.4rem !important;
     font-weight: 800 !important;
     margin-top: 4px !important;
@@ -357,7 +301,7 @@ section[data-testid="stSidebar"] .badge-cloud {
     text-overflow: ellipsis !important;
 }
 
-/* Verdict Boxes — real medical findings keep red / amber / green */
+/* Verdict Boxes */
 .verdict-box {
     border-radius: 12px !important;
     padding: 20px !important;
@@ -365,36 +309,47 @@ section[data-testid="stSidebar"] .badge-cloud {
     margin: 12px 0 !important;
 }
 .verdict-box.success {
-    background: rgba(34, 197, 94, 0.10) !important;
-    border: 2px solid rgba(34, 197, 94, 0.55) !important;
+    background: #f0fdf4 !important;
+    border: 2px solid #86efac !important;
 }
-.verdict-box.success .v-title { color: #4ADE80 !important; }
+.verdict-box.success .v-title {
+    color: #15803d !important;
+}
 .verdict-box.danger {
-    background: rgba(239, 68, 68, 0.10) !important;
-    border: 2px solid rgba(239, 68, 68, 0.60) !important;
+    background: #fef2f2 !important;
+    border: 2px solid #fca5a5 !important;
 }
-.verdict-box.danger .v-title { color: #F87171 !important; }
+.verdict-box.danger .v-title {
+    color: #b91c1c !important;
+}
 .verdict-box.warning {
-    background: rgba(245, 158, 11, 0.10) !important;
-    border: 2px solid rgba(245, 158, 11, 0.55) !important;
+    background: #fffbeb !important;
+    border: 2px solid #fde68a !important;
 }
-.verdict-box.warning .v-title { color: #FBBF24 !important; }
-.verdict-box .v-icon { font-size: 1.8rem !important; }
-.verdict-box .v-title { font-size: 1.3rem !important; font-weight: 800 !important; }
+.verdict-box.warning .v-title {
+    color: #b45309 !important;
+}
+.verdict-box .v-icon {
+    font-size: 1.8rem !important;
+}
+.verdict-box .v-title {
+    font-size: 1.3rem !important;
+    font-weight: 800 !important;
+}
 .verdict-box .v-sub {
     font-size: 0.88rem !important;
     margin-top: 4px !important;
-    color: #D1D5DB !important;
+    color: #334155 !important;
     font-weight: 600 !important;
 }
 
 /* Telemetry Log */
 .console-log {
-    background: #0B0F19 !important;
-    border: 1px solid #1F2937 !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
     border-radius: 10px !important;
     padding: 14px !important;
-    color: #D1D5DB !important;
+    color: #0f172a !important;
     font-family: 'Consolas', 'Courier New', monospace !important;
     font-size: 0.78rem !important;
     line-height: 1.7 !important;
@@ -410,202 +365,110 @@ section[data-testid="stSidebar"] .badge-cloud {
     border-left: 4px solid !important;
 }
 .alert-card.critical {
-    background: rgba(239, 68, 68, 0.10) !important;
-    border-color: #EF4444 !important;
-    color: #FCA5A5 !important;
+    background: #fef2f2 !important;
+    border-color: #b91c1c !important;
+    color: #991b1b !important;
 }
 .alert-card.ok {
-    background: rgba(34, 197, 94, 0.08) !important;
-    border-color: #22C55E !important;
-    color: #86EFAC !important;
+    background: #f0fdf4 !important;
+    border-color: #15803d !important;
+    color: #166534 !important;
 }
 
 .source-tag {
     font-size: 0.75rem !important;
-    color: #9CA3AF !important;
+    color: #475569 !important;
     font-family: monospace !important;
     font-weight: 700 !important;
 }
 
-/* Streamlit native inputs */
+/* Streamlit Native Components — Crisp Light Styling */
 div[data-baseweb="select"] > div {
-    background-color: #0B0F19 !important;
-    color: #F9FAFB !important;
-    border-color: #374151 !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
 }
 div[data-baseweb="select"] span {
-    color: #F9FAFB !important;
+    color: #0f172a !important;
 }
-div[data-baseweb="popover"] ul, div[data-baseweb="menu"] {
-    background-color: #111827 !important;
+div[data-baseweb="input"] input {
+    color: #0f172a !important;
+    background-color: #ffffff !important;
 }
-div[data-baseweb="popover"] li {
-    color: #F9FAFB !important;
-}
-div[data-baseweb="popover"] li:hover {
-    background-color: rgba(37, 99, 235, 0.18) !important;
-}
-div[data-baseweb="input"], div[data-baseweb="textarea"], div[data-baseweb="base-input"] {
-    background-color: #0B0F19 !important;
-    border-color: #374151 !important;
-}
-div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea {
-    color: #F9FAFB !important;
-    -webkit-text-fill-color: #F9FAFB !important;
-    background-color: #0B0F19 !important;
-}
-div[data-baseweb="input"]:focus-within, div[data-baseweb="select"] > div:focus-within {
-    border-color: #3B82F6 !important;
-}
-[data-testid="stFileUploaderDropzone"] {
-    background-color: #0B0F19 !important;
-    border: 1px dashed #374151 !important;
-}
-[data-testid="stFileUploaderDropzone"] small,
-[data-testid="stFileUploaderDropzone"] span {
-    color: #9CA3AF !important;
-}
-[data-testid="stExpander"] {
-    background-color: #111827 !important;
-    border: 1px solid #1F2937 !important;
-    border-radius: 10px !important;
-}
-
-/* Secondary action buttons — transparent dark fill, subtle grey border */
-.stButton > button,
-.stDownloadButton > button,
-button[data-testid="stBaseButton-secondary"] {
-    background-color: rgba(17, 24, 39, 0.55) !important;
-    color: #F9FAFB !important;
-    border: 1px solid #374151 !important;
+.stButton > button {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
     font-weight: 600 !important;
 }
-.stButton > button:hover,
-.stDownloadButton > button:hover,
-button[data-testid="stBaseButton-secondary"]:hover {
-    background-color: #1F2937 !important;
-    border-color: #3B82F6 !important;
-    color: #F9FAFB !important;
+.stButton > button:hover {
+    background-color: #f1f5f9 !important;
+    border-color: #be185d !important;
+    color: #be185d !important;
 }
-.stButton > button:disabled,
-.stDownloadButton > button:disabled {
-    opacity: 0.45 !important;
+.stTabs [data-baseweb="tab-list"] {
+    background-color: #ffffff !important;
+    border-bottom: 2px solid #cbd5e1 !important;
 }
-
-/* Main action buttons — solid blue, white text */
-.stButton > button[kind="primary"],
-.stDownloadButton > button[kind="primary"],
-button[data-testid="stBaseButton-primary"] {
-    background-color: #2563EB !important;
-    color: #FFFFFF !important;
-    border: 1px solid #2563EB !important;
+.stTabs [data-baseweb="tab"] {
+    color: #475569 !important;
     font-weight: 700 !important;
 }
-.stButton > button[kind="primary"]:hover,
-.stDownloadButton > button[kind="primary"]:hover,
-button[data-testid="stBaseButton-primary"]:hover {
-    background-color: #3B82F6 !important;
-    border-color: #3B82F6 !important;
-    color: #FFFFFF !important;
+.stTabs [aria-selected="true"] {
+    color: #be185d !important;
 }
-.stButton > button[kind="primary"] p,
-.stButton > button[kind="primary"] span,
-button[data-testid="stBaseButton-primary"] p {
-    color: #FFFFFF !important;
-}
-
-/* Active selection state (LHW / Doctor) — subtle blue fill + indicator line,
-   not the solid "main action" style */
-.st-key-role_lhw button[data-testid="stBaseButton-primary"],
-.st-key-role_doc button[data-testid="stBaseButton-primary"] {
-    background-color: rgba(37, 99, 235, 0.16) !important;
-    border: 1px solid rgba(59, 130, 246, 0.45) !important;
-    box-shadow: inset 0 -3px 0 #3B82F6 !important;
-    color: #F9FAFB !important;
-}
-.st-key-role_lhw button[data-testid="stBaseButton-primary"]:hover,
-.st-key-role_doc button[data-testid="stBaseButton-primary"]:hover {
-    background-color: rgba(37, 99, 235, 0.24) !important;
-}
-.st-key-role_lhw button p, .st-key-role_doc button p {
-    color: #F9FAFB !important;
-}
-
-/* Tables */
 .stDataFrame, [data-testid="stTable"] {
-    background-color: #111827 !important;
-    border: 1px solid #1F2937 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
     border-radius: 8px !important;
-}
-
-/* Imaging canvas — always pure black so diagnostic grayscale is unaltered */
-[data-testid="stImage"] {
-    background: #000000 !important;
-    border: 1px solid #1F2937;
-    border-radius: 10px;
-    padding: 6px;
-}
-[data-testid="stImage"] img {
-    background: #000000 !important;
-    border-radius: 6px;
-}
-[data-testid="stImageCaption"] {
-    color: #9CA3AF !important;
 }
 
 /* ============= AI CONFIDENCE + LHV OVERRIDE STYLING ============= */
 .ai-recommendation {
-  background: #111827;
-  border: 1px solid #1F2937;
-  border-left: 4px solid #3B82F6;
+  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); /* default/fallback pink gradient */
   border-radius: 14px; padding: 20px; margin: 12px 0;
-  box-shadow: none;
-  color: #F9FAFB;
+  box-shadow: 0 4px 6px rgba(157, 23, 77, 0.2);
+  color: #ffffff;
 }
-/* Risk-based colours = real medical alert colours */
+/* Risk-based color overrides — applied via an extra class based on the
+   real triage result's risk_level, so a BI-RADS 5 case never renders as
+   a green/pink "routine" box again. */
 .ai-recommendation.risk-critical {
-  background: rgba(239, 68, 68, 0.12) !important;
-  border: 1px solid rgba(239, 68, 68, 0.55) !important;
-  border-left: 4px solid #EF4444 !important;
-  box-shadow: none !important;
+  background: linear-gradient(135deg, #b91c1c 0%, #b91c1c 100%) !important;
+  box-shadow: 0 4px 6px rgba(185, 28, 28, 0.3) !important;
 }
 .ai-recommendation.risk-moderate {
-  background: rgba(245, 158, 11, 0.12) !important;
-  border: 1px solid rgba(245, 158, 11, 0.55) !important;
-  border-left: 4px solid #F59E0B !important;
-  box-shadow: none !important;
+  background: linear-gradient(135deg, #b45309 0%, #b45309 100%) !important;
+  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3) !important;
 }
 .ai-recommendation.risk-low {
-  background: rgba(34, 197, 94, 0.10) !important;
-  border: 1px solid rgba(34, 197, 94, 0.5) !important;
-  border-left: 4px solid #22C55E !important;
-  box-shadow: none !important;
+  background: linear-gradient(135deg, #15803d 0%, #15803d 100%) !important;
+  box-shadow: 0 4px 6px rgba(21, 128, 61, 0.3) !important;
 }
 .ai-recommendation .rec-header {
   font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
-  color: #9CA3AF; margin-bottom: 8px;
+  opacity: 0.95; margin-bottom: 8px;
 }
 .ai-recommendation .rec-verdict {
-  font-size: 1.4rem; font-weight: 800; margin: 8px 0; color: #F9FAFB;
+  font-size: 1.4rem; font-weight: 800; margin: 8px 0;
 }
 .ai-recommendation .rec-confidence {
-  font-size: 0.95rem; margin-top: 12px; color: #D1D5DB;
+  font-size: 0.95rem; margin-top: 12px; opacity: 0.95;
 }
 
 .lhv-decision {
-  background: #111827;
-  border: 1px solid #1F2937;
-  border-left: 4px solid #2563EB;
+  background: linear-gradient(135deg, #075985 0%, #0369a1 100%); /* Blue gradient */
   border-radius: 14px; padding: 20px; margin: 12px 0;
-  color: #F9FAFB;
+  box-shadow: 0 4px 6px rgba(7, 89, 133, 0.2);
+  color: #ffffff;
 }
 .lhv-decision .lhv-header {
   font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
-  color: #9CA3AF; margin-bottom: 16px;
+  opacity: 0.95; margin-bottom: 16px;
 }
 
 .btn-agree {
-  background: #2563EB !important;
+  background: linear-gradient(135deg, #15803d 0%, #15803d 100%) !important; /* Green */
   color: #ffffff !important;
   border: none !important;
   border-radius: 8px;
@@ -614,26 +477,33 @@ button[data-testid="stBaseButton-primary"] p {
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(21, 128, 61, 0.3);
 }
-.btn-agree:hover { background: #3B82F6 !important; }
+.btn-agree:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(21, 128, 61, 0.4);
+}
 
 .btn-override {
-  background: transparent !important;
-  color: #F9FAFB !important;
-  border: 1px solid #374151 !important;
+  background: linear-gradient(135deg, #b91c1c 0%, #b91c1c 100%) !important; /* Red */
+  color: #ffffff !important;
+  border: none !important;
   border-radius: 8px;
   padding: 12px 24px;
   font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(185, 28, 28, 0.3);
 }
-.btn-override:hover { background: #1F2937 !important; border-color: #3B82F6 !important; }
+.btn-override:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(185, 28, 28, 0.4);
+}
 
 .override-reason-box {
-  background: #111827;
-  border: 1px solid #374151;
-  border-left: 4px solid #2563EB;
+  background: #f0f9ff; /* Light blue background */
+  border: 2px solid #0369a1;
   border-radius: 12px;
   padding: 16px;
   margin-top: 16px;
@@ -641,7 +511,7 @@ button[data-testid="stBaseButton-primary"] p {
 .override-reason-box .reason-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #F9FAFB;
+  color: #075985;
   margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -649,57 +519,59 @@ button[data-testid="stBaseButton-primary"] p {
 .override-reason-box .reason-option {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
+  padding: 10px 0;
   cursor: pointer;
   border-radius: 6px;
+  padding: 8px 12px;
   transition: background 0.2s ease;
 }
-.override-reason-box .reason-option:hover { background: rgba(37, 99, 235, 0.14); }
+.override-reason-box .reason-option:hover {
+  background: rgba(3, 105, 161, 0.1);
+}
 .override-reason-box .reason-option input[type="radio"] {
   margin-right: 12px;
   cursor: pointer;
-  accent-color: #3B82F6;
+  accent-color: #0369a1;
   width: 18px;
   height: 18px;
 }
 .override-reason-box .reason-option label {
   cursor: pointer;
-  color: #F9FAFB;
+  color: #0f172a;
   font-weight: 500;
   margin: 0;
 }
 
 .decision-status {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 12px 16px;
   margin-top: 12px;
   font-weight: 600;
   text-align: center;
-  border: 1px solid #374151;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* ============= VOICE FEEDBACK SYSTEM ============= */
 .voice-feedback-panel {
-  background: #111827;
-  border: 1px solid #1F2937;
+  background: #ffffff;
   border-radius: 14px;
   padding: 0;
   margin: 16px 0;
-  color: #F9FAFB;
+  box-shadow: 0 4px 8px rgba(157, 23, 77, 0.2);
+  color: #0f172a;
   overflow: hidden;
 }
 .voice-feedback-panel .vfp-header {
-  background: #0B0F19;
+  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%);
   font-size: 0.95rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #F9FAFB;
+  color: #ffffff;
   padding: 16px;
   margin: 0;
-  border-bottom: 1px solid #1F2937;
-  border-left: 4px solid #2563EB;
+  border-bottom: 2px solid rgba(157, 23, 77, 0.2);
 }
 .voice-feedback-panel .vfp-message {
   font-size: 1.05rem;
@@ -707,10 +579,10 @@ button[data-testid="stBaseButton-primary"] p {
   margin: 16px;
   line-height: 1.5;
   padding: 12px;
-  background: #0B0F19;
+  background: #f1f5f9;
   border-radius: 8px;
-  border-left: 4px solid #3B82F6;
-  color: #F9FAFB;
+  border-left: 4px solid #be185d;
+  color: #0f172a;
 }
 .voice-btn-group {
   display: flex;
@@ -719,7 +591,7 @@ button[data-testid="stBaseButton-primary"] p {
   flex-wrap: wrap;
 }
 .voice-btn {
-  background: #2563EB !important;
+  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%) !important;
   border: none !important;
   color: #ffffff !important;
   padding: 10px 16px !important;
@@ -728,62 +600,65 @@ button[data-testid="stBaseButton-primary"] p {
   font-size: 0.9rem !important;
   cursor: pointer !important;
   transition: all 0.3s ease !important;
+  box-shadow: 0 4px 6px rgba(157, 23, 77, 0.3) !important;
 }
-.voice-btn:hover { background: #3B82F6 !important; }
+.voice-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 12px rgba(157, 23, 77, 0.4) !important;
+}
 .voice-status {
-  background: #0B0F19;
+  background: #f0f9ff;
   border-radius: 6px;
   padding: 8px 12px;
   margin: 0 16px 16px 16px;
   font-size: 0.85rem;
   text-align: center;
-  border: 1px solid #374151;
-  color: #9CA3AF;
+  border: 1px solid #bfdbfe;
+  color: #075985;
 }
 .audio-player-wrapper {
-  background: #0B0F19;
+  background: #f1f5f9;
   border-radius: 8px;
   padding: 12px 16px;
   margin: 0 16px 16px 16px;
 }
 
 .helpya-card {
-  background: #111827;
-  border: 1px solid #1F2937;
+  background: #ffffff;
   border-radius: 14px;
   padding: 0;
   margin: 16px 0;
-  color: #F9FAFB;
+  box-shadow: 0 4px 8px rgba(244, 63, 94, 0.2);
+  color: #0f172a;
   overflow: hidden;
 }
 .helpya-card .helpya-header {
-  background: #0B0F19;
+  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%);
   font-size: 1.15rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #F9FAFB;
+  color: #ffffff;
   padding: 16px;
   margin: 0;
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid #1F2937;
-  border-left: 4px solid #2563EB;
+  border-bottom: 2px solid rgba(157, 23, 77, 0.2);
 }
 .helpya-stat {
   display: inline-block;
-  background: #0B0F19;
+  background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
   border-radius: 12px;
   padding: 16px;
   margin: 12px;
   font-weight: 600;
-  border: 1px solid #374151;
-  color: #F9FAFB;
+  border: 2px solid #fbcfe8;
+  color: #be185d;
 }
 .helpya-stat .stat-label {
   font-size: 0.8rem;
-  color: #9CA3AF;
+  opacity: 0.9;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -791,30 +666,6 @@ button[data-testid="stBaseButton-primary"] p {
   font-size: 1.6rem;
   font-weight: 800;
   margin-top: 6px;
-}
-
-/* Section banners used on the Voice / Feedback / Summary pages */
-.pe-section {
-  background: #111827;
-  border: 1px solid #1F2937;
-  border-left: 4px solid #2563EB;
-  color: #F9FAFB !important;
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin: 16px 0 12px 0;
-  font-size: 1.2rem;
-  font-weight: 800;
-}
-.pe-note {
-  background: #0B0F19;
-  border: 1px solid #1F2937;
-  border-left: 4px solid #3B82F6;
-  color: #D1D5DB !important;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin: 8px 0;
-  font-size: 1rem;
-  font-weight: 700;
 }
 
 /* Responsive: narrow viewports */
@@ -881,36 +732,35 @@ def render_sidebar():
     from auth_manager import AuthManager, ROLE_LHW, ROLE_RADIOLOGIST, ROLE_CONFIGS
     with st.sidebar:
         st.markdown(
-            '<div style="background:#0B0F19;border:1px solid #1F2937;border-left:4px solid #2563EB;border-radius:10px;'
-            'padding:14px;margin-bottom:14px;color:#F9FAFB;"><b>🩸 Pink Edge AI</b>'
-            '<div style="font-size:0.72rem;color:#9CA3AF;">Clinical Intelligence Platform</div></div>',
+            '<div style="background:linear-gradient(135deg, #be185d 0%, #9d174d 100%);border-radius:10px;'
+            'padding:14px;margin-bottom:14px;color:#fff;"><b>🩸 Pink Edge AI</b>'
+            '<div style="font-size:0.72rem;opacity:0.85;">Clinical Intelligence Platform</div></div>',
             unsafe_allow_html=True)
         current_role = st.session_state.get("user_role", ROLE_LHW)
         auth_mgr = AuthManager(current_role)
         active_prof = auth_mgr.get_active_profile()
 
         st.markdown(f"""
-        <div style="background:rgba(37,99,235,0.12);border:1px solid rgba(59,130,246,0.35);border-radius:6px;padding:6px 8px;margin-bottom:8px;">
-            <div style="font-size:0.68rem;color:#9CA3AF;font-weight:600;">{t('ACTIVE USER PROFILE')}</div>
-            <div style="font-size:0.82rem;font-weight:700;color:#F9FAFB;">{t(active_prof['badge'])}</div>
+        <div style="background:{active_prof['color']}15;border:1px solid {active_prof['color']}50;border-radius:6px;padding:6px 8px;margin-bottom:8px;">
+            <div style="font-size:0.68rem;color:var(--text-muted);font-weight:600;">ACTIVE USER PROFILE</div>
+            <div style="font-size:0.82rem;font-weight:700;color:{active_prof['color']};">{active_prof['badge']}</div>
         </div>
         """, unsafe_allow_html=True)
 
         ac1, ac2 = st.columns(2)
-        # The selected profile stays highlighted (primary button); the other is secondary.
-        if ac1.button(f"👤 {t('LHW')}", width="stretch", key="role_lhw",
-                      type="primary" if current_role == ROLE_LHW else "secondary"):
+        if ac1.button("👤 LHW", width="stretch"):
             st.session_state.user_role = ROLE_LHW
             st.rerun()
-        if ac2.button(f"👨‍⚕️ {t('Doctor')}", width="stretch", key="role_doc",
-                      type="primary" if current_role == ROLE_RADIOLOGIST else "secondary"):
+        if ac2.button("👨‍⚕️ Doctor", width="stretch"):
             st.session_state.user_role = ROLE_RADIOLOGIST
             st.rerun()
 
-        # PIN is filled in automatically for the selected role and cannot be edited.
-        st.text_input("PIN Auth", value=ROLE_CONFIGS[current_role]["pin"], type="password", disabled=True,
-                      label_visibility="collapsed", key=f"st_pin_auto_{current_role}",
-                      help=t("PIN (auto-filled for the selected role)"))
+        pin_in = st.text_input("PIN Auth", type="password", placeholder="PIN (1111 / 9999)", label_visibility="collapsed", key="st_pin_in")
+        if pin_in:
+            auth_role = auth_mgr.authenticate_pin(pin_in)
+            if auth_role:
+                st.session_state.user_role = auth_role
+                st.rerun()
 
         lc1, lc2 = st.columns(2)
         if lc1.button("🇬🇧 EN", width="stretch"):
@@ -923,16 +773,14 @@ def render_sidebar():
         st.markdown(f"#### {t('Network Mode')}")
         st.session_state.network_mode = st.radio(
             "Network Mode", ["Fully Offline", "GSM Failover"], label_visibility="collapsed",
-            format_func=lambda v: t("Fully Offline") if v == "Fully Offline" else t("GSM Failover (slow internet connection)"),
             index=0 if st.session_state.network_mode == "Fully Offline" else 1)
         if "GSM" in st.session_state.network_mode:
-            st.markdown(f'<span class="badge badge-cloud">{t("☁️ Alibaba Cloud IoT Active")}</span>', unsafe_allow_html=True)
+            st.markdown('<span class="badge badge-cloud">☁️ Alibaba Cloud IoT Active</span>', unsafe_allow_html=True)
         else:
-            st.markdown(f'<span class="badge badge-offline">{t("🔒 100% Offline")}</span>', unsafe_allow_html=True)
+            st.markdown('<span class="badge badge-offline">🔒 100% Offline</span>', unsafe_allow_html=True)
 
-        st.markdown(f"#### {t('Select Xray type')}")
-        selected_model = st.selectbox("Select Xray type", core.MODELS, label_visibility="collapsed",
-                                      format_func=t)
+        st.markdown(f"#### {t('Select AI Model')}")
+        selected_model = st.selectbox("Select AI Model", core.MODELS, label_visibility="collapsed")
         if st.session_state.last_model != selected_model:
             st.session_state.inference_done = False
             st.session_state.log_entries = []
@@ -944,7 +792,7 @@ def render_sidebar():
         uploaded = st.file_uploader("Upload Patient Scan", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
 
         st.markdown("---")
-        if st.button(f"▶️ {t('Run Triage')}", width="stretch", type="primary"):
+        if st.button(f"▶️ {t('Run Triage')}", width="stretch"):
             run_triage_action(selected_model, uploaded)
 
         if st.session_state.inference_done:
@@ -982,10 +830,10 @@ def render_sidebar():
             pass
         if model_status:
             st.markdown("---")
-            st.caption(t("Model backing (this run):"))
+            st.caption("Model backing (this run):")
             for modality, info in model_status.items():
                 icon = "🟢" if info["real"] else "⚪"
-                st.caption(f"{icon} {t(modality.split('(')[0].strip())}")
+                st.caption(f"{icon} {modality.split('(')[0].strip()}")
 
         return selected_model, uploaded
 
@@ -1091,33 +939,34 @@ def sync_cloud_action():
 # ============================================================
 def render_dashboard(selected_model):
     # Top Logo Header matching screenshot
-    st.markdown(f"""
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;background:#111827;padding:16px 20px;border-radius:14px;border:1px solid #1F2937;">
-        <div style="background:#2563EB;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:1.4rem;">
+    st.markdown("""
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;background:#ffffff;padding:16px 20px;border-radius:14px;border:1px solid #e2e8f0;box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+        <div style="background:#be185d;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:1.4rem;box-shadow:0 4px 10px rgba(225,29,72,0.25);">
             💓
         </div>
         <div>
-            <div style="font-size:1.35rem;font-weight:800;color:#F9FAFB;line-height:1.2;">{t("Pink Edge AI")}</div>
-            <div style="font-size:0.82rem;color:#9CA3AF;font-weight:500;margin-top:2px;">{t('Offline triage — Basic Health Unit (BHU) mode')}</div>
+            <div style="font-size:1.35rem;font-weight:800;color:#075985;line-height:1.2;">Pink Edge AI</div>
+            <div style="font-size:0.82rem;color:#64748b;font-weight:500;margin-top:2px;">Offline triage — BHU mode</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Module headings. These are plain, non-clickable headings; the exam type is chosen in the
-    # sidebar ("Select Xray type"). The active one is highlighted.
+    # Modality Pill Selector Buttons matching screenshot
+    mod_cols = st.columns(3)
     m_opts = [
         ("Mammography", "Mammography (YOLOv8-OBB)"),
         ("TB chest X-ray", "Tuberculosis (Chest X-Ray)"),
         ("Maternal ultrasound", "Maternal Health (Ultrasound)"),
     ]
-    cells = ""
-    for label, model_key in m_opts:
-        on = (selected_model == model_key)
-        style = ("background:rgba(37,99,235,0.16);color:#F9FAFB;border:1px solid rgba(59,130,246,0.45);box-shadow:inset 0 -3px 0 #3B82F6;" if on
-                 else "background:#111827;color:#9CA3AF;border:1px solid #1F2937;")
-        cells += (f'<div style="{style}flex:1;text-align:center;padding:10px 8px;border-radius:10px;'
-                  f'font-size:1rem;font-weight:700;">{t(label)}</div>')
-    st.markdown(f'<div style="display:flex;gap:10px;margin-bottom:6px;">{cells}</div>', unsafe_allow_html=True)
+    for idx, (label, model_key) in enumerate(m_opts):
+        with mod_cols[idx]:
+            is_active = (selected_model == model_key)
+            btn_type = "primary" if is_active else "secondary"
+            if st.button(label, key=f"mod_pill_{idx}", type=btn_type, use_container_width=True):
+                st.session_state.last_model = model_key
+                st.session_state.inference_done = False
+                st.session_state.current_result = None
+                st.rerun()
 
     st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
 
@@ -1144,8 +993,8 @@ def render_dashboard(selected_model):
             # was overflowing the tile and wrapping mid-word.
             model_label = model_tile_short.get(selected_model, selected_model.split("(")[0].strip())
             m1, m2, m3 = st.columns(3)
-            m1.markdown(f'<div class="metric-tile"><div class="label">{t("Model")}</div><div class="value" title="{selected_model}">{model_label}</div></div>', unsafe_allow_html=True)
-            m2.markdown(f'<div class="metric-tile"><div class="label">{t("Confidence")}</div><div class="value" style="color:#F9FAFB;">{r["confidence"]:.1f}%</div></div>', unsafe_allow_html=True)
+            m1.markdown(f'<div class="metric-tile"><div class="label">Model</div><div class="value" title="{selected_model}">{model_label}</div></div>', unsafe_allow_html=True)
+            m2.markdown(f'<div class="metric-tile"><div class="label">{t("Confidence")}</div><div class="value" style="color:{C["primary_light"]};">{r["confidence"]:.1f}%</div></div>', unsafe_allow_html=True)
             m3.markdown(f'<div class="metric-tile"><div class="label">{t("Latency")}</div><div class="value">{st.session_state.inference_latency}s</div></div>', unsafe_allow_html=True)
         else:
             st.info(f"📋 {t('Awaiting Analysis')} — {t('Run triage to begin')}")
@@ -1163,67 +1012,67 @@ def render_dashboard(selected_model):
 
         if not r:
             severity_str = "Moderate"
-            sev_bg = "#D97706"
+            sev_bg = "#b45309"
             escalation_str = "Not required"
-            escalation_color = "#22C55E"
+            escalation_color = "#15803d"
             risk_cat = "moderate"
         elif r.get("is_critical", False):
             if "5" in r.get("bi_rads", "") or "4C" in r.get("bi_rads", "") or "POS" in r.get("verdict", ""):
                 severity_str = "High"
-                sev_bg = "#DC2626"
+                sev_bg = "#b91c1c"
                 risk_cat = "high"
             else:
                 severity_str = "Moderate"
-                sev_bg = "#D97706"
+                sev_bg = "#b45309"
                 risk_cat = "moderate"
             escalation_str = "Required"
-            escalation_color = "#EF4444"
+            escalation_color = "#b91c1c"
         else:
             severity_str = "Low"
-            sev_bg = "#16A34A"
+            sev_bg = "#15803d"
             escalation_str = "Not required"
-            escalation_color = "#22C55E"
+            escalation_color = "#15803d"
             risk_cat = "low"
 
         st.markdown(f"""
-        <div style="background:#111827;border:1px solid #1F2937;border-radius:16px;padding:22px;margin-bottom:16px;">
+        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,0.03);margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <span style="font-size:1.1rem;font-weight:800;color:#F9FAFB;">{t("Triage result")}</span>
-                <span style="background:rgba(31,41,55,0.6);color:#D1D5DB;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;border:1px solid #374151;">{t(model_source_tag)}</span>
+                <span style="font-size:1.1rem;font-weight:800;color:#0f172a;">Triage result</span>
+                <span style="background:#fce7f3;color:#be185d;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;border:1px solid #fbcfe8;">{model_source_tag}</span>
             </div>
 
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1F2937;">
-                <span style="color:#9CA3AF;font-size:0.9rem;font-weight:500;">{t("Confidence")}</span>
-                <span style="color:#F9FAFB;font-size:1.05rem;font-weight:800;">{conf_str}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9;">
+                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">Confidence</span>
+                <span style="color:#0f172a;font-size:1.05rem;font-weight:800;">{conf_str}</span>
             </div>
 
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1F2937;">
-                <span style="color:#9CA3AF;font-size:0.9rem;font-weight:500;">{t("Severity")}</span>
-                <span style="background:{sev_bg};color:#ffffff;padding:3px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">{t(severity_str)}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9;">
+                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">Severity</span>
+                <span style="background:{sev_bg};color:#ffffff;padding:3px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">{severity_str}</span>
             </div>
 
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
-                <span style="color:#9CA3AF;font-size:0.9rem;font-weight:500;">{t("Escalation")}</span>
-                <span style="color:{escalation_color};font-size:0.95rem;font-weight:700;">{t(escalation_str)}</span>
+                <span style="color:#64748b;font-size:0.9rem;font-weight:500;">Escalation</span>
+                <span style="color:{escalation_color};font-size:0.95rem;font-weight:700;">{escalation_str}</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
         # 3 Risk Level Cards matching screenshot layout
-        low_style = "background:rgba(34,197,94,0.12);border:2px solid #22C55E;" if risk_cat == "low" else "background:#111827;border:1px solid #1F2937;"
-        mod_style = "background:rgba(245,158,11,0.12);border:2px solid #F59E0B;" if risk_cat == "moderate" else "background:#111827;border:1px solid #1F2937;"
-        high_style = "background:rgba(239,68,68,0.12);border:2px solid #EF4444;" if risk_cat == "high" else "background:#111827;border:1px solid #1F2937;"
+        low_style = "background:#ecfdf5;border:2px solid #15803d;box-shadow:0 2px 6px rgba(16,185,129,0.15);" if risk_cat == "low" else "background:#f4fbf7;border:1px solid #d1fae5;"
+        mod_style = "background:#fffbeb;border:2px solid #b45309;box-shadow:0 2px 6px rgba(180, 83, 9,0.15);" if risk_cat == "moderate" else "background:#fffdf5;border:1px solid #fef3c7;"
+        high_style = "background:#fef2f2;border:2px solid #b91c1c;box-shadow:0 2px 6px rgba(239,68,68,0.15);" if risk_cat == "high" else "background:#fdf2f8;border:1px solid #fee2e2;"
 
         st.markdown(f"""
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;">
             <div style="{low_style}border-radius:12px;padding:14px 6px;text-align:center;">
-                <div style="color:{'#4ADE80' if risk_cat == 'low' else '#9CA3AF'};font-size:0.85rem;font-weight:700;line-height:1.2;">{t("Low risk")}</div>
+                <div style="color:#15803d;font-size:0.85rem;font-weight:700;line-height:1.2;">Low<br>risk</div>
             </div>
             <div style="{mod_style}border-radius:12px;padding:14px 6px;text-align:center;">
-                <div style="color:{'#FBBF24' if risk_cat == 'moderate' else '#9CA3AF'};font-size:0.85rem;font-weight:700;line-height:1.2;">{t("Moderate risk")}</div>
+                <div style="color:#b45309;font-size:0.85rem;font-weight:700;line-height:1.2;">Moderate<br>risk</div>
             </div>
             <div style="{high_style}border-radius:12px;padding:14px 6px;text-align:center;">
-                <div style="color:{'#F87171' if risk_cat == 'high' else '#9CA3AF'};font-size:0.85rem;font-weight:700;line-height:1.2;">{t("High risk")}</div>
+                <div style="color:#b91c1c;font-size:0.85rem;font-weight:700;line-height:1.2;">High<br>risk</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1232,53 +1081,53 @@ def render_dashboard(selected_model):
                    "Maternal Health (Ultrasound)": "US (Ultrasound)"}
         st.subheader(t("DICOM Metadata"))
         priv_hash = st.session_state.get("privacy_hash", "HEX-8F3A1C9B")
-        st.markdown(f"""<div style="background:rgba(31,41,55,0.6);border:1px solid #374151;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:0.75rem;color:#D1D5DB;font-weight:600;">
+        st.markdown(f"""<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:0.75rem;color:var(--success);font-weight:600;">
         🔒 HIPAA/GDPR Compliant — Hex Privacy Hashed</div>
         <div class="card">
-        {t("Patient ID")}: <b style="color:#93C5FD;font-family:monospace;">{priv_hash}</b><br>{t("Age")}: <b>{st.session_state.pat_age} {t("Y")}</b><br>
-        {t("Modality")}: <b>{mod_map[selected_model]}</b><br>{t("Date")}: <b>{datetime.now().strftime('%Y-%m-%d')}</b><br>
-        {t("Privacy")}: <b style="color:#D1D5DB;">{t("ANONYMIZED (PII STRIPPED)")}</b></div>""", unsafe_allow_html=True)
+        Patient ID: <b style="color:#0369a1;font-family:monospace;">{priv_hash}</b><br>Age: <b>{st.session_state.pat_age} Y</b><br>
+        Modality: <b>{mod_map[selected_model]}</b><br>Date: <b>{datetime.now().strftime('%Y-%m-%d')}</b><br>
+        Privacy: <b style="color:var(--success);">ANONYMIZED (PII STRIPPED)</b></div>""", unsafe_allow_html=True)
 
         if st.session_state.inference_done and st.session_state.current_result:
             r = st.session_state.current_result
             css = r.get("css", "danger" if r["is_critical"] else "success")
 
             # AI Preliminary Result & Clinician Confirmation Badges
-            st.markdown(f"""<div style="display:flex;gap:8px;margin-bottom:8px;">
-            <span style="background:rgba(37,99,235,0.16);border:1px solid rgba(59,130,246,0.45);color:#93C5FD;padding:3px 10px;border-radius:4px;font-size:0.75rem;font-weight:700;">{t("🤖 AI PRELIMINARY TRIAGE")}</span>
-            <span style="background:rgba(31,41,55,0.6);border:1px solid #374151;color:#D1D5DB;padding:3px 10px;border-radius:4px;font-size:0.75rem;font-weight:700;">{t("📋 CLINICIAN REVIEW: PENDING")}</span>
+            st.markdown("""<div style="display:flex;gap:8px;margin-bottom:8px;">
+            <span style="background:#e0f2fe;border:1px solid #7dd3fc;color:#0369a1;padding:3px 10px;border-radius:4px;font-size:0.75rem;font-weight:700;">🤖 AI PRELIMINARY TRIAGE</span>
+            <span style="background:#fef3c7;border:1px solid #fde047;color:#92400e;padding:3px 10px;border-radius:4px;font-size:0.75rem;font-weight:700;">📋 CLINICIAN REVIEW: PENDING</span>
             </div>""", unsafe_allow_html=True)
 
             if r.get("confidence", 100.0) < 65.0:
-                st.warning(t("⚠️ Low AI Confidence (<65%): Unable to reach definitive triage threshold. Specialist evaluation recommended."))
+                st.warning("⚠️ Low AI Confidence (<65%): Unable to reach definitive triage threshold. Specialist evaluation recommended.")
 
             st.markdown(f"""<div class="verdict-box {css}"><div class="v-icon">{r['vicon']}</div>
-            <div class="v-title">{t(r['verdict'])}</div><div class="v-sub">{t(r['sub'])}</div></div>""", unsafe_allow_html=True)
+            <div class="v-title">{r['verdict']}</div><div class="v-sub">{r['sub']}</div></div>""", unsafe_allow_html=True)
 
-            st.markdown(f"""<div class="card"><span class="source-tag">{t("Source")}: {r.get('source', 'N/A')}</span><br>
-            {t("Localization")}: <b>{t(r['loc'])}</b><br>{t("Classification / Plane")}: <b>{t(r['extra'])}</b><br>
-            {t("Image Quality")}: <b>{t(r.get('image_quality', 'Adequate for Analysis'))}</b></div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class="card"><span class="source-tag">Source: {r.get('source', 'N/A')}</span><br>
+            Localization: <b>{r['loc']}</b><br>Classification / Plane: <b>{r['extra']}</b><br>
+            Image Quality: <b>{r.get('image_quality', 'Adequate for Analysis')}</b></div>""", unsafe_allow_html=True)
 
             from auth_manager import AuthManager, ROLE_LHW
             auth_m = AuthManager(st.session_state.get("user_role", ROLE_LHW))
             if auth_m.has_permission("override_assessment"):
                 st.subheader(t("Confirm Assessment"))
                 if "Tuberculosis" in selected_model:
-                    opts1, opts2, l1, l2 = core.TB_SEVERITY_LEVELS, core.TB_LUNG_ZONES, t("TB Severity"), t("Lung Zone")
+                    opts1, opts2, l1, l2 = core.TB_SEVERITY_LEVELS, core.TB_LUNG_ZONES, "TB Severity", "Lung Zone"
                 else:
-                    opts1, opts2, l1, l2 = core.BI_RADS_OPTIONS, core.ACR_DENSITY_OPTIONS, t("BI-RADS Assessment"), t("ACR Breast Density")
+                    opts1, opts2, l1, l2 = core.BI_RADS_OPTIONS, core.ACR_DENSITY_OPTIONS, "BI-RADS Assessment", "ACR Breast Density"
                 idx1 = opts1.index(r["bi_rads"]) if r["bi_rads"] in opts1 else 0
                 idx2 = opts2.index(r["acr"]) if r["acr"] in opts2 else 0
                 st.session_state.bi_rads_selected = st.selectbox(l1, opts1, index=idx1)
                 st.session_state.acr_density_selected = st.selectbox(l2, opts2, index=idx2)
             else:
-                st.info(t("🔒 Assessment Override Controls locked for LHW profile. (Select the Doctor profile to unlock)."))
+                st.info("🔒 Assessment Override Controls locked for LHW profile. (Senior Radiologist PIN 9999 required).")
 
             rec_text = r.get("recommendation", "Patient should be referred for specialist consultation")
             if r["is_critical"]:
-                st.warning(f"⚠️ {t('Action Plan')}: {t(rec_text)}")
+                st.warning(f"⚠️ {t('Action Plan')}: {rec_text}")
             else:
-                st.success(f"✅ {t('Action Plan')}: {t(rec_text)}")
+                st.success(f"✅ {t('Action Plan')}: {rec_text}")
 
             report_data = {
                 "patient_id": st.session_state.pat_id, "patient_age": st.session_state.pat_age,
@@ -1308,25 +1157,25 @@ def render_dashboard(selected_model):
 # HOSPITAL HUB TAB
 # ============================================================
 def render_hospital_hub():
-    st.markdown(f"""<div class="page-header">
-    <h1>🏥 {t("Allied Hospital Faisalabad")}</h1><p>{t("Urban Receiving Terminal • 2G GSM Critical Alert Monitor")}</p></div>""",
+    st.markdown(f"""<div class="page-header" style="background:linear-gradient(135deg,{C['primary']} 0%,{C['success']} 100%);">
+    <h1>🏥 Allied Hospital Faisalabad</h1><p>Urban Receiving Terminal • 2G GSM Critical Alert Monitor</p></div>""",
                 unsafe_allow_html=True)
 
     c1, c2 = st.columns([2, 1])
     with c2:
         st.subheader(t("Network Status"))
         net = st.session_state.net_stats
-        st.markdown(f"""<div class="card">{t("GSM Module")}: <b>{net['module']}</b><br>{t("Signal")}: <b>{net['signal']}</b><br>
-        {t("Basic Health Unit (BHU) Nodes")}: <b>{net['bhus']}</b><br>{t("Pending")}: <b>{len(st.session_state.sms_alerts)}</b></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card">GSM Module: <b>{net['module']}</b><br>Signal: <b>{net['signal']}</b><br>
+        BHU Nodes: <b>{net['bhus']}</b><br>Pending: <b>{len(st.session_state.sms_alerts)}</b></div>""", unsafe_allow_html=True)
         m1, m2 = st.columns(2)
         m1.markdown(f'<div class="metric-tile"><div class="label">{t("Total Alerts")}</div><div class="value">{len(st.session_state.sms_alerts)}</div></div>', unsafe_allow_html=True)
         crit = sum(1 for a in st.session_state.sms_alerts if a["is_critical"])
-        m2.markdown(f'<div class="metric-tile"><div class="label">{t("Critical")}</div><div class="value" style="color:{C["danger"]};">{crit}</div></div>', unsafe_allow_html=True)
+        m2.markdown(f'<div class="metric-tile"><div class="label">Critical</div><div class="value" style="color:{C["danger"]};">{crit}</div></div>', unsafe_allow_html=True)
 
     with c1:
         st.subheader(t("Alert Stream"))
         if not st.session_state.sms_alerts:
-            st.markdown(f'<div class="card" style="text-align:center;padding:30px;">{t("✅ All Clear — no alerts pending")}</div>', unsafe_allow_html=True)
+            st.markdown('<div class="card" style="text-align:center;padding:30px;">✅ All Clear — no alerts pending</div>', unsafe_allow_html=True)
         for a in st.session_state.sms_alerts:
             alert_id = a["id"]  # define alert_id from the current alert dict
             # Ensure per-alert state keys exist
@@ -1336,9 +1185,9 @@ def render_hospital_hub():
                 st.session_state.show_override_reason[alert_id] = False
 
             css = "critical" if a["is_critical"] else "ok"
-            st.markdown(f"""<div class="alert-card {css}"><b>{t("Alert")} #{a['id']}</b> ({a['time']})<br>
-            <span style="font-family:Consolas,monospace;font-size:0.8rem;">{t("Payload")}: {a['payload']}<br>
-            {t("Type")}: {t(a['type'])} &nbsp; {t("Status")}: {t(a['status'])}</span></div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class="alert-card {css}"><b>Alert #{a['id']}</b> ({a['time']})<br>
+            <span style="font-family:Consolas,monospace;font-size:0.8rem;">Payload: {a['payload']}<br>
+            Type: {a['type']} &nbsp; Status: {a['status']}</span></div>""", unsafe_allow_html=True)
 
             # AI RECOMMENDATION BOX — real data from inference (populated in
             # run_triage_action). If an alert is missing these fields, it was
@@ -1353,7 +1202,7 @@ def render_hospital_hub():
             risk_class = f"risk-{risk_level}" if has_real_data else ""
 
             if has_real_data:
-                verdict_display = combine_icon_and_text(vicon, t(verdict))
+                verdict_display = combine_icon_and_text(vicon, verdict)
                 conf_display = f"{confidence:.1f}%"
             else:
                 verdict_display = "⚠️ No AI data recorded for this alert"
@@ -1361,10 +1210,10 @@ def render_hospital_hub():
 
             st.markdown(f"""
             <div class="ai-recommendation {risk_class}">
-                <div class="rec-header">{t("🤖 AI Recommendation")}</div>
+                <div class="rec-header">🤖 AI Recommendation</div>
                 <div class="rec-verdict">{verdict_display}</div>
-                <div class="rec-confidence">{t("Confidence")}: <b>{conf_display}</b></div>
-                <div style="font-size: 0.9rem; margin-top: 8px; opacity: 0.95;">{t("Localization")}: {t(localization)}</div>
+                <div class="rec-confidence">Confidence: <b>{conf_display}</b></div>
+                <div style="font-size: 0.9rem; margin-top: 8px; opacity: 0.95;">Localization: {localization}</div>
             </div>
             """, unsafe_allow_html=True)
             if not has_real_data:
@@ -1377,24 +1226,24 @@ def render_hospital_hub():
             col_agree, col_override, col_approve = st.columns(3)
 
             with col_agree:
-                if st.button(t("✅ Agree"), key=f"agree_{alert_id}", use_container_width=True, disabled=already_approved, type="primary"):
+                if st.button("✅ Agree", key=f"agree_{alert_id}", use_container_width=True, disabled=already_approved):
                     st.session_state.lhv_decisions[alert_id]["decision"] = "agree"
                     st.session_state.show_override_reason[alert_id] = False
-                    st.toast(t("👩\u200d⚕️ LHV Decision: Agreed with AI recommendation"))
+                    st.toast("👩\u200d⚕️ LHV Decision: Agreed with AI recommendation")
 
             with col_override:
-                if st.button(t("🔄 Override"), key=f"override_{alert_id}", use_container_width=True, disabled=already_approved):
+                if st.button("🔄 Override", key=f"override_{alert_id}", use_container_width=True, disabled=already_approved):
                     st.session_state.lhv_decisions[alert_id]["decision"] = "override"
                     st.session_state.show_override_reason[alert_id] = True
                     st.rerun()
 
             with col_approve:
-                if st.button(t("📤 Approve"), key=f"approve_{alert_id}", use_container_width=True, disabled=already_approved):
+                if st.button("📤 Approve", key=f"approve_{alert_id}", use_container_width=True, disabled=already_approved):
                     a["status"] = "Approved"
                     st.session_state.log_entries.append(
                         f"[{time.strftime('%H:%M:%S')}] [REFERRAL] Alert #{a['id']} approved and forwarded to hospital."
                     )
-                    st.toast(t("📤 Approved — referral forwarded to hospital."))
+                    st.toast("📤 Approved — referral forwarded to hospital.")
                     st.rerun()
 
             if already_approved:
@@ -1408,7 +1257,7 @@ def render_hospital_hub():
             decision = st.session_state.lhv_decisions[alert_id]["decision"]
             if decision:
                 status_text = "✅ Agreed with AI" if decision == "agree" else "🔴 Overridden"
-                status_color = "#22C55E" if decision == "agree" else "#EF4444"
+                status_color = "#15803d" if decision == "agree" else "#b91c1c"
                 st.markdown(f"""
                 <div style="background: {status_color}20; border-left: 4px solid {status_color}; border-radius: 8px; padding: 12px; margin-top: 8px; margin-bottom: 12px;">
                     <b>👩\u200d⚕️ LHV Decision:</b> {status_text}
@@ -1431,7 +1280,7 @@ def render_hospital_hub():
                 ]
 
                 selected_reason = st.radio(
-                    t("Select reason for override:"),
+                    "Select reason for override:",
                     reason_options,
                     key=f"reason_{alert_id}",
                     label_visibility="collapsed"
@@ -1442,14 +1291,14 @@ def render_hospital_hub():
                 # If "Other" is selected, allow custom text input
                 if "Other" in selected_reason:
                     custom_reason = st.text_input(
-                        t("Please specify the reason:"),
+                        "Please specify the reason:",
                         key=f"custom_reason_{alert_id}",
                         placeholder="Enter additional details..."
                     )
                     st.session_state.lhv_decisions[alert_id]["reason"] = f"Other: {custom_reason}"
 
                 # Confirmation button
-                if st.button(t("✓ Confirm Override"), key=f"confirm_override_{alert_id}", use_container_width=True, type="primary"):
+                if st.button(f"✓ Confirm Override", key=f"confirm_override_{alert_id}", use_container_width=True):
                     st.toast(f"✅ Override confirmed. Reason: {st.session_state.lhv_decisions[alert_id]['reason']}")
                     st.session_state.show_override_reason[alert_id] = False
 
@@ -1460,16 +1309,16 @@ def render_hospital_hub():
 # CLOUD SYNC TAB
 # ============================================================
 def render_cloud_sync():
-    st.markdown(f"""<div class="page-header">
-    <h1>☁️ {t("Cloud Sync & Cache")}</h1><p>{t("Alibaba Cloud Integration (simulated) • Hybrid-Edge Architecture")}</p></div>""",
+    st.markdown(f"""<div class="page-header" style="background:linear-gradient(135deg,{C['primary']} 0%,{C['warning']} 100%);">
+    <h1>☁️ Cloud Sync & Cache</h1><p>Alibaba Cloud Integration (simulated) • Hybrid-Edge Architecture</p></div>""",
                 unsafe_allow_html=True)
 
     total, unsynced = core.counts()
     m1, m2, m3, m4 = st.columns(4)
     m1.markdown(f'<div class="metric-tile"><div class="label">{t("Cached Reports")}</div><div class="value">{total}</div></div>', unsafe_allow_html=True)
-    m2.markdown(f'<div class="metric-tile"><div class="label">{t("Unsynced")}</div><div class="value">{unsynced}</div></div>', unsafe_allow_html=True)
-    m3.markdown(f'<div class="metric-tile"><div class="label">{t("Synced")}</div><div class="value">{total - unsynced}</div></div>', unsafe_allow_html=True)
-    m4.markdown(f'<div class="metric-tile"><div class="label">{t("IoT Queue")}</div><div class="value">{len(st.session_state.iot_messages)}</div></div>', unsafe_allow_html=True)
+    m2.markdown(f'<div class="metric-tile"><div class="label">{t("Unsynced")}</div><div class="value" style="color:{C["danger"]};">{unsynced}</div></div>', unsafe_allow_html=True)
+    m3.markdown(f'<div class="metric-tile"><div class="label">{t("Synced")}</div><div class="value" style="color:{C["success"]};">{total - unsynced}</div></div>', unsafe_allow_html=True)
+    m4.markdown(f'<div class="metric-tile"><div class="label">{t("IoT Queue")}</div><div class="value" style="color:{C["warning"]};">{len(st.session_state.iot_messages)}</div></div>', unsafe_allow_html=True)
 
     st.subheader(t("Local Cache Status"))
     rows = core.get_cached_reports()
@@ -1477,8 +1326,8 @@ def render_cloud_sync():
         st.info(t("No reports cached"))
     else:
         st.dataframe(
-            [{t("ID"): r[0], t("Patient"): r[1], t("Modality"): r[3], t("BI-RADS/Severity"): r[5], t("Verdict"): t(r[7]),
-              t("Timestamp"): r[11], t("Synced"): "✅" if r[12] else "⏳"} for r in rows],
+            [{"ID": r[0], "Patient": r[1], "Modality": r[3], "BI-RADS/Severity": r[5], "Verdict": r[7],
+              "Timestamp": r[11], "Synced": "✅" if r[12] else "⏳"} for r in rows],
             width="stretch", hide_index=True,
         )
 
@@ -1496,11 +1345,11 @@ def render_cloud_sync():
     # VOICE MESSAGE MANAGEMENT
     # ============================================================
     st.markdown("---")
-    st.markdown("<div class='pe-section'>🎤 Voice Message Library</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>🎤 Voice Message Library</div>", unsafe_allow_html=True)
 
     voice_mgmt_col1, voice_mgmt_col2 = st.columns([2, 1])
     with voice_mgmt_col1:
-        st.markdown("<div class='pe-note'>Pre-recorded voice messages for different scenarios:</div>", unsafe_allow_html=True)
+        st.markdown("<div style='background: rgba(190, 24, 93, 0.2); color: #9d174d; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #be185d;'>Pre-recorded voice messages for different scenarios:</div>", unsafe_allow_html=True)
         selected_message = st.selectbox(
             "Select a message to test:",
             list(VOICE_MESSAGES.keys()),
@@ -1529,7 +1378,7 @@ def render_cloud_sync():
         st.caption("🔇 No audio engine configured yet — showing text only. Wire up play_voice_message() to enable playback.")
 
     # Upload custom voice file
-    st.markdown("<div class='pe-note'>Or upload your own audio file:</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: rgba(190, 24, 93, 0.2); color: #9d174d; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #be185d;'>Or upload your own audio file:</div>", unsafe_allow_html=True)
     custom_voice_file = st.file_uploader(
         "Upload audio (MP3/WAV/OGG)",
         type=["mp3", "wav", "ogg"],
@@ -1570,7 +1419,7 @@ def render_cloud_sync():
         """, unsafe_allow_html=True)
 
     # Session Feedback Form
-    st.markdown("<div class='pe-section'>📝 Session Feedback & Quality Check</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>📝 Session Feedback & Quality Check</div>", unsafe_allow_html=True)
 
     feedback_col1, feedback_col2 = st.columns([1, 1])
 
@@ -1592,7 +1441,7 @@ def render_cloud_sync():
         )
 
     # Detailed Feedback
-    st.markdown("<div class='pe-note'>Your Feedback:</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: rgba(190, 24, 93, 0.2); color: #9d174d; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #be185d;'>Your Feedback:</div>", unsafe_allow_html=True)
     feedback_text = st.text_area(
         "Share details about this session:",
         placeholder="E.g., Image quality issues, system performance, suggestions...",
@@ -1617,7 +1466,7 @@ def render_cloud_sync():
     submit_col1, submit_col2 = st.columns([2, 1])
 
     with submit_col1:
-        if st.button("📤 Submit Feedback & Rate Session", use_container_width=True, type="primary"):
+        if st.button("📤 Submit Feedback & Rate Session", use_container_width=True):
             if feedback_text.strip():
                 # Update metrics
                 st.session_state.helpya_total_sessions += 1
@@ -1649,7 +1498,7 @@ def render_cloud_sync():
 
     # Today's Summary Panel
     st.markdown("---")
-    st.markdown("<div class='pe-section'>📊 Today's Diagnostic Summary</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>📊 Today's Diagnostic Summary</div>", unsafe_allow_html=True)
 
     summary_col1, summary_col2, summary_col3 = st.columns(3)
 
@@ -1697,7 +1546,7 @@ def render_cloud_sync():
 
     # Quick Actions
     st.markdown("---")
-    st.markdown("<div class='pe-section'>⚡ Quick Actions</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: linear-gradient(135deg, #be185d 0%, #9d174d 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>⚡ Quick Actions</div>", unsafe_allow_html=True)
 
     action_col1, action_col2, action_col3, action_col4 = st.columns(4)
 

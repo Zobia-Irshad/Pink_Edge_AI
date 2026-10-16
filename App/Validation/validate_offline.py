@@ -40,8 +40,9 @@ import sys
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
 os.environ["HF_DATASETS_OFFLINE"] = "1"
-# Make sure a stray Roboflow key can't send us down the hosted path at all.
-os.environ.pop("ROBOFLOW_API_KEY", None)
+# Exercise the offline mode even when credentials are configured; the UI must not use them
+# unless the user explicitly selects GSM Failover.
+os.environ["ROBOFLOW_API_KEY"] = "offline-validation-only"
 
 import socket  # noqa: E402
 
@@ -58,6 +59,7 @@ _LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1", "0.0.0.0", "", None}
 _REAL_SOCKET = socket.socket
 _REAL_GETADDRINFO = socket.getaddrinfo
 _REAL_CREATE_CONNECTION = socket.create_connection
+NETWORK_ATTEMPTS = 0
 
 
 def _host_of(address):
@@ -65,8 +67,10 @@ def _host_of(address):
 
 
 def _guard(address, what):
+    global NETWORK_ATTEMPTS
     host = _host_of(address)
     if str(host) not in {str(h) for h in _LOCAL_HOSTS}:
+        NETWORK_ATTEMPTS += 1
         raise NetworkBlocked(f"{what} to {host!r} blocked by validate_offline.py")
 
 
@@ -182,7 +186,7 @@ def _():
     import inference as inf
     from PIL import Image
 
-    r = inf.predict_mammography(Image.open(_sample("Breast Cancer")).convert("RGB"))
+    r = inf.predict_mammography(Image.open(_sample("Breast Cancer")).convert("RGB"), allow_network=False)
     _assert_result_shape(r, "predict_mammography")
     return f"({r['source'][:52]})"
 
@@ -192,19 +196,36 @@ def _():
     import inference as inf
     from PIL import Image
 
-    r = inf.predict_tb(Image.open(_sample("Tuberculosis")).convert("RGB"))
+    r = inf.predict_tb(Image.open(_sample("Tuberculosis")).convert("RGB"), allow_network=False)
     _assert_result_shape(r, "predict_tb")
     return f"({r['source'][:52]})"
 
 
 @check("Maternal Health triage works offline on a real sample")
 def _():
+    from glob import glob
+
     import inference as inf
     from PIL import Image
 
-    r = inf.predict_maternal(Image.open(_sample("Maternal")).convert("RGB"))
+    maternal_samples = sorted(
+        path for extension in ("*.png", "*.jpg", "*.jpeg", "*.bmp")
+        for path in glob(os.path.join(TEST_DATA_DIR, "Maternal", extension))
+    )
+    if maternal_samples:
+        image = Image.open(maternal_samples[0]).convert("RGB")
+        sample_description = "dataset image"
+    else:
+        from Tools.dicom_adapter import dicom_to_pil
+
+        dicom_path = os.path.join(ROOT_DIR, "test_ultrasound_valid.dcm")
+        require(os.path.isfile(dicom_path), "no maternal image or bundled DICOM fixture is available")
+        image, _ = dicom_to_pil(dicom_path)
+        sample_description = "bundled DICOM fixture"
+
+    r = inf.predict_maternal(image, allow_network=False)
     _assert_result_shape(r, "predict_maternal")
-    return f"({r['source'][:52]})"
+    return f"({sample_description}; {r['source'][:52]})"
 
 
 # ============================================================
@@ -216,13 +237,16 @@ def _():
     import inference as inf
     from PIL import Image
 
+    attempts_before = NETWORK_ATTEMPTS
     offenders = []
     for model in core.MODELS:
         img = core.load_placeholder(model, seed=11)
-        r = core.run_triage(model, img)
+        r = core.run_triage(model, img, allow_network=False)
         src = (r or {}).get("source", "").lower()
         if any(m in src for m in HOSTED_MARKERS):
             offenders.append(f"{model} -> {r['source']}")
+    require(NETWORK_ATTEMPTS == attempts_before,
+            f"offline triage attempted {NETWORK_ATTEMPTS - attempts_before} outbound connection(s)")
     require(not offenders,
             "a hosted source was reported with no network available, which means the source "
             "label is not trustworthy: " + "; ".join(offenders))
@@ -332,6 +356,7 @@ def _():
 def _():
     from streamlit.testing.v1 import AppTest
 
+    attempts_before = NETWORK_ATTEMPTS
     at = AppTest.from_file(os.path.join(ROOT_DIR, "streamlit_app.py"))
     at.run(timeout=90)
     require(not at.exception, f"startup raised offline: {list(at.exception)}")
@@ -339,6 +364,8 @@ def _():
     require(run, "no Run Triage control found")
     run[0].click().run(timeout=120)
     require(not at.exception, f"Run Triage raised offline: {list(at.exception)}")
+    require(NETWORK_ATTEMPTS == attempts_before,
+            f"offline Streamlit startup/triage attempted {NETWORK_ATTEMPTS - attempts_before} outbound connection(s)")
     require(at.session_state["inference_done"], "Run Triage did not complete offline")
     src = at.session_state["current_result"].get("source", "").lower()
     require(not any(m in src for m in HOSTED_MARKERS),

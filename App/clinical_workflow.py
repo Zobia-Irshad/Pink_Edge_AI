@@ -1,6 +1,12 @@
 from dataclasses import dataclass, asdict
 from datetime import datetime
 
+if __package__:
+    from .inference import predict_maternal, predict_tb, predict_mammography
+else:
+    from inference import predict_maternal, predict_tb, predict_mammography
+
+
 @dataclass
 class WorkflowResult:
     patient_id: str
@@ -32,17 +38,23 @@ def run_workflow(patient_id, modality, image, inference_function):
     except Exception as exc:
         return WorkflowResult(patient_id, modality, timestamp, 'error', {'error': str(exc)}, 'Inference error. Route case for manual clinical review.', True)
 
-def run_maternal_workflow(patient_id, image):
-    from .inference import predict_maternal
-    return run_workflow(patient_id, 'maternal_ultrasound', image, predict_maternal)
+def run_maternal_workflow(patient_id, image, allow_network=True):
+    return run_workflow(
+        patient_id, 'maternal_ultrasound', image,
+        lambda scan: predict_maternal(scan, allow_network=allow_network),
+    )
 
-def run_tb_workflow(patient_id, image):
-    from .inference import predict_tb
-    return run_workflow(patient_id, 'tuberculosis', image, predict_tb)
+def run_tb_workflow(patient_id, image, allow_network=True):
+    return run_workflow(
+        patient_id, 'tuberculosis', image,
+        lambda scan: predict_tb(scan, allow_network=allow_network),
+    )
 
-def run_mammography_workflow(patient_id, image):
-    from .inference import predict_mammography
-    return run_workflow(patient_id, 'mammography', image, predict_mammography)
+def run_mammography_workflow(patient_id, image, allow_network=True):
+    return run_workflow(
+        patient_id, 'mammography', image,
+        lambda scan: predict_mammography(scan, allow_network=allow_network),
+    )
 
 def workflow_to_dict(result):
     return asdict(result)
