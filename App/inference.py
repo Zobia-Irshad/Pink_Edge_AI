@@ -919,7 +919,7 @@ def model_status(allow_network=False) -> dict:
 
     return {
         "Mammography (YOLOv8-OBB)": {
-            "real": roboflow_ok or offline_cv_mammo or local_mammo or local_mammo_model,
+            "real": roboflow_ok or offline_cv_mammo or local_mammo or local_mammo_model is not None,
             "reason": "OK (Roboflow workflow)" if roboflow_ok
             else ("OK (offline pixel-diff heuristic, ~96% on held-out data)" if offline_cv_mammo
                   else ("OK (locally-trained classifier, ~98.7% on held-out data)" if local_mammo
@@ -931,7 +931,7 @@ def model_status(allow_network=False) -> dict:
                               else "Unavailable (no local weights)"))),
         },
         "Tuberculosis (Chest X-Ray)": {
-            "real": local_tb or offline_cv_tb or roboflow_ok or local_tb_model,
+            "real": local_tb or offline_cv_tb or roboflow_ok or local_tb_model is not None,
             "reason": "OK (locally-trained classifier, ~82.5% on held-out data — best measured of the 4 TB options)" if local_tb
             else ("OK (offline pixel-diff heuristic, ~74% on held-out data)" if offline_cv_tb
                   else ("OK (Roboflow model)" if roboflow_ok else (_tb_load_error or ("OK (cached Hugging Face model)" if local_tb_model else "No local model available")))),
@@ -942,7 +942,7 @@ def model_status(allow_network=False) -> dict:
                               else "Unavailable (no cached weights)"))),
         },
         "Maternal Health (Ultrasound)": {
-            "real": roboflow_ok or local_maternal_model,
+            "real": roboflow_ok or local_maternal_model is not None,
             "reason": "OK (Roboflow model)" if roboflow_ok else (_maternal_load_error or ("OK (cached Hugging Face model)" if local_maternal_model else "No local model available")),
             "source": f"Roboflow {ROBOFLOW_MATERNAL_MODEL_ID}" if roboflow_ok
             else ("shr3m/fetal-brain-plane-cnn (Hugging Face)" if local_maternal_model
