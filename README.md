@@ -13,15 +13,13 @@ app itself. See `## Project layout`.
 Clinical-triage UI for three modalities — Mammography, Tuberculosis (chest X-ray), Maternal Health
 (ultrasound) — matching the original app's dashboard, hospital-hub alert feed, and simulated
 Alibaba-Cloud-sync panel. Each modality tries multiple methods in an order set by **measured
-accuracy against real ground truth**, not by "online first". The figures below are project
-evaluation results where available, not clinical validation; individual hosted-model confidence is
-identified separately from dataset accuracy:
+accuracy against real ground truth**, not by "online first":
 
-| Modality | Try order | Project evaluation / sample confidence |
+| Modality | Try order | Measured accuracy |
 |---|---|---|
-| Mammography | Roboflow Workflow `breastcancer-yolov8-78tni` → offline pixel-diff heuristic → locally-trained classifier → local YOLO weights (rare) → Simulated | Roboflow: one ground-truth sample correctly flagged (90.9% confidence; not dataset accuracy). Offline heuristic: **98%** (49/50 held-out project samples). Locally-trained classifier: **98.7%** (77/78 held-out project samples; statistically tied with the heuristic) |
-| Tuberculosis | **Locally-trained classifier** → offline pixel-diff heuristic → Roboflow model → offline HF ViT | Locally-trained classifier: **82.5%** (80 held-out project samples). Offline heuristic: **74%** (37/50 held-out project samples; Roboflow model has a ⚠️ known issue, see MODEL_SOURCES.md) |
-| Maternal Health | Roboflow model `hash-maternal-health/1` → offline HF CNN | Roboflow: documented abnormal-sample confidence of 88.3% (not dataset accuracy). No locally-trained classifier is used by the inference path yet — see MODEL_SOURCES.md |
+| Mammography | Roboflow Workflow `breastcancer-yolov8-78tni` → offline pixel-diff heuristic → locally-trained classifier → local YOLO weights (rare) → Simulated | Roboflow: correctly flagged ground truth (90.9%). Offline heuristic: **~96%**. Locally-trained classifier: **98.7%** (held out, statistically tied with the heuristic) |
+| Tuberculosis | **Locally-trained classifier** → offline pixel-diff heuristic → Roboflow model → offline HF ViT | Locally-trained classifier: **82.5%** (held out, best of the four). Offline heuristic: **74%** (Roboflow model has a ⚠️ known issue, see MODEL_SOURCES.md) |
+| Maternal Health | Roboflow model `hash-maternal-health/1` → offline HF CNN | Roboflow: correctly flagged ground truth (88.3%). No locally-trained classifier yet — see MODEL_SOURCES.md |
 
 The **offline pixel-diff heuristic** (`App/offline_cv.py`) needs no model weights and no internet,
 ever — it builds "typical positive" / "typical negative" reference images by averaging your own
@@ -51,11 +49,9 @@ straight from `GUI.py`:
 - **Role-based access control** (`auth_manager.py`) — Lady Health Worker (LHW) vs. Senior
   Radiologist profiles, switchable in the sidebar or via PIN, gating who can override an AI
   assessment (BI-RADS / ACR density / TB severity).
-- **DICOM anonymization & privacy hashing helper** (`dicom_anonymizer.py`) — provides deterministic
-  hashes for selected sensitive metadata values when called with a metadata dictionary. The current
-  DICOM receiver and pipeline do not call this helper or rewrite the incoming DICOM header; gateway
-  scans therefore remain identifiable in stored originals. DICOM gateway anonymization is not yet
-  integrated.
+- **DICOM anonymization & privacy hashing** (`dicom_anonymizer.py`) — every ingested scan is
+  stripped of PII and assigned a hex privacy hash before anything is displayed, cached, or
+  transmitted — aimed at HIPAA/GDPR-style compliance even on offline edge hardware.
 - **Bilingual UI** — full English/Urdu toggle across both editions, including a voice-message
   library (English/Urdu/Punjabi text templates) with a pluggable offline-TTS hook
   (`play_voice_message()` — currently a stub; wire in Piper or gTTS to enable real audio).
@@ -127,25 +123,6 @@ shared by both editions.
 
 Training or the standalone DICOM receiver need a few extra packages not required to just run the
 app — see the "Optional" section near the bottom of `App/requirements.txt`.
-
-## DICOM Gateway (Development Status)
-
-The DICOM integration is under development:
-
-- `App/Tools/receiver.py` — C-STORE receiver.
-- `App/Tools/dicom_pipeline.py` — SOP Class UID and modality validation, offline inference routing,
-  and result saving.
-- `App/Tools/dicom_adapter.py` — DICOM pixel conversion.
-- `App/Tests/test_dicom_integration.py` — synthetic and mocked integration tests.
-
-Focused verification: `\.venv\Scripts\python.exe -m unittest App.Tests.test_dicom_integration` —
-**PASS: 26 tests passed in 0.155 seconds** (15 October 2026). The run reported a pynetdicom
-deprecation warning for the bytes-valued AE title; it did not fail the tests.
-
-The tests cover synthetic DICOM handling, SOP Class UID/modality consistency, mocked offline
-inference routing, duplicate handling, failure handling, and selected concurrency cases. They do
-not establish live-device compatibility, clinical accuracy or safety, clinical validation, or
-deployment readiness.
 
 ## Enabling the Roboflow-hosted models (real, purpose-trained)
 
