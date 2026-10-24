@@ -1,0 +1,9 @@
+# Python deps specific to running Pink Edge AI's edge-node role on an RK3588 board.
+# The app's own deps (torch, opencv-python-headless, etc.) come from ../App/requirements.txt —
+# install both on the board:  pip install -r ../App/requirements.txt -r requirements_rk3588.txt
+
+pyserial>=3.5      # uart_bridge.py's serial link to the ESP32 companion
+
+# rknn-toolkit-lite2 (on-device NPU runtime) is intentionally NOT listed here: it ships as a
+# board/Python-version-matched wheel from Rockchip's own releases, not a normal PyPI package.
+# See README.md's "NPU-accelerated mammography inference" section for the install command.

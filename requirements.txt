@@ -1,0 +1,52 @@
+# Pink Edge AI — Python dependencies (Desktop + Streamlit editions share this file).
+# Tkinter is stdlib and not listed here. Install with: pip install -r requirements.txt
+# (Start.bat / Start_Web.bat do this automatically on first run.)
+
+numpy>=1.24.0
+Pillow>=10.0.0
+# headless build: the GUI-enabled `opencv-python` needs system graphics libs (libGL.so.1) that
+# headless containers like Streamlit Community Cloud don't have. TB inference (CLAHE/blur/resize)
+# and ultralytics both work fine against the headless build; nothing here opens an OpenCV window.
+opencv-python-headless>=4.8.0
+fpdf2>=2.7.0
+requests>=2.31.0
+streamlit>=1.30.0
+
+# ML runtime — CPU is enough for all 3 models at demo scale.
+torch>=2.0.0
+torchvision>=0.15.0
+ultralytics>=8.0.0
+huggingface_hub>=0.20.0
+
+# Roboflow-hosted models — the primary real-model path for all three modalities, called through
+# `inference_sdk` (InferenceHTTPClient). Only needed if you supply a Roboflow API key; harmless to
+# have installed otherwise, since every modality falls back to its offline path when no key is
+# configured. See Documentations/MODEL_SOURCES.md.
+inference-sdk>=0.9.0
+
+# Only used by inference.py's fetch_roboflow_mammography_weights() — a best-effort download of a
+# trained YOLO export for the Mammography modality's deepest fallback tier, via the Roboflow
+# project/version API (a different surface than the `inference_sdk` client above). Also gated on
+# having a Roboflow API key; safe to leave installed otherwise.
+roboflow>=1.1.0
+
+# NOTE: `dicom-anonymizer` was previously listed here and has been removed. The bundled
+# dicom_anonymizer.py is a local stdlib-only module (hashlib + json); that PyPI package is a
+# different, unrelated project and was never imported.
+
+# ============================================================
+# Optional — only needed for the training script and the standalone DICOM receiver, not for
+# running either edition of the app itself. Kept here (one file) rather than a separate
+# requirements-dev.txt so there's one less file to track; a normal `pip install -r requirements.txt`
+# pulls these in too, which is harmless even if you never run the scripts below.
+# ============================================================
+
+# train_tb_classifier.py — reads the TBX11K label CSV with pandas.
+# (ultralytics already pulls pandas in transitively, but the script imports it directly, so it is
+# declared here rather than relied on as a transitive dependency.)
+pandas>=2.0.0
+
+# Tools/receiver.py — minimal DICOM C-STORE listener (a local PACS bridge) that accepts scans
+# pushed from hospital imaging equipment. Standalone; the app never imports it.
+pynetdicom>=2.0.0
+pydicom>=2.4.0

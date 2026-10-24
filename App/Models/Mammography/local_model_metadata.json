@@ -1,0 +1,17 @@
+{
+  "architecture": "mobilenet_v3_small (ImageNet-pretrained backbone, frozen) + linear head (trained)",
+  "img_size": 128,
+  "classes": [
+    "negative",
+    "positive"
+  ],
+  "train_positive": 150,
+  "train_negative": 150,
+  "test_positive": 40,
+  "test_negative": 38,
+  "held_out_test_accuracy_pct": 98.71794871794872,
+  "epochs": 6,
+  "batch_size": 16,
+  "lr": 0.001,
+  "trained_at": "2026-09-13 01:12:27"
+}

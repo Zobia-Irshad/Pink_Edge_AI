@@ -1,0 +1,49 @@
+.venv/
+.venv-1/
+__pycache__/
+dataset/
+runs/
+*.db
+yolov8n-cls.pt
+
+# Secrets & API Keys
+roboflow_key.txt
+*.key
+.env
+
+# Keep the trained TB checkpoint; ignore placeholder model artifacts.
+models/fetal_health.pt
+models/yolov8_obb_int8.pt
+
+# OS / temporary files
+*.lock
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Bulk training datasets & large weight caches (kept locally, not tracked)
+App/Models/Maternal/Images/
+App/Models/Maternal/Bad Health/
+App/Models/Maternal/Good Health/
+App/Models/Maternal/Med Health/
+App/Models/Maternal/train/
+App/Models/Maternal/test/
+App/Models/Maternal/validate/
+App/Models/Maternal/negative/
+App/Models/Maternal/positive/
+App/Models/Maternal/.cache/
+App/Models/TB/model.pt
+App/Models/TB/.cache/
+App/Models/TB/train/
+App/Models/TB/test/
+App/Models/TB/negative/
+App/Models/TB/positive/
+App/Models/TB/validate/
+App/Models/Mammography/train/
+App/Models/Mammography/test/
+App/Models/Mammography/negative/
+App/Models/Mammography/positive/
+App/Models/Mammography/validate/
+to_untrack.txt
+
+

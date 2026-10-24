@@ -1,0 +1,6 @@
+{
+  "positive_samples_available": 5896,
+  "negative_samples_available": 3583,
+  "positive_samples_used": 150,
+  "negative_samples_used": 150
+}
