@@ -515,6 +515,7 @@ class PinkEdgeApp:
         self.current_image = None
         self.current_result = None
         self.inference_done = False
+        self.clinical_context_packet = None
         self.pat_id = random.randint(10000000, 99999999)
         self.pat_age = random.randint(30, 70)
         self.privacy_hash = _privacy_hash_for(self.pat_id)
