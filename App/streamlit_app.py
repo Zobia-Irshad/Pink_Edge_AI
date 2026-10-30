@@ -708,6 +708,7 @@ def init_state():
         "sms_alerts": [], "iot_messages": [], "oss_uploads": [], "acr_status": None,
         "inference_latency": 9.4, "bi_rads_selected": None, "acr_density_selected": None,
         "cache_saved": False,
+        "clinical_context_packet": None,
         "lhv_decisions": {}, "show_override_reason": {},
         # Voice + Help/Feedback panel state (Cloud Sync tab)
         "voice_enabled": True,
@@ -785,11 +786,22 @@ def render_sidebar():
             st.session_state.inference_done = False
             st.session_state.log_entries = []
             st.session_state.last_model = selected_model
+            st.session_state.clinical_context_packet = None
             st.session_state.current_result = None
             st.session_state.cache_saved = False
 
         st.markdown(f"#### {t('Upload Patient Scan')}")
         uploaded = st.file_uploader("Upload Patient Scan", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
+
+        if "Tuberculosis" in selected_model:
+            with st.expander("🧾 Clinical Context (TB) - optional"):
+                st.text_input("Age (years)", key="ctx_age")
+                st.selectbox("Cough", ["unknown", "yes", "no"], key="ctx_cough")
+                st.selectbox("Fever", ["unknown", "yes", "no"], key="ctx_fever")
+                st.selectbox("Blood in cough (hemoptysis)", ["unknown", "yes", "no"], key="ctx_hemoptysis")
+                st.selectbox("Previous TB", ["unknown", "yes", "no"], key="ctx_prior_tb")
+                st.selectbox("Smoking", ["unknown", "never", "former", "current"], key="ctx_smoking_status")
+                st.caption("Saved with the report only. The AI model does not use these answers yet.")
 
         st.markdown("---")
         if st.button(f"▶️ {t('Run Triage')}", width="stretch"):
@@ -838,6 +850,37 @@ def render_sidebar():
         return selected_model, uploaded
 
 
+CTX_FIELDS = ("cough", "fever", "hemoptysis", "prior_tb", "smoking_status")
+
+
+def context_supplied_count(packet):
+    """How many of the 6 clinical-context fields were actually answered."""
+    norm = packet["preprocessing_result"]["normalized"]
+    return sum(1 for v in norm.values() if v not in (None, "unknown"))
+
+
+def build_context_action(selected_model):
+    """Called from run_triage_action(): packages the sidebar form into a validated packet."""
+    if "Tuberculosis" not in selected_model:
+        st.session_state.clinical_context_packet = None
+        return
+    ctx = {"age": (st.session_state.get("ctx_age", "") or "").strip() or None}
+    for field in CTX_FIELDS:
+        ctx[field] = st.session_state.get(f"ctx_{field}", "unknown")
+    try:
+        pkt = core.build_context_packet(str(st.session_state.pat_id), "tuberculosis", ctx)
+    except (ValueError, TypeError) as exc:
+        st.session_state.clinical_context_packet = None
+        st.session_state.log_entries.append(f"[{time.strftime('%H:%M:%S')}] [Context] Skipped: {exc}")
+        return
+    st.session_state.clinical_context_packet = pkt
+    st.session_state.log_entries.append(
+        f"[{time.strftime('%H:%M:%S')}] [Context] Packet built: {context_supplied_count(pkt)}/6 fields supplied "
+        f"(recorded, not used by AI).")
+    for w in pkt["preprocessing_result"]["warnings"]:
+        st.session_state.log_entries.append(f"[{time.strftime('%H:%M:%S')}] [Context] Warning: {w}")
+
+
 def run_triage_action(selected_model, uploaded):
     import random
     from dicom_anonymizer import generate_hex_privacy_hash
@@ -867,6 +910,7 @@ def run_triage_action(selected_model, uploaded):
     st.session_state.inference_latency = elapsed if elapsed >= 1.0 else round(random.uniform(7.8, 12.2), 1)
 
     st.session_state.current_result = result
+    build_context_action(selected_model)
     st.session_state.bi_rads_selected = result["bi_rads"]
     st.session_state.acr_density_selected = result["acr"]
     st.session_state.inference_done = True
@@ -920,6 +964,7 @@ def save_cache_action(selected_model):
         "verdict": r["verdict"], "localization": r["loc"], "confidence": r["confidence"],
         "inference_time": st.session_state.inference_latency, "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "network_mode": st.session_state.network_mode, "model_source": r.get("source", "N/A"), "synced": 0,
+        "clinical_context": st.session_state.get("clinical_context_packet"),
     }
     core.save_to_cache(data)
     st.session_state.cache_saved = True
@@ -1110,6 +1155,12 @@ def render_dashboard(selected_model):
             Localization: <b>{r['loc']}</b><br>Classification / Plane: <b>{r['extra']}</b><br>
             Image Quality: <b>{r.get('image_quality', 'Adequate for Analysis')}</b></div>""", unsafe_allow_html=True)
 
+            ctx_pkt = st.session_state.get("clinical_context_packet")
+            if ctx_pkt and "Tuberculosis" in selected_model:
+                st.markdown(
+                    f'<div class="card">🧾 <b>Clinical Context</b>: {context_supplied_count(ctx_pkt)}/6 fields '
+                    f'(recorded only, not used by AI)</div>', unsafe_allow_html=True)
+
             from auth_manager import AuthManager, ROLE_LHW
             auth_m = AuthManager(st.session_state.get("user_role", ROLE_LHW))
             if auth_m.has_permission("override_assessment"):
@@ -1141,6 +1192,7 @@ def render_dashboard(selected_model):
                 "referral_priority": r.get("referral_priority", "High Priority" if r["is_critical"] else "Low (Routine)"),
                 "inference_time": st.session_state.inference_latency, "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "network_mode": st.session_state.network_mode, "model_source": r.get("source", "N/A"), "synced": 0,
+                "clinical_context": st.session_state.get("clinical_context_packet"),
             }
             dc1, dc2 = st.columns(2)
             dc1.download_button(f"📝 {t('Download Text Report')}", core.generate_text_report(report_data),
