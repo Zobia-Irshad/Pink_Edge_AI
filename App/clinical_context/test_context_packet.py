@@ -1,4 +1,3 @@
-
 try:
     from .context_packet import build_context_packet
 except ImportError:
@@ -20,20 +19,18 @@ def test_packet_contains_required_metadata():
 
 
 def test_empty_context_marks_missing_fields():
-    packet = build_context_packet(
-        patient_id="TEST-002",
-        modality="tuberculosis",
-        clinical_context={},
-    )
+    packet = build_context_packet("TEST-002", "tuberculosis", {})
 
-    assert set(packet["missing_fields"]) == set(
-        __import__(
-            build_context_packet.__module__.rsplit(".", 1)[0]
-            + ".preprocessing"
-            if "." in build_context_packet.__module__
-            else "preprocessing"
-        ).FEATURE_NAMES
-    )
+    assert set(packet["missing_fields"]) == {
+        "age", "cough", "fever", "hemoptysis", "prior_tb", "smoking_status"}
+
+
+def test_supplied_fields_are_not_missing():
+    packet = build_context_packet(
+        "TEST-003", "tuberculosis", {"age": 40, "smoking_status": "former"})
+
+    assert "age" not in packet["missing_fields"]
+    assert "smoking_status" not in packet["missing_fields"]
 
 
 def test_invalid_patient_id_is_rejected():
