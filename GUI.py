@@ -103,27 +103,357 @@ C = {
     "console_bg": "#060a13", "console_text": "#94a3b8",
 }
 
+
+
+
 TR = {
-    "Pink Edge AI": "پنک ایج اے آئی", "Clinical Intelligence Platform": "کلینیکل انٹیلیجنس پلیٹ فارم",
-    "Dashboard": "ڈیش بورڈ", "Hospital Hub": "ہسپتال مرکز", "Cloud Sync": "کلاؤڈ سنک",
-    "Fully Offline": "مکمل آف لائن", "GSM Failover": "جی ایس ایم فیل اوور",
-    "Select AI Model": "اے آئی ماڈل منتخب کریں", "Upload Patient Scan": "مریض کا اسکین اپ لوڈ کریں",
-    "Run Triage": "تشخیص چلائیں", "Save to Cache": "کیش میں محفوظ کریں",
-    "Sync to Cloud": "کلاؤڈ میں سنک کریں", "Check OTA": "او ٹی اے چیک کریں",
-    "Reset Session": "سیشن ری سیٹ کریں", "Show Detection Overlay": "کھوج اوورلے دکھائیں",
-    "Network Mode": "نیٹ ورک موڈ", "Awaiting Analysis": "تجزیہ کا انتظار",
-    "Confirm Assessment": "تصدیق تشخیص", "Download Text Report": "متن رپورٹ ڈاؤن لوڈ کریں",
-    "Download PDF Report": "پی ڈی ایف رپورٹ ڈاؤن لوڈ کریں", "Hardware Diagnostics": "ہارڈویئر تشخیص",
-    "Telemetry Log": "ٹیلی میٹری لاگ", "Alert Stream": "الرٹ اسٹریم", "No reports cached": "کوئی رپورٹ کیش نہیں",
-    "Local Cache Status": "لوکل کیش حالت", "Report cached.": "رپورٹ محفوظ ہو گئی۔",
-    "Sync complete.": "سنک مکمل۔",
+    "Urban Receiving Terminal • 2G GSM Critical Alert Monitor": "شہری مریض وصولی مرکز • 2G GSM ہنگامی الرٹس کی نگرانی",
+"⚠️ No AI data recorded for this alert": "⚠️ اس الرٹ کے لیے AI کا کوئی ڈیٹا محفوظ نہیں",
+"This alert predates the real-data fix, or session state was carried over. Use 🔄 Reset Session in the sidebar and run a fresh triage to see live results here.": "یہ الرٹ حقیقی ڈیٹا کی اصلاح سے پہلے بنایا گیا تھا یا پچھلا سیشن برقرار ہے۔ سائیڈبار میں 🔄 سیشن ری سیٹ کریں اور تازہ نتائج کے لیے دوبارہ ٹرائیج چلائیں۔",
+"📤 Status:": "📤 حیثیت:",
+"Approved & forwarded to hospital": "منظور کرکے ہسپتال بھیج دیا گیا",
+"✅ Agreed with AI": "✅ AI کی سفارش سے اتفاق",
+"🔴 Overridden": "🔴 AI کی سفارش تبدیل کی گئی",
+"👤 Patient History": "👤 مریض کی سابقہ طبی معلومات",
+"📸 Image Quality": "📸 تصویر کا معیار",
+"🔬 Clinical Symptoms": "🔬 طبی علامات",
+"❓ Other": "❓ دیگر",
+"Enter additional details...": "مزید تفصیلات درج کریں...",
+    # ============================================================
+    # BRANDING
+    # ============================================================
+    "Pink Edge AI": "پنک ایج اے آئی",
+    "Clinical Intelligence Platform": "کلینیکل انٹیلیجنس پلیٹ فارم",
+    "Pink Edge AI (Streamlit) — same real models as the desktop app, browser UI": "پنک ایج اے آئی (اسٹریم لٹ) — ڈیسک ٹاپ ایپ کے وہی حقیقی ماڈلز، براؤزر انٹرفیس",
+
+    # ============================================================
+    # USER PROFILES
+    # ============================================================
+    "ACTIVE USER PROFILE": "فعال صارف کا پروفائل",
+    "Nurse": "نرس",
+    "Doctor": "ڈاکٹر",
+    "Lady Health Worker (LHW)": "لیڈی ہیلتھ ورکر",
+    "Radiologist": "ریڈیولوجسٹ",
+    "PIN Auth": "پن کی تصدیق",
+    "PIN (auto-filled for the selected role)": "منتخب کردہ کردار کا پن خودکار طور پر درج ہے",
+
+    # ============================================================
+    # NAVIGATION
+    # ============================================================
+    "Dashboard": "ڈیش بورڈ",
+    "Hospital Hub": "ہسپتال مرکز",
+    "Cloud Sync": "کلاؤڈ سنک",
+    "Cloud Sync & Cache": "کلاؤڈ سنک اور کیش",
+    "Help": "مدد",
+    "Language": "زبان",
+    "Language:": "زبان:",
+
+    # ============================================================
+    # NETWORK
+    # ============================================================
+    "Network Mode": "نیٹ ورک موڈ",
+    "Fully Offline": "مکمل آف لائن",
+    "GSM Failover": "جی ایس ایم متبادل کنکشن",
+    "GSM Failover (slow internet connection)": "جی ایس ایم متبادل کنکشن (سست انٹرنیٹ)",
+    "☁️ Alibaba Cloud IoT Active": "☁️ علی بابا کلاؤڈ آئی او ٹی فعال",
+    "🔒 100% Offline": "🔒 مکمل طور پر آف لائن",
+    "Network Status": "نیٹ ورک کی صورتحال",
+    "Network": "نیٹ ورک",
+    "Network:": "نیٹ ورک:",
+    "GSM Module": "جی ایس ایم ماڈیول",
+    "Signal": "سگنل",
+    "Signal:": "سگنل:",
+    "BHU Nodes": "بنیادی مراکز صحت",
+    "Pending": "زیرِ التوا",
+    "Network ONLINE": "نیٹ ورک آن لائن",
+    "ONLINE": "آن لائن",
+
+    # ============================================================
+    # X-RAY AND MEDICAL SCANNING
+    # ============================================================
+    "Select AI Model": "اے آئی ماڈل منتخب کریں",
+    "Select X-ray Type": "ایکس رے کی قسم منتخب کریں",
+    "Mammography": "میموگرافی",
+    "Mammography (YOLOv8-OBB)": "میموگرافی",
+    "Tuberculosis": "تپ دق",
+    "Tuberculosis (Chest X-Ray)": "تپ دق کا سینے کا ایکس رے",
+    "TB Chest X-ray": "ٹی بی کے لیے سینے کا ایکس رے",
+    "TB chest X-ray": "ٹی بی کے لیے سینے کا ایکس رے",
+    "Maternal Health": "زچگی کی صحت",
+    "Maternal Health (Ultrasound)": "زچگی کا الٹراساؤنڈ",
+    "Maternal Ultrasound": "زچگی کا الٹراساؤنڈ",
+    "Maternal ultrasound": "زچگی کا الٹراساؤنڈ",
+    "Medical Image Analysis": "طبی تصاویر کا تجزیہ",
+    "Patient Scan": "مریض کا اسکین",
+    "Upload Patient Scan": "مریض کا اسکین اپ لوڈ کریں",
+    "Upload Image...": "تصویر اپ لوڈ کریں...",
+    "Generated Scan Placeholder": "اسکین کا عارضی نمونہ",
+    "Show Detection Overlay": "نشاندہی کا اوورلے دکھائیں",
+
+    # ============================================================
+    # ACTIONS
+    # ============================================================
+    "Run Triage": "ابتدائی طبی جانچ کریں",
+    "Run triage to begin": "ابتدائی طبی جانچ شروع کرنے کے لیے رن ٹرائیج دبائیں",
+    "Save to Cache": "کیش میں محفوظ کریں",
+    "Sync to Cloud": "کلاؤڈ پر سنک کریں",
+    "Check OTA": "او ٹی اے چیک کریں",
+    "Reset Session": "سیشن دوبارہ شروع کریں",
+    "Confirm Assessment": "تشخیص کی تصدیق کریں",
+    "Download Text Report": "متنی رپورٹ ڈاؤن لوڈ کریں",
+    "Download PDF Report": "پی ڈی ایف رپورٹ ڈاؤن لوڈ کریں",
+    "Text Report": "متنی رپورٹ",
+    "PDF Report": "پی ڈی ایف رپورٹ",
+
+    # ============================================================
+    # RESULTS AND RISK LEVELS
+    # ============================================================
+    "Triage result": "ابتدائی طبی جانچ کا نتیجہ",
+    "Real model": "حقیقی ماڈل",
+    "Confidence": "اعتماد کی شرح",
+    "Severity": "شدت",
+    "Escalation": "اعلیٰ سطح پر بھیجنا",
+    "Not required": "ضرورت نہیں",
+    "Low risk": "کم خطرہ",
+    "Moderate": "درمیانہ",
+    "Moderate risk": "درمیانہ خطرہ",
+    "High risk": "زیادہ خطرہ",
+    "Low": "کم",
+    "High": "زیادہ",
+    "Unknown": "نامعلوم",
+    "Awaiting Analysis": "تجزیے کا انتظار ہے",
+    "Running inference...": "تجزیہ جاری ہے...",
+    "Detection: ACTIVE": "نشاندہی فعال ہے",
+    "Localization": "مقام",
+    "Classification": "درجہ بندی",
+    "Inference Time": "تجزیے کا وقت",
+    "Model Source": "ماڈل کا ماخذ",
+    "Immediate Action Required — refer for specialist consultation": "فوری کارروائی ضروری ہے — ماہر ڈاکٹر سے رجوع کریں",
+    "Low risk — routine screening": "کم خطرہ — معمول کی اسکریننگ",
+
+    # ============================================================
+    # ASSESSMENT
+    # ============================================================
+    "BI-RADS Assessment": "بی آئی ریڈز کی تشخیص",
+    "ACR Breast Density": "اے سی آر بریسٹ ڈینسٹی",
+    "TB Severity": "ٹی بی کی شدت",
+    "Lung Zone": "پھیپھڑوں کا حصہ",
+
+    # ============================================================
+    # PATIENT AND METADATA
+    # ============================================================
+    "Patient ID": "مریض کا شناختی نمبر",
+    "Patient Age": "مریض کی عمر",
+    "Age": "عمر",
+    "Modality": "طبی امیجنگ کی قسم",
+    "Date": "تاریخ",
+    "Institution": "ادارہ",
+    "DICOM Metadata": "ڈائیکام کی معلومات",
+    "Privacy": "رازداری",
+    "ANONYMIZED (PII STRIPPED)": "شناختی معلومات حذف کر دی گئی ہیں",
+    "HIPAA/GDPR Compliant — Hex Privacy Hashed": "HIPAA/GDPR کے مطابق — مریض کی معلومات محفوظ طریقے سے ہیش کی گئی ہیں",
+
+    # ============================================================
+    # HEALTH AND HOSPITAL
+    # ============================================================
+    "Basic Health Unit (BHU)": "بنیادی مرکز صحت (BHU)",
+    "Offline triage — Basic Health Unit (BHU) mode": "آف لائن ابتدائی طبی جانچ — بنیادی مرکز صحت (BHU) موڈ",
+    "Allied Hospital Faisalabad": "الائیڈ ہسپتال فیصل آباد",
+    "Urban Receiving Terminal": "شہری وصولی کا مرکز",
+    "Alert Stream": "الرٹس کی فہرست",
+    "All Clear — no alerts pending": "سب ٹھیک ہے — کوئی الرٹ زیرِ التوا نہیں",
+    "Total Alerts": "کل الرٹس",
+    "Critical": "سنگین",
+    "Alerts Processed": "پروسیس کیے گئے الرٹس",
+    "New alerts": "نئے الرٹس",
+    "No alerts": "کوئی الرٹ نہیں",
+"Basic Health Unit (BHU) Nodes": "بنیادی مرکزِ صحت (BHU) کے مراکز",
+
+    # ============================================================
+    # CLOUD SYNC AND CACHE
+    # ============================================================
+    "Alibaba Cloud Integration (simulated)": "علی بابا کلاؤڈ انٹیگریشن (نمونہ)",
+    "Hybrid-Edge Architecture": "ہائبرڈ ایج آرکیٹیکچر",
+    "Cached Reports": "کیش میں محفوظ رپورٹس",
+    "Reports Cached": "محفوظ شدہ رپورٹس",
+    "Unsynced": "سنک نہ ہونے والی رپورٹس",
+    "Synced": "سنک شدہ رپورٹس",
+    "IoT Queue": "آئی او ٹی قطار",
+    "Local Cache Status": "مقامی کیش کی صورتحال",
+    "No reports cached": "کوئی رپورٹ محفوظ نہیں",
+    "Report cached.": "رپورٹ محفوظ ہو گئی۔",
+    "Sync complete.": "سنک مکمل ہو گیا۔",
+    "Syncing...": "سنک ہو رہا ہے...",
+    "All synced": "تمام ڈیٹا سنک ہوگیا",
+    "Sync Rate": "سنک کی شرح",
+    "pending sync": "سنک ہونے کے منتظر",
+    "Optimal": "بہترین",
+
+    # ============================================================
+    # SYSTEM AND HARDWARE
+    # ============================================================
+    "Hardware Diagnostics": "ہارڈویئر کی جانچ",
+    "Model backing (this run):": "اس عمل میں استعمال ہونے والے ماڈلز:",
+    "System Status": "سسٹم کی صورتحال",
+    "System Status:": "سسٹم کی حالت:",
+    "Telemetry Log": "ٹیلی میٹری لاگ",
+    "System initialized. Awaiting commands...": "سسٹم شروع ہوگیا ہے۔ احکامات کا انتظار ہے۔",
+    "RK3588 ACTIVE": "آر کے 3588 فعال",
+    "NPU Load": "این پی یو لوڈ",
+    "Power": "بجلی",
+    "Temp": "درجہ حرارت",
+    "Online": "آن لائن",
+    "Offline": "آف لائن",
+    "Loading": "لوڈ ہو رہا ہے",
+    "Processing": "عمل جاری ہے",
+    "Completed": "مکمل ہو گیا",
+    "Error": "خرابی",
+    "Success": "کامیابی",
+    "Cancel": "منسوخ کریں",
+    "Close": "بند کریں",
+    "Back": "واپس",
+    "Operational": "فعال",
+    "Active": "فعال",
+    "Data Encryption:": "ڈیٹا کی خفیہ کاری:",
+    "Data Encryption: Active": "ڈیٹا انکرپشن فعال ہے",
+
+    # ============================================================
+    # HELP AND VOICE MESSAGES
+    # ============================================================
+    "Help - LHV Feedback & Session Analytics": "مدد - ایل ایچ وی فیڈبیک اور سیشن تجزیات",
+    "LHV Feedback & Session Analytics": "ایل ایچ وی کی رائے اور سیشن کا تجزیہ",
+    "Voice Message Library": "صوتی پیغامات کی لائبریری",
+    "Pre-recorded voice messages for different scenarios:": "مختلف حالات کے لیے پہلے سے ریکارڈ شدہ صوتی پیغامات:",
+    "Select a message to test:": "جانچنے کے لیے پیغام منتخب کریں:",
+    "Message": "پیغام",
+    "Message:": "پیغام:",
+    "No message found": "کوئی پیغام نہیں ملا",
+    "Click play to hear the message": "پیغام سننے کے لیے پلے دبائیں",
+    "No audio engine configured yet — showing text only. Wire up play_voice_message() to enable playback.": "ابھی آڈیو سسٹم ترتیب نہیں دیا گیا، اس لیے صرف متن دکھایا جا رہا ہے۔ آواز سننے کے لیے آڈیو سسٹم فعال کریں۔",
+    "Or upload your own audio file:": "یا اپنی آڈیو فائل اپ لوڈ کریں:",
+    "Upload audio (MP3/WAV/OGG)": "آڈیو اپ لوڈ کریں (MP3/WAV/OGG)",
+    "Custom audio loaded:": "اپنی آڈیو فائل لوڈ ہوگئی:",
+    "No file chosen": "کوئی فائل منتخب نہیں کی گئی",
+    "200MB per file • MP3, WAV, OGG": "ہر فائل زیادہ سے زیادہ 200 ایم بی • MP3، WAV، OGG",
+    "rescan": "دوبارہ اسکین کریں",
+    "Message: Image quality too low. Please rescan the patient.": "پیغام: تصویر کا معیار بہت کم ہے۔ براہِ کرم مریض کا دوبارہ اسکین کریں۔",
+
+    # ============================================================
+    # LHV SESSIONS AND FEEDBACK
+    # ============================================================
+    "LHV Sessions": "ایل ایچ وی سیشنز",
+    "Successful Diagnosis": "کامیاب تشخیص",
+    "Escalations": "اعلیٰ سطح پر بھیجے گئے معاملات",
+    "Session Feedback & Quality Check": "سیشن فیڈبیک اور معیار کی جانچ",
+    "Rate this diagnostic session:": "اس تشخیصی سیشن کی درجہ بندی کریں:",
+    "How was your experience with this session?": "اس سیشن کے بارے میں آپ کا تجربہ کیسا رہا؟",
+    "Session Type:": "سیشن کی قسم:",
+    "Needs Review": "جائزے کی ضرورت",
+    "Reanalysis": "دوبارہ تجزیہ",
+    "Your Feedback:": "آپ کی رائے:",
+    "Share details about this session:": "اس سیشن کے بارے میں تفصیلات بتائیں:",
+    "E.g., Image quality issues, system performance, suggestions...": "مثلاً تصویر کے معیار کے مسائل، سسٹم کی کارکردگی یا تجاویز...",
+    "Enable voice feedback confirmation": "آواز کے ذریعے فیڈبیک کی تصدیق فعال کریں",
+    "Feedback Language:": "فیڈبیک کی زبان:",
+    "📤 Submit Feedback & Rate Session": "📤 فیڈبیک جمع کریں اور سیشن کی درجہ بندی کریں",
+    "🔄 Clear Form": "🔄 فارم صاف کریں",
+    "Feedback submitted! Rating:": "فیڈبیک جمع ہوگیا! درجہ بندی:",
+    "Please enter your feedback before submitting.": "جمع کروانے سے پہلے اپنی رائے درج کریں۔",
+    "Voice Feedback:": "صوتی فیڈبیک:",
+
+    # ============================================================
+    # TODAY'S SUMMARY AND STATUS
+    # ============================================================
+    "Today's Diagnostic Summary": "آج کی تشخیصی رپورٹ",
+    "Voice System:": "صوتی نظام:",
+    "Voice System: ENABLED": "صوتی نظام: فعال",
+    "ENABLED": "فعال",
+    "DISABLED": "غیر فعال",
+    "Language: Urdu": "زبان: اردو",
+    "Urdu (اردو)": "اردو",
+    "English": "انگریزی",
+    "Urdu": "اردو",
+    "Punjabi": "پنجابی",
+    "Session Time": "سیشن کا وقت",
+    "Session Time:": "سیشن کا دورانیہ:",
+    "avg": "اوسط",
+    "Quick Actions": "فوری اقدامات",
+
+    # ============================================================
+    # QUICK ACTIONS AND NOTIFICATIONS
+    # ============================================================
+    "🔊 Test Voice": "🔊 آواز کی جانچ",
+    "📥 Download Report": "📥 رپورٹ ڈاؤن لوڈ کریں",
+    "🌐 Switch Language": "🌐 زبان تبدیل کریں",
+    "🔄 Sync Now": "🔄 ابھی سنک کریں",
+    "Voice system test: System is functional and ready for use.": "صوتی نظام کی جانچ: سسٹم فعال اور استعمال کے لیے تیار ہے۔",
+    "Report download initiated": "رپورٹ ڈاؤن لوڈ شروع ہوگئی",
+    "Cloud sync initiated": "کلاؤڈ سنک شروع ہوگیا",
+    "Language set to English": "زبان انگریزی پر سیٹ کر دی گئی",
+    "زبان تبدیل ہو گئی": "زبان تبدیل ہو گئی",
+
+    # ============================================================
+    # OVERRIDE
+    # ============================================================
+    "Reason for Override": "اوور رائیڈ کی وجہ",
+    "Select reason for override:": "اوور رائیڈ کی وجہ منتخب کریں:",
+    "Please specify the reason:": "براہِ کرم وجہ بیان کریں:",
+    "Enter additional details...": "مزید تفصیلات درج کریں...",
+    "✓ Confirm Override": "✓ اوور رائیڈ کی تصدیق کریں",
+
+    # ============================================================
+    # GENERAL
+    # ============================================================
+    "Saved": "محفوظ ہو گیا",
+    "Urban Receiving Terminal": "شہری مریض وصولی مرکز",
+"2G GSM Critical Alert Monitor": "2G GSM ہنگامی الرٹس کی نگرانی",
+"All Clear — no alerts pending": "سب ٹھیک ہے — کوئی زیرِ التوا الرٹ نہیں",
+"ONLINE": "آن لائن",
+"ACTIVE": "فعال",
+"rescan": "دوبارہ اسکین کریں",
+"Image quality too low. Please rescan the patient.": "تصویر کا معیار بہت کم ہے۔ براہِ کرم مریض کا دوبارہ اسکین کریں۔",
+"No file chosen": "کوئی فائل منتخب نہیں کی گئی",
+"Alibaba Cloud Integration (simulated)": "علی بابا کلاؤڈ انٹیگریشن (فرضی)",
+"LHV Sessions": "ایل ایچ وی کے سیشنز",
+"Successful Diagnosis": "کامیاب تشخیص",
+"Session Type:": "سیشن کی قسم:",
+"Message:": "پیغام:",
+"Enable voice feedback confirmation": "آواز کے ذریعے فیڈبیک کی تصدیق فعال کریں",
+"Alerts Processed": "پروسیس کیے گئے الرٹس",
+"Reports Cached": "کیش میں محفوظ رپورٹس",
+"Sync Rate": "سنک کی شرح",
+"Sync Now": "ابھی سنک کریں",
+"Test Voice": "آواز کی جانچ",
+"Download Report": "رپورٹ ڈاؤن لوڈ کریں",
+"Switch Language": "زبان تبدیل کریں",
+"Quick Actions": "فوری اقدامات",
+"System Status:": "سسٹم کی حالت:",
+"Operational": "فعال",
+"Data Encryption:": "ڈیٹا کی خفیہ کاری:",
+"Active": "فعال",
+"Session Time:": "سیشن کا دورانیہ:",
+"avg": "اوسط",
+"Basic Health Unit (BHU) Nodes": "بنیادی مراکزِ صحت (BHU)",
+"LHV Sessions": "ایل ایچ وی سیشنز",
+"Successful Diagnosis": "کامیاب تشخیص",
+"Escalations": "اعلیٰ سطح پر بھیجے گئے معاملات",
+"Enable voice feedback confirmation": "آواز کے ذریعے فیڈبیک کی تصدیق فعال کریں",
+"Reports Cached": "محفوظ شدہ رپورٹس",
+"Sync Rate": "سنک کی شرح",
+"Alerts Processed": "پروسیس کیے گئے الرٹس",
+"📊 Dashboard": "📊 ڈیش بورڈ",
+"🏥 Hospital Hub": "🏥 ہسپتال مرکز",
+"☁️ Cloud Sync & Cache": "☁️ کلاؤڈ سنک اور کیش",
+"Image quality too low. Please rescan the patient.": "تصویر کا معیار بہت کم ہے۔ براہِ کرم مریض کا دوبارہ اسکین کریں۔",
+"Basic Health Unit (BHU) Nodes": "بنیادی مراکز صحت کے نوڈز",
 }
+
+
 _urdu = {"on": False}
 
 
 def t(s):
     return TR.get(s, s) if _urdu["on"] else s
-
 
 # ============================================================
 # DATABASE (same schema/file as the Streamlit app's cache)
