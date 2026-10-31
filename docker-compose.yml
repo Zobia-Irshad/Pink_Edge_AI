@@ -1,0 +1,59 @@
+# Pink Edge AI - process-boundary sandboxing for the async inference stack (Chunk 3).
+#
+# Imposes strict container-level physical resource constraints (mem_limit) so a
+# runaway inference job on a RAM-constrained edge host cannot OOM the box. The
+# Redis broker + Celery worker are OPTIONAL: the app falls back to its in-process
+# thread queue (governance/task_queue.py) when they are absent, so this file is
+# for deployments that want true multi-process async offloading.
+#
+# Usage:  docker compose up -d
+services:
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    # Keep the broker tiny; it only holds short-lived task messages.
+    mem_limit: 256m
+    mem_reservation: 128m
+    ports:
+      - "6379:6379"
+
+  worker:
+    build: .
+    restart: unless-stopped
+    command: ["celery", "-A", "App.governance.task_queue", "worker", "--loglevel=info", "--concurrency=2"]
+    environment:
+      PINKEDGE_CELERY_BROKER: "redis://redis:6379/0"
+      PINKEDGE_DB_PATH: "/data/pink_edge_secure.db"
+      # PINKEDGE_DB_KEY must be injected from a secret store, never committed.
+      PINKEDGE_DB_KEY: "${PINKEDGE_DB_KEY:-}"
+    depends_on:
+      - redis
+    # Hard RAM ceiling for the heavy inference worker (OOM guard).
+    mem_limit: 4g
+    mem_reservation: 2g
+    volumes:
+      - pinkedge_data:/data
+
+  app:
+    build: .
+    restart: unless-stopped
+    command: ["streamlit", "run", "App/streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    environment:
+      PINKEDGE_CELERY_BROKER: "redis://redis:6379/0"
+      PINKEDGE_DB_PATH: "/data/pink_edge_secure.db"
+      PINKEDGE_DB_KEY: "${PINKEDGE_DB_KEY:-}"
+    depends_on:
+      - redis
+      - worker
+    # The UI process is light; cap it so it cannot starve the worker.
+    mem_limit: 1g
+    mem_reservation: 512m
+    ports:
+      - "8501:8501"
+    volumes:
+      - pinkedge_data:/data
+
+volumes:
+  pinkedge_data:
