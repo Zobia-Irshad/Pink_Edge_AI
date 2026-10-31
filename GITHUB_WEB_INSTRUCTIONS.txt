@@ -1,0 +1,101 @@
+=====================================================================
+ Pink Edge AI — add the "clinical governance" changes on GitHub.com
+ (web browser only — no git commands needed)
+=====================================================================
+
+WHAT YOU ARE ADDING
+  19 files for the DICOM fail-safes + privacy + async queue + FHIR
+  clinical-governance layer. 13 are brand-new files; 6 are updated
+  versions of files that already exist in the repo.
+  New branch to create:  claude/dicom-privacy-clinical-governance-l3ye8f
+
+BEFORE YOU START
+  * Do this on a COMPUTER browser (Chrome/Edge/Firefox). The GitHub
+    phone app / mobile site cannot upload folders.
+  * Unzip  pink_edge_changes.zip  somewhere, e.g. your Desktop.
+    You will get these items:
+        inference.py
+        requirements.txt
+        docker-compose.yml
+        .gitignore
+        App/          (a folder containing the rest)
+  * You must be signed in to GitHub as the repo owner (Zobia-Irshad)
+    or someone with write access.
+
+---------------------------------------------------------------------
+STEP-BY-STEP (uploads everything in ONE commit + opens the PR)
+---------------------------------------------------------------------
+1. Go to:  https://github.com/Zobia-Irshad/Pink_Edge_AI
+   Make sure the branch selector (top-left of the file list) says "main".
+
+2. Click the "Add file" button (top-right of the file list) →
+   choose "Upload files".
+
+3. Drag these items from your unzipped folder into the upload area
+   (you can drop them all together):
+        - the  App  folder
+        - inference.py
+        - requirements.txt
+        - docker-compose.yml
+   GitHub keeps the folder structure, so App/governance/..., App/Tools/...,
+   App/Tests/... all land in the right place. Uploading inference.py,
+   requirements.txt and App/requirements.txt on top of the existing ones
+   simply REPLACES them with the updated versions — that is intended.
+
+   (About .gitignore: see the note at the bottom — easiest to edit by hand.)
+
+4. Scroll down to "Commit changes".
+   - Commit message:  Add clinical governance layer: DICOM fail-safes, privacy, async, FHIR
+   - Select the option:
+        "Create a new branch for this commit and start a pull request"
+   - In the branch-name box, type exactly:
+        claude/dicom-privacy-clinical-governance-l3ye8f
+
+5. Click "Propose changes".  GitHub opens the new Pull Request page.
+   Add a title/description if you like, then "Create pull request".
+
+That's it — the branch and PR now exist on GitHub.
+
+---------------------------------------------------------------------
+THE .gitignore CHANGE (tiny — do it by hand on the website)
+---------------------------------------------------------------------
+Dotfiles like .gitignore sometimes don't show up when dragging, so the
+simplest way is to edit it directly:
+
+  1. On the new branch, open  .gitignore .
+  2. Click the pencil (Edit) icon.
+  3. Find the line that says:   *.db
+  4. Add these TWO new lines right under it:
+        *.db-wal
+        *.db-shm
+  5. Commit (to the same branch:
+        claude/dicom-privacy-clinical-governance-l3ye8f ).
+
+(If .gitignore DID upload fine in step 3, you can skip this section.)
+
+---------------------------------------------------------------------
+THE 19 FILES (for reference)
+---------------------------------------------------------------------
+NEW (13):
+  App/Tools/dicom_safe.py
+  App/governance/__init__.py
+  App/governance/circuit_breaker.py
+  App/governance/outbound_guard.py
+  App/governance/task_queue.py
+  App/governance/secure_store.py
+  App/governance/provenance.py
+  App/governance/verification.py
+  App/governance/fhir_mapper.py
+  App/governance/README.md
+  App/Tests/test_governance.py
+  App/Tests/test_dicom_safe.py
+  docker-compose.yml
+
+UPDATED (6) — upload replaces the existing file:
+  inference.py
+  App/inference.py
+  App/Tools/dicom_pipeline.py
+  requirements.txt
+  App/requirements.txt
+  .gitignore
+=====================================================================

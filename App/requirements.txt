@@ -50,3 +50,20 @@ pandas>=2.0.0
 # pushed from hospital imaging equipment. Standalone; the app never imports it.
 pynetdicom>=2.0.0
 pydicom>=2.4.0
+
+# ============================================================
+# OPTIONAL — clinical governance layer (App/governance/). Deliberately NOT part
+# of the default edge install: the hardware targets are RAM-constrained, so the
+# governance package is stdlib-first and degrades gracefully when these are
+# absent. Install only for deployments that want the heavier backends.
+#
+#   * Celery + Redis  -> multi-process async inference offload
+#     (App/governance/task_queue.py). Without them, an in-process thread pool is
+#     used, which still returns an HTTP 202 immediately and never freezes the UI.
+#   * pysqlcipher3    -> AES-256-at-rest for the secure record store
+#     (App/governance/secure_store.py). Without it, the store falls back to plain
+#     sqlite3 (still WAL-mode) and records the reduced-encryption posture.
+# ============================================================
+# celery>=5.3.0
+# redis>=5.0.0
+# pysqlcipher3>=1.2.0
