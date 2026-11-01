@@ -117,18 +117,69 @@ def _get_roboflow_client():
         raise RoboflowError(_roboflow_client_error) from e
 
 
-def _with_retries(fn, retries=2, backoff=1.5, what="Roboflow call"):
-    """Run fn() with a couple of retries and exponential backoff; raise RoboflowError with
-    a clear message (including the last underlying error) if every attempt fails."""
-    last_err = None
-    for attempt in range(retries + 1):
+_roboflow_breaker = None
+
+
+def _get_roboflow_breaker():
+    """Lazily build the shared circuit breaker for the external Roboflow endpoint.
+
+    Returns None when the governance package isn't importable (e.g. a minimal
+    install), in which case external calls behave exactly as before.
+    """
+    global _roboflow_breaker
+    if _roboflow_breaker is not None:
+        return _roboflow_breaker or None
+    try:
         try:
-            return fn()
-        except Exception as e:
-            last_err = e
-            if attempt < retries:
-                time.sleep(backoff * (attempt + 1))
-    raise RoboflowError(f"{what} failed after {retries + 1} attempt(s): {last_err}") from last_err
+            from governance.circuit_breaker import CircuitBreaker
+        except ImportError:
+            import os as _os
+            import sys as _sys
+            _here = _os.path.dirname(_os.path.abspath(__file__))
+            for _cand in (_here, _os.path.join(_here, "App")):
+                if _os.path.isdir(_os.path.join(_cand, "governance")) and _cand not in _sys.path:
+                    _sys.path.insert(0, _cand)
+            from governance.circuit_breaker import CircuitBreaker
+        _roboflow_breaker = CircuitBreaker(
+            failure_threshold=3, reset_timeout=600.0, name="roboflow"
+        )
+    except Exception:
+        _roboflow_breaker = False  # sentinel: breaker unavailable
+    return _roboflow_breaker or None
+
+
+def _with_retries(fn, retries=2, backoff=1.5, what="Roboflow call"):
+    """Run fn() with retries + exponential backoff, guarded by a circuit breaker.
+
+    The breaker trips open after 3 consecutive exhausted call-sequences and, for
+    the next 10 minutes, short-circuits further external calls so a dead endpoint
+    never hangs the thread — callers catch RoboflowError and fall back to local.
+    If the governance package isn't present the behaviour is the original plain
+    retry loop.
+    """
+    def _sequence():
+        last_err = None
+        for attempt in range(retries + 1):
+            try:
+                return fn()
+            except Exception as e:
+                last_err = e
+                if attempt < retries:
+                    time.sleep(backoff * (attempt + 1))
+        raise RoboflowError(f"{what} failed after {retries + 1} attempt(s): {last_err}") from last_err
+
+    breaker = _get_roboflow_breaker()
+    if breaker is None:
+        return _sequence()
+
+    from governance.circuit_breaker import CircuitBreakerOpen
+    try:
+        return breaker.call(_sequence)
+    except CircuitBreakerOpen as e:
+        raise RoboflowError(
+            f"{what} skipped: external circuit breaker is open "
+            f"(endpoint failing); using local fallback."
+        ) from e
 
 
 def _roboflow_infer(model_id: str, pil_image: Image.Image, retries=2, backoff=1.5) -> list:

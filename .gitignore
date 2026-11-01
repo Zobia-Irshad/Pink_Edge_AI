@@ -7,6 +7,8 @@ __pycache__/
 *.key
 roboflow_key.txt
 *.db
+*.db-wal
+*.db-shm
 *.sqlite
 *.sqlite3
 received_scans/

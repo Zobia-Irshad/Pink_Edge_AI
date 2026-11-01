@@ -81,16 +81,8 @@ def build_context_packet(
             "result containing the processed features and missing-value mask."
         )
 
-    missing_fields = [
-        name
-        for name in FEATURE_NAMES
-        if name not in raw_context
-        or raw_context[name] is None
-        or (
-            isinstance(raw_context[name], str)
-            and not raw_context[name].strip()
-        )
-    ]
+    norm = processed["normalized"]
+    missing_fields = [k for k, v in norm.items() if v is None or v == "unknown"]
 
     packet = ClinicalContextPacket(
         schema_version="1.0",

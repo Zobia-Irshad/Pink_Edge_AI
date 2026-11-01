@@ -36,6 +36,13 @@ import numpy as np
 import pydicom
 from PIL import Image
 
+# Memory-safe DICOM helpers (Chunk 1 fail-safes): context-managed file handles
+# and a forced gc cycle after extracting the high-dimensional pixel matrix.
+try:
+    from dicom_safe import dicom_reader, extract_pixel_array
+except ImportError:  # pragma: no cover - fallback when imported as a package
+    from .dicom_safe import dicom_reader, extract_pixel_array
+
 
 # ---------------------------------------------------------
 # Project paths
@@ -60,19 +67,26 @@ import inference
 def dicom_to_pil(dicom_path):
     """
     Read a DICOM file and convert its PixelData to a PIL RGB image.
+
+    The dataset is read inside a context manager and released before this
+    returns, so only the image plus a lightweight metadata snapshot survive.
+
     Returns:
-        image, dataset
+        image, metadata_dict
     """
 
     if not os.path.isfile(dicom_path):
         raise FileNotFoundError(dicom_path)
 
-    ds = pydicom.dcmread(dicom_path)
+    # Read inside a context manager so the file handle is released immediately,
+    # and extract the pixel matrix through the helper that forces a gc cycle
+    # right after the high-dimensional decode (OOM / heap protection).
+    with dicom_reader(dicom_path) as ds:
+        pixels = extract_pixel_array(ds).astype(np.float32)
 
-    if not hasattr(ds, "PixelData"):
-        raise ValueError("DICOM contains no PixelData.")
-
-    pixels = ds.pixel_array.astype(np.float32)
+        # Capture the lightweight metadata we need before the dataset is
+        # released on context exit.
+        ds_meta = _snapshot_metadata(ds)
 
     # Handle multi-frame DICOM.
     if pixels.ndim > 2:
@@ -94,7 +108,27 @@ def dicom_to_pil(dicom_path):
 
     image = Image.fromarray(pixels).convert("RGB")
 
-    return image, ds
+    return image, ds_meta
+
+
+# Metadata blocks the task calls for (Patient ID, Study/Series ID, Modality).
+# Snapshotting them into a plain dict lets the heavy dataset be released by the
+# dicom_reader context manager before inference runs.
+_METADATA_FIELDS = (
+    "PatientID",
+    "StudyInstanceUID",
+    "SeriesInstanceUID",
+    "SOPInstanceUID",
+    "Modality",
+)
+
+
+def _snapshot_metadata(ds):
+    """Copy the lightweight metadata blocks out of a DICOM dataset to a dict."""
+    return {
+        field: str(getattr(ds, field, ""))
+        for field in _METADATA_FIELDS
+    }
 
 
 # ---------------------------------------------------------
@@ -147,27 +181,17 @@ def process_dicom(dicom_path):
     Returns a JSON-serializable dictionary.
     """
 
-    image, ds = dicom_to_pil(dicom_path)
+    image, ds_meta = dicom_to_pil(dicom_path)
 
-    modality = str(
-        getattr(ds, "Modality", "UNKNOWN")
-    ).upper().strip()
+    modality = (ds_meta.get("Modality") or "UNKNOWN").upper().strip()
 
-    patient_id = str(
-        getattr(ds, "PatientID", "UNKNOWN")
-    )
+    patient_id = ds_meta.get("PatientID") or "UNKNOWN"
 
-    study_uid = str(
-        getattr(ds, "StudyInstanceUID", "")
-    )
+    study_uid = ds_meta.get("StudyInstanceUID") or ""
 
-    series_uid = str(
-        getattr(ds, "SeriesInstanceUID", "")
-    )
+    series_uid = ds_meta.get("SeriesInstanceUID") or ""
 
-    sop_uid = str(
-        getattr(ds, "SOPInstanceUID", "")
-    )
+    sop_uid = ds_meta.get("SOPInstanceUID") or ""
 
     print(">>> DICOM PIPELINE")
     print("Patient ID:", patient_id)
@@ -180,9 +204,27 @@ def process_dicom(dicom_path):
         modality
     )
 
+    # Governance (Chunk 2 + 4): stamp an immutable model-provenance block on the
+    # inference output and derive a surrogate id so results can be correlated
+    # downstream without exposing the raw PatientID. Best-effort: never let a
+    # governance import failure break the core inference path.
+    surrogate_id = None
+    try:
+        from governance.provenance import stamp_provenance
+        from governance.outbound_guard import build_surrogate_id
+
+        if isinstance(inference_result, dict):
+            inference_result = stamp_provenance(inference_result)
+        surrogate_id = build_surrogate_id(
+            {"PatientID": patient_id, "StudyInstanceUID": study_uid}
+        )
+    except Exception as exc:  # pragma: no cover - defensive
+        print(">>> GOVERNANCE STAMP SKIPPED:", type(exc).__name__, exc)
+
     result = {
         "dicom_path": os.path.abspath(dicom_path),
         "patient_id": patient_id,
+        "surrogate_id": surrogate_id,
         "study_instance_uid": study_uid,
         "series_instance_uid": series_uid,
         "sop_instance_uid": sop_uid,
