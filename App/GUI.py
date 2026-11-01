@@ -88,28 +88,24 @@ TB_LUNG_ZONES = inf.TB_LUNG_ZONES
 # #f59e0b 1.9:1, #ef4444 3.3:1), so those are now darker shades of the same hues.
 # ============================================================
 C = {
-    # neutrals (slate)
-    "bg": "#f8fafc", "surface": "#ffffff", "surface_alt": "#f1f5f9", "surface_hover": "#e2e8f0",
-    "border": "#cbd5e1", "border_light": "#e2e8f0",
-    "text": "#0f172a", "text_muted": "#475569", "text_light": "#64748b",
-    # brand (rose) — `primary_light` is the *higher-contrast* shade: it's used for emphasis text
-    # (confidence readout, headings, table headers) and pressed/hover states, not for tinting.
-    "primary": "#be185d", "primary_light": "#9d174d",
-    # secondary (sky), for informational emphasis that isn't the brand
-    "accent": "#0369a1", "accent_light": "#075985",
-    # semantic — these carry clinical meaning (a danger verdict is a real finding), so both
-    # editions must agree on them exactly.
-    "success": "#15803d", "warning": "#b45309", "danger": "#b91c1c",
-    # tints, for card/banner backgrounds behind the semantic colours above
-    "primary_bg": "#fdf2f8", "success_bg": "#f0fdf4", "warning_bg": "#fffbeb", "danger_bg": "#fef2f2",
-    # console panels (telemetry log, hardware stats, network trace) — deliberately dark, a
-    # terminal-style readout embedded in the light UI, not a leftover of the old dark theme.
-    "console_bg": "#060a13", "console_text": "#94a3b8",
+    # neutrals — dark clinical command center (matches product design)
+    "bg": "#14111a", "surface": "#1e1a26", "surface_alt": "#262030", "surface_hover": "#322c3d",
+    "border": "#3d354c", "border_light": "#2c2636",
+    "text": "#f5f0f7", "text_muted": "#c9bdd6", "text_light": "#b7a9c6",
+    # brand — Pink Edge magenta (not retired #ff69b4 / #ff1493)
+    "primary": "#e879a9", "primary_light": "#f0a8c8",
+    # secondary — soft steel for informational emphasis on dark UI
+    "accent": "#9eb6e8", "accent_light": "#c2d2f5",
+    # semantic — brighter for AA contrast on dark surfaces
+    "success": "#4ade80", "warning": "#fbbf24", "danger": "#f87171",
+    "primary_bg": "#2a1c28", "success_bg": "#14261c", "warning_bg": "#2a2114", "danger_bg": "#2a1518",
+    "console_bg": "#0c0a10", "console_text": "#c9bdd6",
 }
 
 TR = {
     "Pink Edge AI": "پنک ایج اے آئی", "Clinical Intelligence Platform": "کلینیکل انٹیلیجنس پلیٹ فارم",
     "Dashboard": "ڈیش بورڈ", "Hospital Hub": "ہسپتال مرکز", "Cloud Sync": "کلاؤڈ سنک",
+    "AI Lab": "اے آئی لیب", "Overview": "اوور ویو", "Case Builder": "کیس بلڈر", "Reports": "رپورٹس",
     "Fully Offline": "مکمل آف لائن", "GSM Failover": "جی ایس ایم فیل اوور",
     "Select AI Model": "اے آئی ماڈل منتخب کریں", "Upload Patient Scan": "مریض کا اسکین اپ لوڈ کریں",
     "Run Triage": "تشخیص چلائیں", "Save to Cache": "کیش میں محفوظ کریں",
@@ -282,7 +278,24 @@ def run_triage(model_name, pil_image, patient_id="DEMO", allow_network=True):
 
     # Keep the GUI's existing result format.
     # This prevents us from redesigning the rest of GUI.py.
-    result = dict(data["inference"])
+    result = dict(data["inference"] or {})
+
+    # When no real model tier is available (missing torch/weights/network), inference is {}.
+    # Fall back to the labeled simulated scenario so every UI path always has bi_rads/acr/etc.
+    if not result or "bi_rads" not in result:
+        if "Mammography" in model_name:
+            result = sim_mammography()
+        elif "Tuberculosis" in model_name:
+            result = sim_tb()
+        else:
+            result = sim_maternal()
+        # Preserve honesty: simulated because real inference was unavailable/errored.
+        if data.get("status") == "error" and data["inference"].get("error"):
+            result["source"] = (
+                f"SIMULATED (fallback after inference error: {data['inference']['error']})"
+            )
+        elif "SIMULATED" not in str(result.get("source", "")):
+            result["source"] = "SIMULATED (fallback — real model unavailable this run)"
 
     # Add workflow information without changing the existing inference fields.
     result["workflow_status"] = data["status"]

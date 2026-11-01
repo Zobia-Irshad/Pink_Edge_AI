@@ -78,11 +78,29 @@ def _sidebar_button(at, substring):
     return matches[0]
 
 
-@check("app starts with no exception and renders its 3 tabs")
+@check("app starts with no exception and renders its 3 nav pages")
 def _():
     at = _fresh_app()
     require(not at.exception, f"startup raised: {list(at.exception)}")
-    require(len(at.tabs) == 3, f"expected 3 tabs (Dashboard/Hospital Hub/Cloud Sync), got {len(at.tabs)}")
+    # Navigation moved from st.tabs to sidebar (+ top) page links.
+    nav_needles = ("Dashboard", "Hospital Hub", "Cloud Sync")
+    sidebar_hits = sum(
+        1 for needle in nav_needles
+        if any(needle in b.label for b in at.sidebar.button)
+    )
+    tab_ok = len(at.tabs) == 3
+    require(
+        sidebar_hits == 3 or tab_ok,
+        f"expected 3 nav destinations via sidebar links or tabs; "
+        f"sidebar_hits={sidebar_hits}, tabs={len(at.tabs)}",
+    )
+    require(
+        at.session_state["active_page"] in (
+            "overview", "builder", "dashboard", "hub", "reports", "cloud", "lab",
+        )
+        or tab_ok,
+        f"active_page missing/invalid: {at.session_state.get('active_page') if hasattr(at.session_state, 'get') else at.session_state['active_page']}",
+    )
     _app["at"] = at
     return f"({len(at.sidebar.button)} sidebar controls)"
 
