@@ -12,6 +12,7 @@ roboflow_key.txt
 *.sqlite
 *.sqlite3
 received_scans/
+App/edge_quarantine/
 dataset/
 datasets/
 "App/Test Data"/

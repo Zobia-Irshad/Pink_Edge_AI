@@ -96,7 +96,7 @@ def _():
     )
     require(
         at.session_state["active_page"] in (
-            "overview", "builder", "dashboard", "hub", "reports", "cloud", "lab",
+            "overview", "builder", "dashboard", "hub", "reports", "cloud", "lab", "ops",
         )
         or tab_ok,
         f"active_page missing/invalid: {at.session_state.get('active_page') if hasattr(at.session_state, 'get') else at.session_state['active_page']}",

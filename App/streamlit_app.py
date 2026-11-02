@@ -82,16 +82,41 @@ VOICE_MESSAGES = {
 }
 
 
+def speak_voiceover(text: str, lang=None):
+    """Browser voice-over via Web Speech API (works offline once voices are cached)."""
+    if not text or not st.session_state.get("voice_enabled", True):
+        return
+    import json
+    import streamlit.components.v1 as components
+
+    if lang is None:
+        lang = "ur" if st.session_state.get("urdu_mode") else "en"
+    locale = "ur-PK" if str(lang).startswith("ur") else "en-US"
+    safe = json.dumps(str(text)[:500])
+    components.html(
+        f"""
+        <script>
+        (() => {{
+          const utter = new SpeechSynthesisUtterance({safe});
+          utter.lang = {json.dumps(locale)};
+          utter.rate = 1.0;
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utter);
+        }})();
+        </script>
+        """,
+        height=0,
+    )
+
+
 def play_voice_message(message_key: str, lang: str):
     """
-    Returns audio bytes suitable for st.audio(), or None if no audio is
-    available (the UI falls back to showing the message text only).
-    Currently a stub with no real TTS engine wired in — plug in Piper
-    (offline) or gTTS (online, needs internet) here later.
+    Speaks the library line via browser TTS and returns None for st.audio
+    (text still shown in UI). Prefer speak_voiceover() for free-form narration.
     """
-    # Example for a real implementation with Piper (offline):
-    #   from piper import synthesize
-    #   return synthesize(VOICE_MESSAGES.get(message_key, {}).get(lang, ""))
+    text = VOICE_MESSAGES.get(message_key, {}).get(lang) or VOICE_MESSAGES.get(message_key, {}).get("en")
+    if text:
+        speak_voiceover(text, lang=lang)
     return None
 
 
@@ -168,27 +193,27 @@ CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap');
 
 :root {
-  --bg: #14111a;
-  --surface: #1e1a26;
-  --surface-alt: #262030;
-  --border: #3d354c;
-  --border-light: #2c2636;
-  --text: #f5f0f7;
-  --muted: #c9bdd6;
-  --light: #b7a9c6;
-  --primary: #e879a9;
-  --primary-deep: #f0a8c8;
+  --bg: #0f1419;
+  --surface: #161d27;
+  --surface-alt: #1e2733;
+  --border: #2a3544;
+  --border-light: #1c2430;
+  --text: #e8eef6;
+  --muted: #9aabbf;
+  --light: #8494a8;
+  --primary: #4f8cff;
+  --primary-deep: #9db8f0;
   --accent: #9eb6e8;
-  --success: #4ade80;
+  --success: #3d9b8f;
   --warning: #fbbf24;
   --danger: #f87171;
-  --primary-bg: #2a1c28;
+  --primary-bg: #152238;
   --radius: 14px;
   --shadow: 0 12px 40px rgba(0,0,0,0.35);
   --shadow-sm: 0 4px 16px rgba(0,0,0,0.22);
   --font: 'Sora', sans-serif;
   --display: 'Syne', sans-serif;
-  --glow: 0 0 24px rgba(232,121,169,0.22);
+  --glow: 0 0 24px rgba(79,140,255,0.22);
 }
 
 @keyframes pe-in {
@@ -196,8 +221,8 @@ CSS = """
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes pe-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(232,121,169,0.35); }
-  50% { box-shadow: 0 0 0 10px rgba(232,121,169,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(79,140,255,0.35); }
+  50% { box-shadow: 0 0 0 10px rgba(79,140,255,0); }
 }
 
 html, body, .stApp, [class*="css"],
@@ -223,14 +248,14 @@ span[class*="material"],
 
 .stApp {
   background:
-    radial-gradient(900px 480px at 0% -5%, rgba(232,121,169,0.14), transparent 55%),
-    radial-gradient(700px 400px at 100% 0%, rgba(158,182,232,0.08), transparent 50%),
+    radial-gradient(900px 480px at 0% -5%, rgba(79,140,255,0.14), transparent 55%),
+    radial-gradient(700px 400px at 100% 0%, rgba(79,140,255,0.08), transparent 50%),
     var(--bg) !important;
   color: var(--text) !important;
 }
 
 section[data-testid="stSidebar"] {
-  background: linear-gradient(180deg, #1a1622 0%, #14111a 100%) !important;
+  background: linear-gradient(180deg, #121820 0%, #0f1419 100%) !important;
   border-right: 1px solid var(--border) !important;
 }
 section[data-testid="stSidebar"] > div { padding-top: 0.85rem !important; }
@@ -238,8 +263,8 @@ section[data-testid="stSidebar"] * { color: var(--text) !important; }
 
 /* Professional dashboard sidebar sections */
 .sidebar-section {
-  background: #1e1a26;
-  border: 1px solid #3d354c;
+  background: #161d27;
+  border: 1px solid #2a3544;
   border-radius: 14px;
   padding: 12px 12px 10px;
   margin-bottom: 12px;
@@ -251,14 +276,14 @@ section[data-testid="stSidebar"] * { color: var(--text) !important; }
   font-weight: 800 !important;
   letter-spacing: 0.14em !important;
   text-transform: uppercase !important;
-  color: #b7a9c6 !important;
+  color: #8494a8 !important;
   margin: 0 0 10px 2px !important;
 }
 .sidebar-field-label {
   font-family: 'Sora', sans-serif !important;
   font-size: 0.72rem !important;
   font-weight: 600 !important;
-  color: #c9bdd6 !important;
+  color: #9aabbf !important;
   margin: 0 0 6px 2px !important;
 }
 section[data-testid="stSidebar"] .stButton > button {
@@ -269,8 +294,8 @@ section[data-testid="stSidebar"] .stButton > button {
   min-height: 40px !important;
 }
 section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
-  background: #262030 !important;
-  border: 1px dashed #6b3a55 !important;
+  background: #1e2733 !important;
+  border: 1px dashed #3a5680 !important;
   border-radius: 12px !important;
   padding: 8px !important;
 }
@@ -284,7 +309,7 @@ section[data-testid="stSidebar"] [data-testid="stFileUploader"] span {
 }
 section[data-testid="stSidebar"] [data-testid="stCaption"] {
   font-size: 0.7rem !important;
-  color: #b7a9c6 !important;
+  color: #8494a8 !important;
 }
 
 .block-container {
@@ -301,7 +326,7 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
 /* Top bar */
 .app-topbar {
   display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-  background: linear-gradient(135deg, #221c2c 0%, #1e1a26 100%);
+  background: linear-gradient(135deg, #221c2c 0%, #161d27 100%);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px 18px;
@@ -324,12 +349,12 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
   font-size: 0.72rem; font-weight: 700;
   border: 1px solid var(--border); background: var(--surface-alt); color: var(--muted) !important;
 }
-.pill.ok { background: #14261c; border-color: #166534; color: #4ade80 !important; }
+.pill.ok { background: #14261c; border-color: #166534; color: #3d9b8f !important; }
 .pill.warn { background: #2a2114; border-color: #854d0e; color: #fbbf24 !important; }
-.pill.info { background: var(--primary-bg); border-color: #6b3a55; color: var(--primary) !important; }
+.pill.info { background: var(--primary-bg); border-color: #3a5680; color: var(--primary) !important; }
 
 .sidebar-brand {
-  background: linear-gradient(145deg, #e879a9 0%, #c45d8a 55%, #7c3a9e 140%);
+  background: linear-gradient(145deg, #4f8cff 0%, #3a6fd8 55%, #2f5bb8 140%);
   border-radius: 16px; padding: 18px 16px; margin-bottom: 14px; color: #fff !important;
   box-shadow: var(--glow);
 }
@@ -358,12 +383,12 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
 }
 
 .action-dock {
-  background: linear-gradient(180deg, #241e2e 0%, #1e1a26 100%);
+  background: linear-gradient(180deg, #241e2e 0%, #161d27 100%);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 12px;
   margin-bottom: 12px;
-  box-shadow: inset 0 1px 0 rgba(232,121,169,0.08);
+  box-shadow: inset 0 1px 0 rgba(79,140,255,0.08);
 }
 
 .workflow-strip {
@@ -373,15 +398,15 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
   background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
   padding: 10px; text-align: center; transition: 0.2s ease;
 }
-.workflow-step:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); border-color: #6b3a55; }
+.workflow-step:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); border-color: #3a5680; }
 .workflow-step .n {
   width: 22px; height: 22px; margin: 0 auto 6px; border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
   font-size: 0.7rem; font-weight: 800; background: var(--surface-alt); color: var(--muted) !important;
 }
 .workflow-step .l { font-size: 0.68rem; font-weight: 700; color: var(--muted) !important; text-transform: uppercase; letter-spacing: 0.04em; }
-.workflow-step.active { border-color: var(--primary); background: var(--primary-bg); box-shadow: 0 0 0 3px rgba(232,121,169,0.12); }
-.workflow-step.active .n { background: var(--primary); color: #14111a !important; animation: pe-pulse 2s infinite; }
+.workflow-step.active { border-color: var(--primary); background: var(--primary-bg); box-shadow: 0 0 0 3px rgba(79,140,255,0.12); }
+.workflow-step.active .n { background: var(--primary); color: #0f1419 !important; animation: pe-pulse 2s infinite; }
 .workflow-step.active .l { color: var(--primary) !important; }
 .workflow-step.done { border-color: #166534; background: #14261c; }
 .workflow-step.done .n { background: var(--success); color: #052e16 !important; }
@@ -395,7 +420,7 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
 .brand-mark {
   width: 46px; height: 46px; border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(145deg, #e879a9, #c45d8a);
+  background: linear-gradient(145deg, #4f8cff, #3a6fd8);
   color: #fff !important; font-weight: 800; font-size: 0.95rem;
   font-family: var(--display) !important;
   box-shadow: var(--glow);
@@ -407,7 +432,7 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
 .brand-sub { font-size: 0.8rem; color: var(--muted) !important; font-weight: 500; }
 
 .page-header {
-  background: linear-gradient(135deg, #e879a9 0%, #7c3a9e 100%);
+  background: linear-gradient(135deg, #4f8cff 0%, #2f5bb8 100%);
   border-radius: var(--radius); padding: 20px 22px; margin: 0.4rem 0 1rem;
   box-shadow: var(--glow); position: relative; overflow: hidden;
 }
@@ -426,7 +451,7 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
 }
 .card { padding: 16px !important; margin: 8px 0 !important; color: var(--text) !important; }
 .card:hover, .result-panel:hover, .metric-tile:hover, .kpi-card:hover, .feature-tile:hover {
-  transform: translateY(-2px); box-shadow: var(--shadow) !important; border-color: #6b3a55 !important;
+  transform: translateY(-2px); box-shadow: var(--shadow) !important; border-color: #3a5680 !important;
 }
 .result-panel { padding: 20px; margin-bottom: 14px; animation: pe-in 0.35s ease-out; }
 .builder-shell { padding: 18px; margin-bottom: 14px; }
@@ -478,12 +503,12 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
   display: inline-flex; align-items: center; gap: 6px;
   padding: 5px 11px; border-radius: 999px; font-size: 0.72rem; font-weight: 700;
 }
-.badge-offline { background: #14261c !important; color: #4ade80 !important; border: 1px solid #166534 !important; }
+.badge-offline { background: #14261c !important; color: #3d9b8f !important; border: 1px solid #166534 !important; }
 .badge-cloud { background: #2a2114 !important; color: #fbbf24 !important; border: 1px solid #854d0e !important; }
 
 .verdict-box { border-radius: var(--radius) !important; padding: 18px !important; text-align: center !important; margin: 12px 0 !important; }
 .verdict-box.success { background: #14261c !important; border: 2px solid #166534 !important; }
-.verdict-box.success .v-title { color: #4ade80 !important; }
+.verdict-box.success .v-title { color: #3d9b8f !important; }
 .verdict-box.danger { background: #2a1518 !important; border: 2px solid #7f1d1d !important; }
 .verdict-box.danger .v-title { color: #f87171 !important; }
 .verdict-box.warning { background: #2a2114 !important; border: 2px solid #854d0e !important; }
@@ -493,8 +518,8 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
 .verdict-box .v-sub { font-size: 0.88rem !important; margin-top: 4px !important; color: var(--muted) !important; font-weight: 600 !important; }
 
 .console-log {
-  background: #0c0a10 !important; border: 1px solid #2c2636 !important; border-radius: 14px !important;
-  padding: 14px !important; color: #c9bdd6 !important;
+  background: #0c0a10 !important; border: 1px solid #1c2430 !important; border-radius: 14px !important;
+  padding: 14px !important; color: #9aabbf !important;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
   font-size: 0.76rem !important; line-height: 1.7 !important; max-height: 240px !important; overflow-y: auto !important;
 }
@@ -505,7 +530,7 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
 }
 .alert-card:hover { transform: translateX(2px); box-shadow: var(--shadow-sm); }
 .alert-card.critical { background: #2a1518 !important; border-color: #f87171 !important; color: #fecaca !important; }
-.alert-card.ok { background: #14261c !important; border-color: #4ade80 !important; color: #bbf7d0 !important; }
+.alert-card.ok { background: #14261c !important; border-color: #3d9b8f !important; color: #bbf7d0 !important; }
 
 .source-tag {
   font-size: 0.72rem !important; color: var(--muted) !important;
@@ -513,13 +538,13 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
 }
 
 .ai-recommendation {
-  background: linear-gradient(135deg, #e879a9, #c45d8a);
+  background: linear-gradient(135deg, #4f8cff, #3a6fd8);
   border-radius: 14px; padding: 18px; margin: 12px 0; color: #fff;
   box-shadow: var(--glow); animation: pe-in 0.3s ease-out;
 }
 .ai-recommendation.risk-critical { background: linear-gradient(135deg, #f87171, #b91c1c) !important; }
 .ai-recommendation.risk-moderate { background: linear-gradient(135deg, #fbbf24, #b45309) !important; }
-.ai-recommendation.risk-low { background: linear-gradient(135deg, #4ade80, #15803d) !important; }
+.ai-recommendation.risk-low { background: linear-gradient(135deg, #3d9b8f, #15803d) !important; }
 .ai-recommendation .rec-header, .ai-recommendation .rec-verdict, .ai-recommendation .rec-confidence { color: #fff !important; }
 .ai-recommendation .rec-header { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.95; }
 .ai-recommendation .rec-verdict { font-size: 1.3rem; font-weight: 800; margin: 8px 0; font-family: var(--display) !important; }
@@ -542,12 +567,12 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
 .xai-panel .xai-sub { color: var(--muted) !important; font-size: 0.8rem; margin-bottom: 12px; }
 .xai-bar-label { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 700; color: var(--muted) !important; margin-bottom: 4px; }
 .xai-bar-track { height: 10px; border-radius: 999px; background: var(--surface-alt); overflow: hidden; }
-.xai-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #e879a9, #9eb6e8); }
+.xai-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #4f8cff, #9eb6e8); }
 .xai-tier {
   display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px;
   margin: 6px 0; border: 1px solid var(--border); background: var(--surface-alt);
 }
-.xai-tier.active { border-color: var(--primary); background: var(--primary-bg); box-shadow: 0 0 0 3px rgba(232,121,169,0.12); }
+.xai-tier.active { border-color: var(--primary); background: var(--primary-bg); box-shadow: 0 0 0 3px rgba(79,140,255,0.12); }
 .xai-tier .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; background: #6b6280; flex-shrink: 0; }
 .xai-tier.active .dot { background: var(--primary); animation: pe-pulse 2s infinite; }
 .xai-tier .t-title { font-weight: 800; font-size: 0.84rem; color: var(--text) !important; }
@@ -558,7 +583,7 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
   border-radius: 12px; padding: 12px 14px; margin: 10px 0 14px; font-size: 0.9rem; color: var(--text) !important;
 }
 .demo-banner {
-  background: linear-gradient(135deg, #e879a9, #7c3a9e); color: #fff !important;
+  background: linear-gradient(135deg, #4f8cff, #2f5bb8); color: #fff !important;
   border-radius: 14px; padding: 14px 16px; margin-bottom: 12px;
   box-shadow: var(--glow);
 }
@@ -570,12 +595,12 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
 
 .helpya-card { overflow: hidden; margin: 16px 0; padding: 0 !important; }
 .helpya-card .helpya-header {
-  background: linear-gradient(135deg, #e879a9, #c45d8a); color: #fff !important;
+  background: linear-gradient(135deg, #4f8cff, #3a6fd8); color: #fff !important;
   padding: 14px 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
   font-family: var(--display) !important;
 }
 .helpya-stat {
-  display: inline-block; background: var(--primary-bg); border: 1px solid #6b3a55; border-radius: 12px;
+  display: inline-block; background: var(--primary-bg); border: 1px solid #3a5680; border-radius: 12px;
   padding: 14px; margin: 10px; color: var(--primary); font-weight: 600;
 }
 .helpya-stat .stat-value { font-size: 1.5rem; font-weight: 800; margin-top: 4px; font-family: var(--display) !important; }
@@ -598,12 +623,12 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
   font-size: 0.75rem; font-weight: 500; font-family: var(--font) !important;
 }
 
-/* Streamlit controls — dark + pink */
+/* Streamlit controls — dark clinical blue */
 div[data-baseweb="select"] > div,
 div[data-baseweb="input"] > div,
 div[data-baseweb="base-input"],
 .stTextInput input, .stNumberInput input, .stTextArea textarea {
-  background: #262030 !important; color: var(--text) !important;
+  background: #1e2733 !important; color: var(--text) !important;
   border-color: var(--border) !important; border-radius: 12px !important;
   font-family: var(--font) !important;
 }
@@ -611,7 +636,7 @@ div[data-baseweb="select"] span { color: var(--text) !important; }
 
 .stButton > button {
   border-radius: 12px !important; font-weight: 700 !important; font-family: var(--font) !important;
-  border: 1px solid var(--border) !important; background: #262030 !important; color: var(--text) !important;
+  border: 1px solid var(--border) !important; background: #1e2733 !important; color: var(--text) !important;
   transition: 0.18s ease !important; box-shadow: var(--shadow-sm) !important;
 }
 .stButton > button:hover {
@@ -619,7 +644,7 @@ div[data-baseweb="select"] span { color: var(--text) !important; }
   background: var(--primary-bg) !important; transform: translateY(-1px);
 }
 .stButton > button[kind="primary"], .stButton > button[data-testid="baseButton-primary"] {
-  background: linear-gradient(135deg, #e879a9, #c45d8a) !important;
+  background: linear-gradient(135deg, #4f8cff, #3a6fd8) !important;
   color: #fff !important; border: none !important;
   box-shadow: var(--glow) !important;
 }
@@ -639,7 +664,7 @@ div[data-baseweb="select"] span { color: var(--text) !important; }
   font-family: var(--font) !important;
 }
 .stTabs [aria-selected="true"] {
-  background: linear-gradient(135deg, #e879a9, #c45d8a) !important; color: #fff !important;
+  background: linear-gradient(135deg, #4f8cff, #3a6fd8) !important; color: #fff !important;
 }
 .stTabs [aria-selected="true"] * { color: #fff !important; }
 
@@ -718,6 +743,15 @@ def init_state():
         "train_case": None,
         "train_revealed": False,
         "train_guess": None,
+        # Client Edge Ops modules
+        "dicom_listener_on": False,
+        "dicom_inbox": [],
+        "dicom_prefetch": [],
+        "shield_last": None,
+        "multitask_last": None,
+        "cascade_jobs": [],
+        "telemetry_quarantine": [],
+        "telemetry_uploads": [],
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -924,7 +958,7 @@ def render_xai_panel(result: dict, modality: str, compact: bool = False):
     if not compact:
         st.markdown('<div class="section-label">Decision factors</div>', unsafe_allow_html=True)
         for title, detail in xai["factors"]:
-            st.markdown(f'<div class="card" style="padding:12px !important;margin:6px 0 !important;"><b>{title}</b><br><span style="color:#b7a9c6;">{detail}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="card" style="padding:12px !important;margin:6px 0 !important;"><b>{title}</b><br><span style="color:#8494a8;">{detail}</span></div>', unsafe_allow_html=True)
 
     st.markdown(f'<div class="coach-card"><b>Clinical coach</b><br>{xai["coach"]}</div>', unsafe_allow_html=True)
 
@@ -996,6 +1030,9 @@ def launch_fyp_demo(modality: str = "Tuberculosis (Chest X-Ray)"):
     )
     st.session_state.log_entries.append(
         f'[{time.strftime("%H:%M:%S")}] [GSM] Demo alert queued → Allied Hospital Hub'
+    )
+    speak_voiceover(
+        "FYP guided demo ready. Triage complete. Open the explainable AI panel and Hospital Hub alert."
     )
     st.toast("FYP Demo ready — check XAI panel + Hospital Hub")
     st.rerun()
@@ -1171,10 +1208,11 @@ def render_overview(selected_model: str):
       <div class="feature-tile"><div class="ft-icon">🏥</div><div class="ft-title">Hospital Hub</div><div class="ft-desc">GSM alert stream with agree / override / approve workflow.</div></div>
       <div class="feature-tile"><div class="ft-icon">📄</div><div class="ft-title">Reports</div><div class="ft-desc">Browse local SQLite cache, filter, and re-download outputs.</div></div>
       <div class="feature-tile"><div class="ft-icon">☁️</div><div class="ft-title">Cloud Sync</div><div class="ft-desc">Simulated edge→cloud sync, voice library, session feedback.</div></div>
+      <div class="feature-tile"><div class="ft-icon">⚙️</div><div class="ft-title">Edge Ops</div><div class="ft-desc">DICOM route, missing-data shield, multi-task vision, care cascade, telemetry.</div></div>
     </div>
     """, unsafe_allow_html=True)
 
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4, c5 = st.columns(5)
     if c1.button("Open Case Builder", width="stretch", type="primary", key="ov_builder"):
         st.session_state.active_page = "builder"
         st.rerun()
@@ -1186,6 +1224,9 @@ def render_overview(selected_model: str):
         st.rerun()
     if c4.button("Reports Library", width="stretch", key="ov_reports"):
         st.session_state.active_page = "reports"
+        st.rerun()
+    if c5.button("Edge Ops", width="stretch", key="ov_ops"):
+        st.session_state.active_page = "ops"
         st.rerun()
 
     left, right = st.columns([1.4, 1])
@@ -1218,7 +1259,7 @@ def render_case_builder(selected_model: str, uploaded):
     st.markdown("""
     <div class="builder-shell">
       <h3>Case Builder</h3>
-      <p style="margin:0;color:#c9bdd6;font-size:0.88rem;font-family:'Sora',sans-serif;">
+      <p style="margin:0;color:#9aabbf;font-size:0.88rem;font-family:'Sora',sans-serif;">
         Assemble patient context before running triage. Offline models stay unchanged — this sheet only enriches the session.
       </p>
     </div>
@@ -1358,6 +1399,7 @@ PAGES = {
     "reports": {"label_key": "Reports", "icon": "📄", "title": "Reports Library", "blurb": "Browse and export cached reports"},
     "cloud": {"label_key": "Cloud Sync", "icon": "☁️", "title": "Cloud Sync & Cache", "blurb": "Local cache and simulated sync"},
     "lab": {"label_key": "AI Lab", "icon": "✨", "title": "AI Lab · FYP Features", "blurb": "XAI, demo mode, LHW training"},
+    "ops": {"label_key": "Edge Ops", "icon": "⚙️", "title": "Edge Ops · Client Modules", "blurb": "DICOM route, shield, multi-task, cascade, telemetry"},
 }
 
 
@@ -1558,6 +1600,15 @@ def render_sidebar():
             '<div class="sidebar-section"><div class="sidebar-section-title">Demo & system</div>',
             unsafe_allow_html=True,
         )
+        st.toggle(
+            "Voice over",
+            key="voice_enabled",
+            help="Browser narration for triage, demo, and Edge Ops actions",
+        )
+        if st.button("🔊 Test voice over", width="stretch", key="sidebar_voice_test"):
+            speak_voiceover(
+                "Pink Edge AI voice over is ready. Clinical edge triage narration is enabled."
+            )
         if st.button("🚀 Launch FYP Demo", width="stretch", type="primary", key="sidebar_fyp_demo"):
             _confirm_demo_dialog()
         hw = st.session_state.hw_stats
@@ -1639,6 +1690,10 @@ def run_triage_action(selected_model, uploaded):
                                    "module": "ONLINE" if random.random() > 0.1 else "UNSTABLE"}
 
     real = "SIMULATED" not in result.get("source", "")
+    speak_voiceover(
+        f"Triage complete for {selected_model.split('(')[0].strip()}. "
+        f"Verdict {result.get('verdict', 'ready')}. Latency {st.session_state.inference_latency} seconds."
+    )
     st.session_state.log_entries.append(
         f"[{time.strftime('%H:%M:%S')}] [NPU] {'Real on-device' if real else 'Simulated'} inference "
         f"for {selected_model.split('(')[0].strip()}... Complete ({st.session_state.inference_latency}s).")
@@ -1746,8 +1801,8 @@ def render_dashboard(selected_model):
         stage_status = "Detection ACTIVE" if (st.session_state.inference_done and st.session_state.show_bbox) else "Awaiting analysis"
         st.markdown(
             f'<div class="image-stage-caption">'
-            f'<span style="color:#b7a9c6 !important;font-family:Sora,sans-serif;">{st.session_state.uploaded_name or "Generated scan placeholder"}</span>'
-            f'<span style="color:#e879a9 !important;font-family:Sora,sans-serif;">{stage_status}</span></div>',
+            f'<span style="color:#8494a8 !important;font-family:Sora,sans-serif;">{st.session_state.uploaded_name or "Generated scan placeholder"}</span>'
+            f'<span style="color:#4f8cff !important;font-family:Sora,sans-serif;">{stage_status}</span></div>',
             unsafe_allow_html=True,
         )
         st.image(display, use_container_width=True)
@@ -1784,7 +1839,7 @@ def render_dashboard(selected_model):
             severity_str = "—"
             sev_bg = "#6b6280"
             escalation_str = "—"
-            escalation_color = "#b7a9c6"
+            escalation_color = "#8494a8"
             risk_cat = "none"
         elif r.get("is_critical", False):
             if "5" in r.get("bi_rads", "") or "4C" in r.get("bi_rads", "") or "POS" in r.get("verdict", ""):
@@ -1799,40 +1854,40 @@ def render_dashboard(selected_model):
             escalation_color = "#f87171"
         else:
             severity_str = "Low"
-            sev_bg = "#4ade80"
+            sev_bg = "#3d9b8f"
             escalation_str = "Not required"
-            escalation_color = "#4ade80"
+            escalation_color = "#3d9b8f"
             risk_cat = "low"
 
         st.markdown(f"""
         <div class="result-panel">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <span style="font-size:1.1rem;font-weight:800;color:#f5f0f7;font-family:Syne,sans-serif;">Triage result</span>
-                <span style="background:#2a1c28;color:#e879a9;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;border:1px solid #6b3a55;">{model_source_tag}</span>
+                <span style="font-size:1.1rem;font-weight:800;color:#e8eef6;font-family:Syne,sans-serif;">Triage result</span>
+                <span style="background:#152238;color:#4f8cff;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;border:1px solid #3a5680;">{model_source_tag}</span>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #2c2636;">
-                <span style="color:#b7a9c6;font-size:0.9rem;font-weight:500;">Confidence</span>
-                <span style="color:#f5f0f7;font-size:1.05rem;font-weight:800;">{conf_str}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1c2430;">
+                <span style="color:#8494a8;font-size:0.9rem;font-weight:500;">Confidence</span>
+                <span style="color:#e8eef6;font-size:1.05rem;font-weight:800;">{conf_str}</span>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #2c2636;">
-                <span style="color:#b7a9c6;font-size:0.9rem;font-weight:500;">Severity</span>
-                <span style="background:{sev_bg};color:#14111a;padding:3px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">{severity_str}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1c2430;">
+                <span style="color:#8494a8;font-size:0.9rem;font-weight:500;">Severity</span>
+                <span style="background:{sev_bg};color:#0f1419;padding:3px 12px;border-radius:12px;font-size:0.8rem;font-weight:700;">{severity_str}</span>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
-                <span style="color:#b7a9c6;font-size:0.9rem;font-weight:500;">Escalation</span>
+                <span style="color:#8494a8;font-size:0.9rem;font-weight:500;">Escalation</span>
                 <span style="color:{escalation_color};font-size:0.95rem;font-weight:700;">{escalation_str}</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        low_style = "background:#14261c;border:2px solid #4ade80;box-shadow:0 2px 6px rgba(74,222,128,0.15);" if risk_cat == "low" else "background:#1e1a26;border:1px solid #3d354c;"
-        mod_style = "background:#2a2114;border:2px solid #fbbf24;box-shadow:0 2px 6px rgba(251,191,36,0.15);" if risk_cat == "moderate" else "background:#1e1a26;border:1px solid #3d354c;"
-        high_style = "background:#2a1518;border:2px solid #f87171;box-shadow:0 2px 6px rgba(248,113,113,0.15);" if risk_cat == "high" else "background:#1e1a26;border:1px solid #3d354c;"
+        low_style = "background:#14261c;border:2px solid #3d9b8f;box-shadow:0 2px 6px rgba(61,155,143,0.15);" if risk_cat == "low" else "background:#161d27;border:1px solid #2a3544;"
+        mod_style = "background:#2a2114;border:2px solid #fbbf24;box-shadow:0 2px 6px rgba(251,191,36,0.15);" if risk_cat == "moderate" else "background:#161d27;border:1px solid #2a3544;"
+        high_style = "background:#2a1518;border:2px solid #f87171;box-shadow:0 2px 6px rgba(248,113,113,0.15);" if risk_cat == "high" else "background:#161d27;border:1px solid #2a3544;"
 
         st.markdown(f"""
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;">
             <div class="card" style="{low_style}border-radius:12px;padding:14px 6px;text-align:center;margin:0;">
-                <div style="color:#4ade80;font-size:0.85rem;font-weight:700;line-height:1.2;">Low<br>risk</div>
+                <div style="color:#3d9b8f;font-size:0.85rem;font-weight:700;line-height:1.2;">Low<br>risk</div>
             </div>
             <div class="card" style="{mod_style}border-radius:12px;padding:14px 6px;text-align:center;margin:0;">
                 <div style="color:#fbbf24;font-size:0.85rem;font-weight:700;line-height:1.2;">Moderate<br>risk</div>
@@ -1847,12 +1902,12 @@ def render_dashboard(selected_model):
                    "Maternal Health (Ultrasound)": "US (Ultrasound)"}
         st.markdown(f'<div class="section-label">{t("DICOM Metadata")}</div>', unsafe_allow_html=True)
         priv_hash = st.session_state.get("privacy_hash", "HEX-8F3A1C9B")
-        st.markdown(f"""<div style="background:#14261c;border:1px solid #4ade80;border-radius:10px;padding:8px 12px;margin-bottom:8px;font-size:0.75rem;color:#4ade80;font-weight:700;">
+        st.markdown(f"""<div style="background:#14261c;border:1px solid #3d9b8f;border-radius:10px;padding:8px 12px;margin-bottom:8px;font-size:0.75rem;color:#3d9b8f;font-weight:700;">
         HIPAA / GDPR compliant — hex privacy hash active</div>
         <div class="card">
         Patient ID: <b style="color:#2b4c7e;font-family:ui-monospace,monospace;">{priv_hash}</b><br>Age: <b>{st.session_state.pat_age} Y</b><br>
         Modality: <b>{mod_map[selected_model]}</b><br>Date: <b>{datetime.now().strftime('%Y-%m-%d')}</b><br>
-        Privacy: <b style="color:#4ade80;">ANONYMIZED (PII STRIPPED)</b></div>""", unsafe_allow_html=True)
+        Privacy: <b style="color:#3d9b8f;">ANONYMIZED (PII STRIPPED)</b></div>""", unsafe_allow_html=True)
 
         if st.session_state.inference_done and st.session_state.current_result:
             r = st.session_state.current_result
@@ -2026,14 +2081,20 @@ def render_hospital_hub():
                 if st.button("📤 Approve", key=f"approve_{alert_id}", use_container_width=True, disabled=already_approved):
                     a["status"] = "Approved"
                     st.session_state.log_entries.append(
-                        f"[{time.strftime('%H:%M:%S')}] [REFERRAL] Alert #{a['id']} approved and forwarded to hospital."
+                        f"[{time.strftime('%H:%M:%S')}] [REFERRAL] Alert #{a['id']} approved — care cascade queued."
                     )
-                    st.toast("📤 Approved — referral forwarded to hospital.")
+                    try:
+                        from edge_ops import queue_care_cascade
+                        finding = a.get("message") or a.get("sms") or "Critical AI alert accepted"
+                        queue_care_cascade(str(finding)[:120], "Pulmonology", speak=speak_voiceover)
+                    except Exception:
+                        speak_voiceover("Alert approved. Referral forwarded to hospital.")
+                    st.toast("📤 Approved — care cascade + referral queued.")
                     st.rerun()
 
             if already_approved:
                 st.markdown("""
-                <div style="background:#4ade8020;border-left:4px solid #4ade80;border-radius:8px;padding:12px;margin-top:8px;margin-bottom:12px;">
+                <div style="background:#3d9b8f20;border-left:4px solid #3d9b8f;border-radius:8px;padding:12px;margin-top:8px;margin-bottom:12px;">
                     <b>📤 Status:</b> Approved & forwarded to hospital
                 </div>
                 """, unsafe_allow_html=True)
@@ -2042,7 +2103,7 @@ def render_hospital_hub():
             decision = st.session_state.lhv_decisions[alert_id]["decision"]
             if decision:
                 status_text = "✅ Agreed with AI" if decision == "agree" else "🔴 Overridden"
-                status_color = "#4ade80" if decision == "agree" else "#f87171"
+                status_color = "#3d9b8f" if decision == "agree" else "#f87171"
                 st.markdown(f"""
                 <div style="background: {status_color}20; border-left: 4px solid {status_color}; border-radius: 8px; padding: 12px; margin-top: 8px; margin-bottom: 12px;">
                     <b>👩\u200d⚕️ LHV Decision:</b> {status_text}
@@ -2131,11 +2192,11 @@ def render_cloud_sync():
     # VOICE MESSAGE MANAGEMENT
     # ============================================================
     st.markdown("---")
-    st.markdown("<div style='background: linear-gradient(135deg, #e879a9 0%, #c45d8a 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>🎤 Voice Message Library</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: linear-gradient(135deg, #4f8cff 0%, #3a6fd8 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>🎤 Voice Message Library</div>", unsafe_allow_html=True)
 
     voice_mgmt_col1, voice_mgmt_col2 = st.columns([2, 1])
     with voice_mgmt_col1:
-        st.markdown("<div style='background: rgba(232, 121, 169, 0.18); color: #f0a8c8; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #e879a9;'>Pre-recorded voice messages for different scenarios:</div>", unsafe_allow_html=True)
+        st.markdown("<div style='background: rgba(79, 140, 255, 0.18); color: #9db8f0; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #4f8cff;'>Pre-recorded voice messages for different scenarios:</div>", unsafe_allow_html=True)
         selected_message = st.selectbox(
             "Select a message to test:",
             list(VOICE_MESSAGES.keys()),
@@ -2164,7 +2225,7 @@ def render_cloud_sync():
         st.caption("🔇 No audio engine configured yet — showing text only. Wire up play_voice_message() to enable playback.")
 
     # Upload custom voice file
-    st.markdown("<div style='background: rgba(232, 121, 169, 0.18); color: #f0a8c8; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #e879a9;'>Or upload your own audio file:</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: rgba(79, 140, 255, 0.18); color: #9db8f0; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #4f8cff;'>Or upload your own audio file:</div>", unsafe_allow_html=True)
     custom_voice_file = st.file_uploader(
         "Upload audio (MP3/WAV/OGG)",
         type=["mp3", "wav", "ogg"],
@@ -2205,7 +2266,7 @@ def render_cloud_sync():
         """, unsafe_allow_html=True)
 
     # Session Feedback Form
-    st.markdown("<div style='background: linear-gradient(135deg, #e879a9 0%, #c45d8a 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>📝 Session Feedback & Quality Check</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: linear-gradient(135deg, #4f8cff 0%, #3a6fd8 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>📝 Session Feedback & Quality Check</div>", unsafe_allow_html=True)
 
     feedback_col1, feedback_col2 = st.columns([1, 1])
 
@@ -2227,7 +2288,7 @@ def render_cloud_sync():
         )
 
     # Detailed Feedback
-    st.markdown("<div style='background: rgba(232, 121, 169, 0.18); color: #f0a8c8; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #e879a9;'>Your Feedback:</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: rgba(79, 140, 255, 0.18); color: #9db8f0; padding: 8px 12px; border-radius: 6px; margin: 8px 0; font-size: 1rem; font-weight: 700; border-left: 4px solid #4f8cff;'>Your Feedback:</div>", unsafe_allow_html=True)
     feedback_text = st.text_area(
         "Share details about this session:",
         placeholder="E.g., Image quality issues, system performance, suggestions...",
@@ -2284,7 +2345,7 @@ def render_cloud_sync():
 
     # Today's Summary Panel
     st.markdown("---")
-    st.markdown("<div style='background: linear-gradient(135deg, #e879a9 0%, #c45d8a 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>📊 Today's Diagnostic Summary</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: linear-gradient(135deg, #4f8cff 0%, #3a6fd8 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>📊 Today's Diagnostic Summary</div>", unsafe_allow_html=True)
 
     summary_col1, summary_col2, summary_col3 = st.columns(3)
 
@@ -2332,7 +2393,7 @@ def render_cloud_sync():
 
     # Quick Actions
     st.markdown("---")
-    st.markdown("<div style='background: linear-gradient(135deg, #e879a9 0%, #c45d8a 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>⚡ Quick Actions</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background: linear-gradient(135deg, #4f8cff 0%, #3a6fd8 100%); color: white; padding: 12px 16px; border-radius: 8px; margin: 16px 0 12px 0; font-size: 1.2rem; font-weight: 800;'>⚡ Quick Actions</div>", unsafe_allow_html=True)
 
     action_col1, action_col2, action_col3, action_col4 = st.columns(4)
 
@@ -2386,7 +2447,7 @@ elif page == "dashboard":
     with bar1:
         st.markdown(
             f"<div style='padding:6px 4px;'><b>{selected_model.split('(')[0].strip()}</b>"
-            f"<div style='font-size:0.78rem;color:#b7a9c6;'>{st.session_state.network_mode}</div></div>",
+            f"<div style='font-size:0.78rem;color:#8494a8;'>{st.session_state.network_mode}</div></div>",
             unsafe_allow_html=True,
         )
     with bar2:
@@ -2403,9 +2464,14 @@ elif page == "reports":
     render_reports_center()
 elif page == "lab":
     render_ai_lab(selected_model)
+elif page == "ops":
+    from edge_ops import render_edge_ops
+    render_edge_ops(speak=speak_voiceover)
+elif page == "cloud":
+    render_cloud_sync()
 else:
     render_cloud_sync()
 
 st.markdown(
-    '<div class="pe-footer">Pink Edge AI · Command Center · Case Builder · Triage · Hub · Reports</div>',
+    '<div class="pe-footer">Pink Edge AI · Command Center · Edge Ops · Triage · Hub · Reports</div>',
     unsafe_allow_html=True)

@@ -90,24 +90,25 @@ TB_LUNG_ZONES = inf.TB_LUNG_ZONES
 # #f59e0b 1.9:1, #ef4444 3.3:1), so those are now darker shades of the same hues.
 # ============================================================
 C = {
-    # neutrals — dark clinical command center (matches product design)
-    "bg": "#14111a", "surface": "#1e1a26", "surface_alt": "#262030", "surface_hover": "#322c3d",
-    "border": "#3d354c", "border_light": "#2c2636",
-    "text": "#f5f0f7", "text_muted": "#c9bdd6", "text_light": "#b7a9c6",
-    # brand — Pink Edge magenta (not retired #ff69b4 / #ff1493)
-    "primary": "#e879a9", "primary_light": "#f0a8c8",
-    # secondary — soft steel for informational emphasis on dark UI
-    "accent": "#9eb6e8", "accent_light": "#c2d2f5",
-    # semantic — brighter for AA contrast on dark surfaces
-    "success": "#4ade80", "warning": "#fbbf24", "danger": "#f87171",
-    "primary_bg": "#2a1c28", "success_bg": "#14261c", "warning_bg": "#2a2114", "danger_bg": "#2a1518",
-    "console_bg": "#0c0a10", "console_text": "#c9bdd6",
+    # neutrals — professional clinical slate (restrained; no pink wash)
+    "bg": "#0f1419", "surface": "#161d27", "surface_alt": "#1e2733", "surface_hover": "#273141",
+    "border": "#2a3544", "border_light": "#1c2430",
+    "text": "#e8eef6", "text_muted": "#9aabbf", "text_light": "#8494a8",
+    # brand — steel clinical blue
+    "primary": "#4f8cff", "primary_light": "#9db8f0",
+    # secondary — cool info accent
+    "accent": "#7aa2e3", "accent_light": "#b7c9ea",
+    # semantic — muted (avoid neon green chrome)
+    "success": "#3d9b8f", "warning": "#d4a017", "danger": "#e07070",
+    "primary_bg": "#152238", "success_bg": "#14241f", "warning_bg": "#2a2114", "danger_bg": "#2a1518",
+    "console_bg": "#0b1016", "console_text": "#9aabbf",
 }
 
 TR = {
     "Pink Edge AI": "پنک ایج اے آئی", "Clinical Intelligence Platform": "کلینیکل انٹیلیجنس پلیٹ فارم",
     "Dashboard": "ڈیش بورڈ", "Hospital Hub": "ہسپتال مرکز", "Cloud Sync": "کلاؤڈ سنک",
     "AI Lab": "اے آئی لیب", "Overview": "اوور ویو", "Case Builder": "کیس بلڈر", "Reports": "رپورٹس",
+    "Edge Ops": "ایج آپس",
     "Fully Offline": "مکمل آف لائن", "GSM Failover": "جی ایس ایم فیل اوور",
     "Select AI Model": "اے آئی ماڈل منتخب کریں", "Upload Patient Scan": "مریض کا اسکین اپ لوڈ کریں",
     "Run Triage": "تشخیص چلائیں", "Save to Cache": "کیش میں محفوظ کریں",
