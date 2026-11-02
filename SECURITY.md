@@ -220,8 +220,8 @@ real patient data. Specifically:
 - **Dependencies are floor-pinned (`>=`), not exact-pinned or lock-filed.** Builds are reproducible
   in spirit but not byte-for-byte; the project relies on CodeQL and Dependabot-style alerts rather
   than a lockfile to catch a vulnerable transitive dependency.
-- **No LICENSE file is published yet.** This doesn't weaken the running code, but it leaves the
-  legal terms under which a security researcher may use, patch, or redistribute a fix ambiguous.
+- **A license is published.** `LICENSE.md` at the repository root contains the CC0 1.0 Universal
+  text. Read it for the exact terms that apply to using, patching, or redistributing a fix.
 - **No independent security or clinical audit has been performed.** The test suites in §1.5 verify
   that the project does what its own documentation claims; they are not a substitute for
   third-party penetration testing or regulatory review.
@@ -266,4 +266,4 @@ reporters are credited in the resulting GitHub Security Advisory and in this sec
 
 ---
 
-*This policy is reviewed as the project changes. Last updated: 2026-10-07.*
+*This policy is reviewed as the project changes. Last updated: 2026-11-03.*
