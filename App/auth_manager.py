@@ -33,6 +33,7 @@ ROLE_CONFIGS = {
             "view_results",
             "download_report",
             "run_triage",
+            # LHW: clinical workflow only — AI Lab / Edge Ops stay locked
         },
     },
     ROLE_RADIOLOGIST: {
@@ -47,6 +48,9 @@ ROLE_CONFIGS = {
             "view_audit_log",
             "export_dicom",
             "manage_users",
+            "view_ai_lab",
+            "view_edge_ops",
+            "view_admin_structure",
         },
     },
 }

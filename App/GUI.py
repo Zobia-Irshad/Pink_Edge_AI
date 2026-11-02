@@ -138,8 +138,46 @@ def init_db():
         model_used TEXT, bi_rads TEXT, acr_density TEXT, verdict TEXT, localization TEXT,
         confidence REAL, inference_time REAL, timestamp TEXT, synced INTEGER DEFAULT 0, report_json TEXT
     )""")
+    # Offline-first usage metrics (no Mixpanel/PostHog — local SQLite only)
+    conn.execute("""CREATE TABLE IF NOT EXISTS usage_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_name TEXT NOT NULL,
+        detail TEXT,
+        role TEXT,
+        page TEXT,
+        timestamp TEXT NOT NULL
+    )""")
     conn.commit()
     conn.close()
+
+
+def log_usage_event(event_name: str, detail: str = "", role: str = "", page: str = ""):
+    """Append a local usage event for offline analytics."""
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute(
+        "INSERT INTO usage_events (event_name, detail, role, page, timestamp) VALUES (?,?,?,?,?)",
+        (
+            event_name,
+            (detail or "")[:500],
+            (role or "")[:64],
+            (page or "")[:64],
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_usage_events(limit: int = 100):
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    rows = conn.execute(
+        "SELECT id, event_name, detail, role, page, timestamp FROM usage_events ORDER BY id DESC LIMIT ?",
+        (int(limit),),
+    ).fetchall()
+    conn.close()
+    return rows
 
 
 def save_to_cache(d):

@@ -262,6 +262,11 @@ def _to_result(modality, confidence, is_positive, bbox):
     }
 
 
+def get_reference_templates(modality: str):
+    """Public accessor for UI/XAI: returns (positive_template, negative_template) arrays or (None, None)."""
+    return _get_templates(modality)
+
+
 def available(modality: str) -> bool:
     pos, neg = _get_templates(modality)
     return pos is not None and neg is not None

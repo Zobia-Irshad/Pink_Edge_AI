@@ -360,9 +360,14 @@ p,label,span,div,li,td,th { color: var(--text) !important; }
 }
 .sidebar-brand b {
   display: block; font-family: var(--display) !important; font-size: 1.2rem;
-  color: #fff !important; letter-spacing: -0.02em; font-weight: 800;
+  color: #ffffff !important; letter-spacing: -0.02em; font-weight: 800;
 }
-.sidebar-brand .tag { color: rgba(255,255,255,0.9) !important; font-size: 0.74rem; margin-top: 4px; }
+.sidebar-brand .tag { color: #f8fbff !important; font-size: 0.74rem; margin-top: 4px; }
+/* High-contrast text on primary gradient surfaces (a11y) */
+.brand-bar .brand-title, .demo-banner b, .demo-banner span { color: #ffffff !important; }
+.stButton > button[kind="primary"] *, .stButton > button[data-testid="baseButton-primary"] * {
+  color: #ffffff !important;
+}
 
 .nav-rail-label {
   font-size: 0.66rem !important; font-weight: 800 !important;
@@ -762,6 +767,15 @@ init_state()
 core._urdu["on"] = st.session_state.urdu_mode  # sync GUI.py's t() to this session's language choice
 t = core.t
 
+# Modular page components (keep streamlit_app thin — no duplicated triage logic)
+from components.overview import render_overview
+from components.case_builder import render_case_builder
+from components.reports import render_reports_center
+from components.ai_lab import render_ai_lab
+from components.access import can_view_page, enforce_page_access, current_auth
+from components.metrics import track
+
+
 
 def render_workflow_strip(has_upload: bool = False):
     """Interactive clinical workflow progress — Upload → Triage → Review → Cache."""
@@ -1123,274 +1137,6 @@ def render_training_arena():
         render_xai_panel(r, case["modality"], compact=True)
 
 
-def render_ai_lab(selected_model: str):
-    st.markdown(
-        '<div class="nav-hint" style="margin-bottom:12px;">Surprise FYP features — Explainable AI, guided demo, and LHW training</div>',
-        unsafe_allow_html=True,
-    )
-    if st.session_state.demo_mode and st.session_state.demo_step:
-        st.markdown(
-            f'<div class="demo-banner"><b>Guided demo active</b><br><span>{st.session_state.demo_step}</span></div>',
-            unsafe_allow_html=True,
-        )
-
-    d1, d2 = st.columns([2, 1])
-    with d1:
-        st.markdown("### One-click FYP Demo")
-        st.write(
-            "Loads a real Test Data scan, runs the **offline** triage pipeline, "
-            "builds an Explainable AI trace, and queues a Hospital Hub alert — viva-ready in one click."
-        )
-    with d2:
-        demo_mod = st.selectbox(
-            "Demo modality",
-            core.MODELS,
-            index=1 if len(core.MODELS) > 1 else 0,
-            key="demo_modality_select",
-        )
-        if st.button("🚀 Launch FYP Demo", type="primary", width="stretch"):
-            launch_fyp_demo(demo_mod)
-
-    st.markdown("---")
-    st.markdown("### Explainable AI (live case)")
-    if st.session_state.inference_done and st.session_state.current_result:
-        render_xai_panel(st.session_state.current_result, selected_model or st.session_state.last_model or core.MODELS[0])
-    else:
-        st.info("Run triage on Dashboard (or Launch FYP Demo) to populate the XAI panel.")
-
-    st.markdown("---")
-    render_training_arena()
-
-
-def _session_kpis():
-    total, unsynced = core.counts()
-    alerts = st.session_state.get("sms_alerts") or []
-    crit = sum(1 for a in alerts if a.get("is_critical"))
-    return {
-        "alerts": len(alerts),
-        "critical": crit,
-        "cached": total,
-        "unsynced": unsynced,
-        "latency": st.session_state.get("inference_latency", 0),
-        "train": st.session_state.get("train_score", 0),
-        "done": bool(st.session_state.get("inference_done")),
-    }
-
-
-def render_overview(selected_model: str):
-    """Production command-center landing — interactive tiles, KPIs, activity."""
-    k = _session_kpis()
-    st.markdown("""
-    <div class="brand-bar">
-      <div class="brand-mark">PE</div>
-      <div>
-        <div class="brand-title">Command Center</div>
-        <div class="brand-sub">Production clinical workspace · build a case · triage · escalate · sync</div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown(f"""
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="k">Hub alerts</div><div class="v">{k['alerts']}</div><div class="s">{k['critical']} critical</div></div>
-      <div class="kpi-card"><div class="k">Cached reports</div><div class="v">{k['cached']}</div><div class="s">{k['unsynced']} unsynced</div></div>
-      <div class="kpi-card"><div class="k">Last latency</div><div class="v">{k['latency']}s</div><div class="s">{'Ready' if k['done'] else 'Awaiting triage'}</div></div>
-      <div class="kpi-card"><div class="k">Training score</div><div class="v">{k['train']}</div><div class="s">LHW arena</div></div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown('<div class="section-label">Workspace modules</div>', unsafe_allow_html=True)
-    st.markdown("""
-    <div class="feature-grid">
-      <div class="feature-tile"><div class="ft-icon">🧩</div><div class="ft-title">Case Builder</div><div class="ft-desc">Compose patient context, urgency, and BHU metadata before triage.</div></div>
-      <div class="feature-tile"><div class="ft-icon">🩺</div><div class="ft-title">Clinical Triage</div><div class="ft-desc">Run offline-first models with bbox overlay and clinician confirm.</div></div>
-      <div class="feature-tile"><div class="ft-icon">✨</div><div class="ft-title">AI Lab</div><div class="ft-desc">Explainable AI, guided FYP demo, and LHW training arena.</div></div>
-      <div class="feature-tile"><div class="ft-icon">🏥</div><div class="ft-title">Hospital Hub</div><div class="ft-desc">GSM alert stream with agree / override / approve workflow.</div></div>
-      <div class="feature-tile"><div class="ft-icon">📄</div><div class="ft-title">Reports</div><div class="ft-desc">Browse local SQLite cache, filter, and re-download outputs.</div></div>
-      <div class="feature-tile"><div class="ft-icon">☁️</div><div class="ft-title">Cloud Sync</div><div class="ft-desc">Simulated edge→cloud sync, voice library, session feedback.</div></div>
-      <div class="feature-tile"><div class="ft-icon">⚙️</div><div class="ft-title">Edge Ops</div><div class="ft-desc">DICOM route, missing-data shield, multi-task vision, care cascade, telemetry.</div></div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    c1, c2, c3, c4, c5 = st.columns(5)
-    if c1.button("Open Case Builder", width="stretch", type="primary", key="ov_builder"):
-        st.session_state.active_page = "builder"
-        st.rerun()
-    if c2.button(f"Run Triage · {selected_model.split('(')[0].strip()}", width="stretch", key="ov_triage"):
-        st.session_state.active_page = "dashboard"
-        st.rerun()
-    if c3.button("Hospital Hub", width="stretch", key="ov_hub"):
-        st.session_state.active_page = "hub"
-        st.rerun()
-    if c4.button("Reports Library", width="stretch", key="ov_reports"):
-        st.session_state.active_page = "reports"
-        st.rerun()
-    if c5.button("Edge Ops", width="stretch", key="ov_ops"):
-        st.session_state.active_page = "ops"
-        st.rerun()
-
-    left, right = st.columns([1.4, 1])
-    with left:
-        st.markdown('<div class="section-label">Live activity</div>', unsafe_allow_html=True)
-        logs = st.session_state.log_entries[-8:] or ["> System initialized. Awaiting commands..."]
-        rows = "".join(f"<div class='activity-row'><span>{e}</span></div>" for e in reversed(logs))
-        st.markdown(f"<div class='builder-shell'>{rows}</div>", unsafe_allow_html=True)
-    with right:
-        st.markdown('<div class="section-label">Edge node</div>', unsafe_allow_html=True)
-        hw, net = st.session_state.hw_stats, st.session_state.net_stats
-        case_bits = (
-            f"BHU {st.session_state.get('case_bhu','—')} · "
-            f"{st.session_state.get('case_urgency','Routine')} · "
-            f"{'case sheet ready' if st.session_state.get('case_built') else 'no case sheet yet'}"
-        )
-        st.markdown(f"""
-        <div class="builder-shell">
-          <h3>RK3588 edge</h3>
-          <div class="activity-row"><span>NPU load</span><b>{hw['load']}</b></div>
-          <div class="activity-row"><span>Power / temp</span><b>{hw['power']} · {hw['temp']}</b></div>
-          <div class="activity-row"><span>GSM</span><b>{net['module']} · {net['signal']}</b></div>
-          <div class="activity-row"><span>Case context</span><b style="font-size:0.75rem;">{case_bits}</b></div>
-        </div>
-        """, unsafe_allow_html=True)
-
-
-def render_case_builder(selected_model: str, uploaded):
-    """Interactive clinical case sheet — production builder pattern (UI only; same triage backend)."""
-    st.markdown("""
-    <div class="builder-shell">
-      <h3>Case Builder</h3>
-      <p style="margin:0;color:#9aabbf;font-size:0.88rem;font-family:'Sora',sans-serif;">
-        Assemble patient context before running triage. Offline models stay unchanged — this sheet only enriches the session.
-      </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    c1, c2 = st.columns(2)
-    with c1:
-        st.session_state.pat_age = st.number_input("Patient age", min_value=1, max_value=100, value=int(st.session_state.pat_age), step=1)
-        st.session_state.case_gender = st.selectbox("Gender", ["Female", "Male", "Other"], index=["Female", "Male", "Other"].index(st.session_state.get("case_gender", "Female")))
-        st.session_state.case_bhu = st.text_input("BHU / facility", value=st.session_state.get("case_bhu", "BHU-14 Faisalabad"))
-    with c2:
-        modality = st.selectbox("Modality for this case", core.MODELS, index=core.MODELS.index(selected_model) if selected_model in core.MODELS else 0, key="builder_modality")
-        st.session_state.case_urgency = st.select_slider("Urgency", options=["Routine", "Soon", "Urgent", "Critical"], value=st.session_state.get("case_urgency", "Routine"))
-        st.session_state.network_mode = st.radio("Network for run", ["Fully Offline", "GSM Failover"], index=0 if "Offline" in st.session_state.network_mode else 1, horizontal=True, key="builder_net")
-
-    st.session_state.case_notes = st.text_area(
-        "Clinical notes (optional)",
-        value=st.session_state.get("case_notes", ""),
-        placeholder="Symptoms, referral reason, image quality notes…",
-        height=100,
-    )
-
-    st.markdown('<div class="section-label">Case preview</div>', unsafe_allow_html=True)
-    st.markdown(f"""
-    <div class="builder-shell">
-      <div class="activity-row"><span>Privacy hash</span><b style="font-family:ui-monospace,monospace;font-size:0.78rem;">{st.session_state.privacy_hash}</b></div>
-      <div class="activity-row"><span>Age / gender</span><b>{st.session_state.pat_age} Y · {st.session_state.case_gender}</b></div>
-      <div class="activity-row"><span>Facility</span><b>{st.session_state.case_bhu}</b></div>
-      <div class="activity-row"><span>Modality / urgency</span><b>{modality.split('(')[0].strip()} · {st.session_state.case_urgency}</b></div>
-      <div class="activity-row"><span>Notes</span><b style="font-size:0.78rem;">{(st.session_state.case_notes or '—')[:120]}</b></div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    b1, b2, b3 = st.columns(3)
-    if b1.button("Save case sheet", width="stretch", key="builder_save"):
-        st.session_state.case_built = True
-        st.session_state.last_model = modality
-        st.session_state.log_entries.append(
-            f"[{time.strftime('%H:%M:%S')}] [BUILDER] Case sheet saved · {st.session_state.case_bhu} · {st.session_state.case_urgency}"
-        )
-        st.toast("Case sheet saved", icon="🧩")
-    if b2.button("Save & open triage", width="stretch", type="primary", key="builder_to_dash"):
-        st.session_state.case_built = True
-        st.session_state.last_model = modality
-        st.session_state.active_page = "dashboard"
-        st.toast("Case ready — run triage", icon="🩺")
-        st.rerun()
-    if b3.button("Build + Run Triage now", width="stretch", type="primary", key="builder_run"):
-        st.session_state.case_built = True
-        st.session_state.last_model = modality
-        st.session_state.active_page = "dashboard"
-        run_triage_action(modality, uploaded)
-        # run_triage_action reruns; also stamp note into log
-        return
-
-
-def render_reports_center():
-    """Interactive local report library over the existing SQLite cache."""
-    total, unsynced = core.counts()
-    st.markdown(f"""
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="k">Total reports</div><div class="v">{total}</div><div class="s">SQLite cache</div></div>
-      <div class="kpi-card"><div class="k">Unsynced</div><div class="v">{unsynced}</div><div class="s">Pending cloud</div></div>
-      <div class="kpi-card"><div class="k">Synced</div><div class="v">{max(total-unsynced,0)}</div><div class="s">Marked synced</div></div>
-      <div class="kpi-card"><div class="k">Session alerts</div><div class="v">{len(st.session_state.sms_alerts)}</div><div class="s">Hospital Hub</div></div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    rows = core.get_cached_reports()
-    if not rows:
-        st.info("No reports cached yet — run triage and Save to Cache.")
-        if st.button("Go to Clinical Dashboard", type="primary"):
-            st.session_state.active_page = "dashboard"
-            st.rerun()
-        return
-
-    f1, f2 = st.columns(2)
-    modalities = sorted({r[3] for r in rows if r[3]})
-    pick_mod = f1.multiselect("Filter modality", modalities, default=modalities)
-    sync_filter = f2.selectbox("Sync status", ["All", "Unsynced only", "Synced only"])
-
-    filtered = []
-    for r in rows:
-        if pick_mod and r[3] not in pick_mod:
-            continue
-        synced = bool(r[12])
-        if sync_filter == "Unsynced only" and synced:
-            continue
-        if sync_filter == "Synced only" and not synced:
-            continue
-        filtered.append(r)
-
-    st.dataframe(
-        [{
-            "ID": r[0], "Patient": r[1], "Age": r[2], "Modality": r[3], "Model": r[4],
-            "Assessment": r[5], "Verdict": r[7], "Confidence": r[9],
-            "Latency": r[10], "Time": r[11], "Synced": "✅" if r[12] else "⏳",
-        } for r in filtered],
-        width="stretch", hide_index=True,
-    )
-
-    if filtered:
-        pick_id = st.selectbox("Open report", [r[0] for r in filtered], format_func=lambda i: f"#{i}")
-        row = next(r for r in filtered if r[0] == pick_id)
-        # id, patient_id, age, modality, model, bi_rads, acr, verdict, loc, conf, inf_time, ts, synced, json
-        report_data = {
-            "patient_id": row[1], "patient_age": row[2], "modality": row[3], "model_used": row[4],
-            "bi_rads": row[5], "acr_density": row[6], "verdict": row[7], "localization": row[8],
-            "confidence": row[9], "inference_time": row[10], "timestamp": row[11],
-            "network_mode": st.session_state.network_mode, "model_source": "cached_report", "synced": row[12],
-            "image_quality": "From cache", "recommendation": "See original triage notes.",
-            "referral_priority": "Review",
-        }
-        st.markdown(f"""
-        <div class="builder-shell">
-          <h3>Report #{row[0]}</h3>
-          <div class="activity-row"><span>Verdict</span><b>{row[7]}</b></div>
-          <div class="activity-row"><span>Assessment</span><b>{row[5]}</b></div>
-          <div class="activity-row"><span>Confidence / latency</span><b>{row[9]}% · {row[10]}s</b></div>
-        </div>
-        """, unsafe_allow_html=True)
-        d1, d2, d3 = st.columns(3)
-        d1.download_button("Download text", core.generate_text_report(report_data), file_name=f"report_{row[1]}.txt", width="stretch")
-        pdf = core.generate_pdf_bytes(report_data)
-        if pdf:
-            d2.download_button("Download PDF", pdf, file_name=f"report_{row[1]}.pdf", mime="application/pdf", width="stretch")
-        if d3.button("Open Cloud Sync", width="stretch"):
-            st.session_state.active_page = "cloud"
-            st.rerun()
-
-
 PAGES = {
     "overview": {"label_key": "Overview", "icon": "▣", "title": "Command Center", "blurb": "KPIs, modules, and live edge activity"},
     "builder": {"label_key": "Case Builder", "icon": "🧩", "title": "Case Builder", "blurb": "Compose clinical context before triage"},
@@ -1465,7 +1211,11 @@ def render_sidebar():
             '<div class="sidebar-section"><div class="sidebar-section-title">Navigation</div>',
             unsafe_allow_html=True,
         )
+        auth_nav = current_auth()
         for key, meta in PAGES.items():
+            if not can_view_page(key, auth_nav):
+                # LHW: hide AI Lab + Edge Ops; radiologist PIN unlocks them
+                continue
             active = st.session_state.active_page == key
             label = f"{meta['icon']}  {t(meta['label_key'])}"
             if st.button(
@@ -1476,7 +1226,10 @@ def render_sidebar():
             ):
                 if st.session_state.active_page != key:
                     st.session_state.active_page = key
+                    track("nav_click", detail=key)
                     st.rerun()
+        if auth_nav.is_lhw():
+            st.caption("🔒 AI Lab & Edge Ops unlock with Radiologist PIN **9999**")
         st.markdown("</div>", unsafe_allow_html=True)
 
         # —— 2. Triage controls ——
@@ -1655,6 +1408,7 @@ def run_triage_action(selected_model, uploaded):
     import random
     from dicom_anonymizer import generate_hex_privacy_hash
 
+    track("run_triage", detail=str(selected_model))
     raw_id = random.randint(10000000, 99999999)
     priv_hash = generate_hex_privacy_hash({"pat_id": raw_id, "cnic": f"35201-{raw_id}-1"})
     st.session_state.pat_id = raw_id
@@ -2423,6 +2177,7 @@ def render_cloud_sync():
 selected_model, uploaded = render_sidebar()
 if st.session_state.active_page not in PAGES:
     st.session_state.active_page = "overview"
+st.session_state.active_page = enforce_page_access(st.session_state.active_page)
 
 render_top_chrome(st.session_state.active_page)
 
@@ -2430,7 +2185,7 @@ page = st.session_state.active_page
 if page == "overview":
     render_overview(selected_model)
 elif page == "builder":
-    render_case_builder(selected_model, uploaded)
+    render_case_builder(selected_model, uploaded, run_triage_fn=run_triage_action)
 elif page == "dashboard":
     if st.session_state.demo_mode and st.session_state.inference_done:
         st.markdown(
@@ -2463,7 +2218,12 @@ elif page == "hub":
 elif page == "reports":
     render_reports_center()
 elif page == "lab":
-    render_ai_lab(selected_model)
+    render_ai_lab(
+        selected_model,
+        render_xai_panel=render_xai_panel,
+        render_training_arena=render_training_arena,
+        launch_fyp_demo=launch_fyp_demo,
+    )
 elif page == "ops":
     from edge_ops import render_edge_ops
     render_edge_ops(speak=speak_voiceover)
