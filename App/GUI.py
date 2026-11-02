@@ -259,6 +259,7 @@ def sim_mammography():
     ]
     r = random.choice(s)
     r["source"] = "SIMULATED — no downloadable trained weights (see MODEL_SOURCES.md)"
+    r["css"] = "danger" if r["is_critical"] else "success"
     return r
 
 
@@ -274,6 +275,7 @@ def sim_tb():
     ]
     r = random.choice(s)
     r["source"] = "SIMULATED (fallback — real model unavailable this run)"
+    r["css"] = "danger" if r["is_critical"] else "success"
     return r
 
 
@@ -285,6 +287,7 @@ def sim_maternal():
     ]
     r = random.choice(s)
     r["source"] = "SIMULATED — least-developed pathway, no public model matched (see MODEL_SOURCES.md)"
+    r["css"] = "danger" if r["is_critical"] else "success"
     return r
 
 
@@ -345,6 +348,9 @@ def run_triage(model_name, pil_image, patient_id="DEMO", allow_network=True):
     result["patient_id"] = data["patient_id"]
     result["workflow_timestamp"] = data["timestamp"]
     result["workflow_modality"] = data["modality"]
+    # UI / smoke-test contract: always expose a css severity token
+    if "css" not in result:
+        result["css"] = "danger" if result.get("is_critical") else "success"
 
     return result
 

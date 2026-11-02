@@ -78,31 +78,44 @@ def _sidebar_button(at, substring):
     return matches[0]
 
 
-@check("app starts with no exception and renders its 3 nav pages")
+@check("app starts with no exception and renders modular sidebar nav")
 def _():
     at = _fresh_app()
     require(not at.exception, f"startup raised: {list(at.exception)}")
-    # Navigation moved from st.tabs to sidebar (+ top) page links.
-    nav_needles = ("Dashboard", "Hospital Hub", "Cloud Sync")
-    sidebar_hits = sum(
-        1 for needle in nav_needles
-        if any(needle in b.label for b in at.sidebar.button)
-    )
-    tab_ok = len(at.tabs) == 3
+    # Default role is LHW — AI Lab / Edge Ops are role-gated (hidden until radiologist PIN).
+    # Core clinical nav must still be present as sidebar buttons (components/overview etc.).
+    nav_needles = ("Overview", "Case Builder", "Dashboard", "Hospital Hub", "Reports", "Cloud Sync")
+    labels = [b.label for b in at.sidebar.button]
+    missing = [n for n in nav_needles if not any(n in lab for lab in labels)]
+    require(not missing, f"missing sidebar nav {missing} (have: {labels})")
+    # Radiologist-only pages must NOT show for default LHW
     require(
-        sidebar_hits == 3 or tab_ok,
-        f"expected 3 nav destinations via sidebar links or tabs; "
-        f"sidebar_hits={sidebar_hits}, tabs={len(at.tabs)}",
+        not any("AI Lab" in lab for lab in labels),
+        "AI Lab should be hidden for default LHW role",
+    )
+    require(
+        not any("Edge Ops" in lab for lab in labels),
+        "Edge Ops should be hidden for default LHW role",
     )
     require(
         at.session_state["active_page"] in (
             "overview", "builder", "dashboard", "hub", "reports", "cloud", "lab", "ops",
-        )
-        or tab_ok,
+        ),
         f"active_page missing/invalid: {at.session_state.get('active_page') if hasattr(at.session_state, 'get') else at.session_state['active_page']}",
     )
+    # Modular component files must exist (pre-merge critical check)
+    for rel in (
+        "components/overview.py",
+        "components/case_builder.py",
+        "components/reports.py",
+        "components/ai_lab.py",
+    ):
+        require(
+            os.path.isfile(os.path.join(APP_DIR, rel)),
+            f"missing modular component {rel}",
+        )
     _app["at"] = at
-    return f"({len(at.sidebar.button)} sidebar controls)"
+    return f"({len(at.sidebar.button)} sidebar controls; components OK)"
 
 
 @check("branding is Pink Edge AI everywhere the user can see it")
@@ -120,19 +133,29 @@ def _():
     return f"(page_title={m.group(1)!r})"
 
 
-@check("role switch, language toggle and modality select all re-run cleanly")
+@check("role switch unlocks radiologist nav; language + modality re-run cleanly")
 def _():
     at = _app.get("at") or _fresh_app()
     for label in ("Doctor", "LHW", "اردو", "EN"):
         _sidebar_button(at, label).click().run(timeout=30)
         require(not at.exception, f"clicking {label!r} raised: {list(at.exception)}")
+    # Elevate to radiologist — AI Lab / Edge Ops must appear
+    _sidebar_button(at, "Doctor").click().run(timeout=30)
+    require(not at.exception, f"Doctor role click raised: {list(at.exception)}")
+    labels = [b.label for b in at.sidebar.button]
+    require(any("AI Lab" in lab for lab in labels), f"AI Lab missing after Doctor switch (have: {labels})")
+    require(any("Edge Ops" in lab for lab in labels), f"Edge Ops missing after Doctor switch (have: {labels})")
+    # Navigate modular pages via sidebar
+    for needle in ("Overview", "Case Builder", "Reports", "Dashboard"):
+        _sidebar_button(at, needle).click().run(timeout=30)
+        require(not at.exception, f"nav click {needle!r} raised: {list(at.exception)}")
     sel = next(s for s in at.sidebar.selectbox if s.label == "Select AI Model")
     require(len(sel.options) == 3, f"expected 3 modalities, got {sel.options}")
     for modality in sel.options:
         sel.set_value(modality).run(timeout=30)
         require(not at.exception, f"selecting {modality!r} raised: {list(at.exception)}")
     _app["at"] = at
-    return f"({len(sel.options)} modalities)"
+    return f"(radiologist nav + {len(sel.options)} modalities)"
 
 
 @check("Run Triage completes and produces a well-formed result")

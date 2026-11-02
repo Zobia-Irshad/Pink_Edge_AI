@@ -14,8 +14,8 @@ def _privacy_ref(patient_id) -> str:
     raw = str(patient_id or "")
     if not raw or raw.upper().startswith("PE-") or len(raw) >= 32:
         # Already looks like a hash / privacy token
-        return raw[:16] + "…" if len(raw) > 18 else raw
-    return generate_hex_privacy_hash({"PatientID": raw})[:16] + "…"
+        return raw[:16] + "..." if len(raw) > 18 else raw
+    return generate_hex_privacy_hash({"PatientID": raw})[:16] + "..."
 
 
 def render_reports_center():
@@ -91,12 +91,14 @@ def render_reports_center():
 
     # Strip any residual PII tags if report_json embeds DICOM-like fields
     safe_patient = _privacy_ref(row[1])
+    # ASCII-only id for PDF/text generators (Helvetica cannot encode ellipsis)
+    export_patient = safe_patient.replace("...", "")
     meta_preview = anonymize_dicom_metadata(
         {"PatientID": str(row[1]), "PatientName": "REDACTED", "Modality": row[3] or ""}
     )
 
     report_data = {
-        "patient_id": safe_patient,
+        "patient_id": export_patient,
         "patient_age": row[2],
         "modality": row[3],
         "model_used": row[4],
@@ -133,18 +135,23 @@ def render_reports_center():
     d1.download_button(
         "Download text",
         core.generate_text_report(report_data),
-        file_name=f"report_{safe_patient.replace('…','')[:12]}.txt",
+        file_name=f"report_{safe_patient.replace('...','')[:12]}.txt",
         width="stretch",
     )
-    pdf = core.generate_pdf_bytes(report_data)
-    if pdf:
-        d2.download_button(
-            "Download PDF",
-            pdf,
-            file_name=f"report_{safe_patient.replace('…','')[:12]}.pdf",
-            mime="application/pdf",
-            width="stretch",
-        )
+    # Only build PDF when user asks — avoid FPDF unicode issues during page render/smoke
+    if d2.button("Prepare PDF", width="stretch", key="reports_prep_pdf"):
+        pdf = core.generate_pdf_bytes(report_data)
+        if pdf:
+            st.download_button(
+                "Download PDF",
+                pdf,
+                file_name=f"report_{safe_patient.replace('...','')[:12]}.pdf",
+                mime="application/pdf",
+                width="stretch",
+                key="reports_dl_pdf",
+            )
+        else:
+            st.warning("PDF generator unavailable.")
     if d3.button("Open Cloud Sync", width="stretch"):
         st.session_state.active_page = "cloud"
         st.rerun()
